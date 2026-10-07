@@ -38,6 +38,7 @@ from .const import (
     SERVICE_RESUME,
     SERVICE_SUBMIT_ANSWER,
 )
+from .eingang import QUELLE_AKTION
 from .verwaltung import VerwaltungError
 
 if TYPE_CHECKING:
@@ -125,10 +126,17 @@ def _kind_id(
     return kind_id
 
 
+DOPPELT = "doppelt"
+
+
 async def _async_submit_answer(call: ServiceCall) -> ServiceResponse:
     manager = _manager(call.hass)
     kind_id = _kind_id(call.hass, manager, call.data)
-    return await manager.async_antwort(kind_id, call.data[ATTR_TEXT])
+    antwort: str = call.data[ATTR_TEXT]
+    if manager.antwort_doppelt(kind_id, antwort.strip(), QUELLE_AKTION):
+        # The built-in listener already took this message
+        return {"ergebnis": DOPPELT}
+    return await manager.async_antwort(kind_id, antwort)
 
 
 async def _async_ask_now(call: ServiceCall) -> None:

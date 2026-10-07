@@ -1730,6 +1730,11 @@ export class LearnBuddyPanel extends LitElement {
               </button>
             </div>`
           : nothing}
+        ${this._uebersicht?.kinder.find((k) => k.id === this._kindId)?.absender === false
+          ? html`<div class="meldung fehler" role="status">
+              <span>${t("absender_fehlt")}</span>
+            </div>`
+          : nothing}
         ${this._meldung
           ? html`<div
               class="meldung ${this._meldung.fehler ? "fehler" : ""}"

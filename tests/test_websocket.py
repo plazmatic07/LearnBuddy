@@ -122,7 +122,9 @@ async def test_nicht_geladen(
 
 async def test_overview(client: Client) -> None:
     ergebnis = await client.ok("overview")
-    assert ergebnis["kinder"] == [{"id": KIND_ID, "name": "Max", "bilder": False}]
+    assert ergebnis["kinder"] == [
+        {"id": KIND_ID, "name": "Max", "bilder": False, "absender": True}
+    ]
     assert ergebnis["faecher"] == [
         {
             "id": FACH_ID,

@@ -27,6 +27,11 @@ CONF_TIMEOUT_MINUTEN: Final = "timeout_minuten"
 CONF_SPRACHE: Final = "sprache"
 CONF_KI_ENTITY: Final = "ki_entity"
 CONF_AUTO_FREIGABE: Final = "auto_freigabe"
+CONF_EINGANG_TELEGRAM: Final = "eingang_telegram"
+CONF_EINGANG_WHATSAPP: Final = "eingang_whatsapp"
+CONF_EINGANG_EVENT: Final = "eingang_event"
+CONF_EINGANG_ABSENDER_FELD: Final = "eingang_absender_feld"
+CONF_EINGANG_TEXT_FELD: Final = "eingang_text_feld"
 
 # Subentry "kind"
 CONF_NAME: Final = "name"
@@ -70,6 +75,13 @@ CONF_ERSTELLT: Final = "erstellt"
 CONF_GEAENDERT: Final = "geaendert"
 
 DEFAULT_TIMEOUT_MINUTEN: Final = 60
+DEFAULT_EINGANG_ABSENDER_FELD: Final = "sender"
+DEFAULT_EINGANG_TEXT_FELD: Final = "text"
+# Events fired by other integrations for incoming messages
+EVENT_TELEGRAM_TEXT: Final = "telegram_text"
+EVENT_WHATSAPP_NACHRICHT: Final = "whatsapp_message_received"
+# Two paths (built-in listener and an automation) may deliver the same message
+DOPPELT_SEKUNDEN: Final = 5.0
 DEFAULT_SIMULATION_ANZAHL: Final = 10
 MAX_TIMEOUT_MINUTEN: Final = 1440
 DEFAULT_ABFRAGEN_PRO_TAG: Final = 3

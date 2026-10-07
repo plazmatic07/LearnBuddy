@@ -1,6 +1,6 @@
 # LearnBuddy – Arbeitsnotizen
 
-Home Assistant Custom Integration (`learnbuddy`). Ursprüngliches Lastenheft: `SPEC.md`. Zielversion: HA 2026.9.x, Python ≥ 3.14.2. Stand: Version 0.6.1, Storage 1.11.
+Home Assistant Custom Integration (`learnbuddy`). Ursprüngliches Lastenheft: `SPEC.md`. Zielversion: HA 2026.9.x, Python ≥ 3.14.2. Stand: Version 0.6.2, Storage 1.11.
 
 Das Projekt hieß früher „Lernhelfer“ und „Lernbuddy“. Im Code gibt es keine Migration von den alten Namen; nur der JSON-Import nimmt noch Exporte mit dem Format `lernbuddy-aufgaben` an.
 
@@ -31,6 +31,7 @@ python -m script.hassfest --action validate --integration-path <repo>/custom_com
 - `manager.py` orchestriert (Fragen stellen, Antworten, Fristen, Timer, Simulation). Reine Logik ohne HA-Abhängigkeit: `scheduler.py` (Leitner, Auswahl), `evaluation.py` (Vokabeln), `mathe.py`, `rechnen.py` (sicherer Auswerter mit `ast` + `Fraction`), `sach.py`, `simulation.py`, `wunsch.py`, `importer.py`.
 - `verwaltung.py` enthält die Datenpflege fürs Panel; `websocket_api.py` ist nur die dünne, admin-geschützte Hülle (`learnbuddy/…`). Fehler: `VerwaltungError(code, schluessel)`; den Schlüssel übersetzt das Panel (`err_<schluessel>` in `frontend-src/src/i18n.ts`).
 - `ai.py`: alle KI-Aufrufe über `ai_task` mit festem Schema und Parser; nur mit ausdrücklich gewählter Entität (Optionen, Abweichung je Fach). `ai_task` wird spät importiert (`_async_generate_data`), Tests mocken diese Funktion. `KiBewerter.status`: `keine`, `nicht_verfuegbar`, `ohne_bilder`, `ok`. Repair-Issue `ki_<entity>` nach drei Fehlern in Folge oder fehlender Entität.
+- `eingang.py`: nimmt Antworten direkt von den Ereignissen `telegram_text` und `whatsapp_message_received` (ha-wa-bridge) sowie einem frei einstellbaren Ereignis an; Zuordnung über `manager.kind_per_absender`. `manager.antwort_doppelt` verhindert, dass eine Nachricht doppelt zählt, wenn zusätzlich eine Automation `submit_answer` aufruft (gleicher Text vom anderen Weg binnen 5 s).
 - `messaging.py`: Versand über notify-Entität oder klassische Aktion; Bilder über die eigene Aktion des Kindes, sonst automatisch über `telegram_bot.send_photo` mit signierter Loopback-URL.
 - `bilder.py`: `BildAblage` in `<config>/learnbuddy/uploads`, Views `POST /api/learnbuddy/bilder` (nur Admin) und `GET …/{id}` (angemeldet oder signiert). Pillow kodiert neu, EXIF weg, max. 1600 px (`?zweck=seite`: 2400 px). Unbenutzte Uploads werden nach 24 h gelöscht. `media_source.py` löst `media-source://learnbuddy/<id>` für die KI auf.
 - `blatt.py`: Aufgabenblatt mit Pillow (A4, 1240×1754) und der mitgelieferten DejaVu-Schrift in `fonts/`; die eingebaute Pillow-Schrift kennt keine Umlaute.

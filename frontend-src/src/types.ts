@@ -21,6 +21,8 @@ export interface Kind {
   name: string;
   // Whether tasks with an image can be sent to the child
   bilder: boolean;
+  // Whether a sender ID is set; missing on older servers
+  absender?: boolean;
 }
 
 export interface Fach {

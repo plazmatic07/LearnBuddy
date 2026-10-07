@@ -49,6 +49,11 @@ from .const import (
     CONF_BILD_AKTION,
     CONF_BUNDESLAND,
     CONF_DATUM,
+    CONF_EINGANG_ABSENDER_FELD,
+    CONF_EINGANG_EVENT,
+    CONF_EINGANG_TELEGRAM,
+    CONF_EINGANG_TEXT_FELD,
+    CONF_EINGANG_WHATSAPP,
     CONF_ERSTELLT,
     CONF_FACH_ID,
     CONF_GEAENDERT,
@@ -142,6 +147,11 @@ OPTIONS_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_KI_ENTITY): _KI_SELECTOR,
         vol.Required(CONF_AUTO_FREIGABE, default=False): BooleanSelector(),
+        vol.Required(CONF_EINGANG_TELEGRAM, default=True): BooleanSelector(),
+        vol.Required(CONF_EINGANG_WHATSAPP, default=True): BooleanSelector(),
+        vol.Optional(CONF_EINGANG_EVENT): TextSelector(),
+        vol.Optional(CONF_EINGANG_ABSENDER_FELD): TextSelector(),
+        vol.Optional(CONF_EINGANG_TEXT_FELD): TextSelector(),
     }
 )
 

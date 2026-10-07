@@ -254,6 +254,8 @@ class Verwaltung:
                     "id": k.id,
                     "name": k.name,
                     "bilder": manager.messenger.kann_bilder(k),
+                    # Without it incoming answers cannot be assigned
+                    "absender": bool(k.absender_kennung),
                 }
                 for k in manager.kinder.values()
             ],

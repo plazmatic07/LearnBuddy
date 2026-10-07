@@ -8,6 +8,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta
 from enum import StrEnum
 from random import Random
+import time
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -31,6 +32,7 @@ from .const import (
     CONF_TIMEOUT_MINUTEN,
     DEFAULT_TIMEOUT_MINUTEN,
     DOMAIN,
+    DOPPELT_SEKUNDEN,
     EVENT_ANSWER_EVALUATED,
     EVENT_QUESTION_SENT,
     EVENT_SIMULATION_FINISHED,
@@ -146,6 +148,8 @@ class LearnBuddyManager:
         self._ki_pruefung: CALLBACK_TYPE | None = None
         self._basis: tuple[dict[str, Any], dict[str, Any]] = ({}, {})
         self._sperren: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+        # Last incoming answer per child: text, monotonic time, path it came on
+        self._letzte_antwort: dict[str, tuple[str, float, str]] = {}
         self._rng = Random()  # noqa: S311 - not used for cryptography
         # Timers of planned simulations, per exam
         self._sim_timer: dict[str, CALLBACK_TYPE] = {}
@@ -408,6 +412,24 @@ class LearnBuddyManager:
             ):
                 return kind
         return None
+
+    def antwort_doppelt(self, kind_id: str, antwort: str, quelle: str) -> bool:
+        """Tell whether the same message just arrived on the other path.
+
+        The built-in listener and an automation calling the action may both
+        deliver one message; only the first one counts.
+        """
+        jetzt = time.monotonic()
+        letzte = self._letzte_antwort.get(kind_id)
+        if (
+            letzte is not None
+            and letzte[0] == antwort
+            and letzte[2] != quelle
+            and jetzt - letzte[1] < DOPPELT_SEKUNDEN
+        ):
+            return True
+        self._letzte_antwort[kind_id] = (antwort, jetzt, quelle)
+        return False
 
     def fach_per_name(self, kind_id: str, name: str) -> Fach | None:
         """Find a subject of a child by its name."""

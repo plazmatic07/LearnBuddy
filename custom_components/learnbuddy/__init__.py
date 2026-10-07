@@ -15,6 +15,7 @@ from .const import (
     SUBENTRY_ARBEIT,
     SUBENTRY_FACH,
 )
+from .eingang import Eingang
 from .manager import LearnBuddyManager
 from .panel import async_register_panel, async_unregister_panel
 from .services import async_setup_services
@@ -67,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LearnBuddyConfigEntry) -
     async_register_views(hass)
     entry.async_on_unload(lambda: async_unregister_panel(hass))
     manager.async_start()
+    entry.async_on_unload(Eingang(hass, manager, entry.options).async_start())
     entry.async_on_unload(manager.async_stop)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True

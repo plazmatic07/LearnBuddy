@@ -46,7 +46,7 @@ LearnBuddy bringt weder einen eigenen Messenger noch eine eigene KI-Anbindung mi
 ## Voraussetzungen
 
 - Home Assistant 2026.9 oder neuer.
-- Eine eingerichtete Messenger-Integration mit `notify`-Entität oder klassischer `notify.<name>`-Aktion (z. B. Telegram, eine WhatsApp-Bridge, die Companion-App). Damit Antworten ankommen, muss die Integration eingehende Nachrichten als Event melden.
+- Eine eingerichtete Messenger-Integration mit `notify`-Entität oder klassischer `notify.<name>`-Aktion (z. B. Telegram, eine WhatsApp-Bridge, die Companion-App). Damit Antworten ankommen, muss die Integration eingehende Nachrichten als Ereignis melden.
 - Optional eine KI-Integration mit `ai_task`-Entität. Für Funktionen mit Fotos muss sie Bilder annehmen.
 
 ## Installation
@@ -73,6 +73,9 @@ Sie werden beim Hinzufügen abgefragt und lassen sich später über das Zahnrad 
 | Sprache der Nachrichten | Deutsch, Englisch oder wie Home Assistant. |
 | KI-Entität für die Bewertung | Optional. Eine `ai_task`-Entität. Je Fach lässt sich eine andere wählen. |
 | Generierte Aufgaben automatisch freigeben | Standard: aus. Von der KI erzeugte Mathe-Aufgaben warten dann im Panel auf deine Freigabe. |
+| Antworten aus Telegram annehmen | Standard: an. Siehe [Antworten entgegennehmen](#antworten-entgegennehmen). |
+| Antworten aus WhatsApp annehmen | Standard: an. Gilt für die Integration [ha-wa-bridge](https://github.com/raulpetruta/ha-wa-bridge). |
+| Eigenes Ereignis für Antworten, Feld mit dem Absender, Feld mit dem Text | Optional, für andere Messenger. |
 
 Danach legst du auf der Seite der Integration der Reihe nach Kind, Fach und Arbeit an. Fächer, Lektionen und Arbeiten lassen sich auch im Panel pflegen.
 
@@ -112,19 +115,25 @@ Je Fach kann eine abweichende KI-Entität gewählt werden. Die Sprachen eines Fa
 
 ## Antworten entgegennehmen
 
-LearnBuddy verschickt Fragen selbst. Für den Rückweg reicht eine Automation die eingehenden Nachrichten an die Aktion `learnbuddy.submit_answer` weiter. Dafür liegen unter `blueprints/automation/learnbuddy/` zwei Blueprints:
+LearnBuddy verschickt Fragen selbst und nimmt Antworten selbst entgegen. Dazu lauscht es auf das Ereignis, das deine Messenger-Integration bei einer eingehenden Nachricht in Home Assistant auslöst. Eine Automation brauchst du dafür nicht, und es ist egal, ob der Messenger vor oder nach LearnBuddy eingerichtet wird.
 
-- `telegram_antwort.yaml` – für die Telegram-Integration.
-- `event_antwort.yaml` – für jede Integration, die eingehende Nachrichten als Event meldet. Event-Typ und die Felder für Absender und Text sind einstellbar.
+| Messenger | Ereignis | Absenderkennung beim Kind |
+|---|---|---|
+| Telegram (Telegram-Bot-Integration) | `telegram_text` | Chat-ID |
+| WhatsApp ([ha-wa-bridge](https://github.com/raulpetruta/ha-wa-bridge)) | `whatsapp_message_received` | Telefonnummer, z. B. `491701234567` |
+| Andere | in den Optionen einstellbar: Name des Ereignisses, Feld mit dem Absender (Vorgabe `sender`), Feld mit dem Text (Vorgabe `text`) | was die Integration als Absender liefert |
 
-Die Dateien nach `/config/blueprints/automation/learnbuddy/` kopieren und daraus eine Automation erstellen. Das Kind wird an der Absenderkennung erkannt.
+Zugeordnet wird eine Nachricht über die **Absenderkennung** des Kindes. Fehlt sie, gehen Fragen raus, aber Antworten kommen nicht an; das Panel weist beim Kind darauf hin. Nachrichten unbekannter Absender und WhatsApp-Nachrichten aus Gruppen werden ignoriert. Telefonnummern werden nur nach ihren Ziffern verglichen.
+
+Beide eingebauten Wege lassen sich in den Optionen abschalten.
+
+**Eigene Automation:** Wer die Antworten lieber selbst weiterreicht, ruft die Aktion `learnbuddy.submit_answer` auf. Unter `blueprints/automation/learnbuddy/` liegen dafür zwei Blueprints (`telegram_antwort.yaml`, `event_antwort.yaml`). Nötig sind sie nicht mehr. Läuft eine solche Automation zusätzlich zum eingebauten Weg, wird dieselbe Nachricht trotzdem nur einmal gewertet.
 
 ### Telegram einrichten
 
 1. In der Telegram-Bot-Integration den Bot auf **Polling** (oder Webhooks) stellen. Mit „Broadcast“ kann der Bot nur senden. Ein Bot-Token darf nur von einer Home-Assistant-Instanz empfangen werden.
 2. Die Chat-ID des Kindes als **erlaubten Chat** beim Bot hinzufügen. Unbekannt? Das Kind schreibt dem Bot; die Chat-ID steht dann als „Unauthorized update“ im Log. Für jeden erlaubten Chat legt die Integration eine `notify`-Entität an.
 3. Beim Kind in LearnBuddy diese `notify`-Entität als Messenger-Ziel und die Chat-ID als Absenderkennung eintragen.
-4. Aus dem Blueprint `telegram_antwort.yaml` eine Automation erstellen, optional beschränkt auf die Chat-IDs der Kinder.
 
 Tipp: Mit parse_mode „markdown“ lehnt Telegram Nachrichten ab, deren Text `_`, `*` oder `` ` `` enthält. „plain_text“ in den Bot-Optionen vermeidet das.
 

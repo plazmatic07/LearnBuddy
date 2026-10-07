@@ -8,12 +8,22 @@
           "timeout_minuten": "Timeout for open questions",
           "sprache": "Language of the messages",
           "ki_entity": "AI entity for evaluation",
-          "auto_freigabe": "Approve generated tasks automatically"
+          "auto_freigabe": "Approve generated tasks automatically",
+          "eingang_telegram": "Accept answers from Telegram",
+          "eingang_whatsapp": "Accept answers from WhatsApp",
+          "eingang_event": "Custom event for answers",
+          "eingang_absender_feld": "Field with the sender",
+          "eingang_text_feld": "Field with the text"
         },
         "data_description": {
           "timeout_minuten": "After this time a question counts as unanswered (not as wrong).",
           "ki_entity": "Optional. This AI task entity checks vocabulary answers that are wrong locally for synonyms and typos, evaluates math answers that are no plain numbers, explains solutions and creates math tasks. No name or other personal data is sent.",
-          "auto_freigabe": "Off: tasks created by the AI wait in the panel until you approve them. On: they are asked right away if their solution could be verified."
+          "auto_freigabe": "Off: tasks created by the AI wait in the panel until you approve them. On: they are asked right away if their solution could be verified.",
+          "eingang_telegram": "LearnBuddy takes text messages of the Telegram bot integration itself (bot set to polling or webhooks). No automation is needed. Messages are assigned by the sender ID of the child (chat ID).",
+          "eingang_whatsapp": "Applies to the integration \"WhatsApp\" (ha-wa-bridge, event whatsapp_message_received). Messages are assigned by the phone number set as sender ID of the child; group messages are ignored.",
+          "eingang_event": "Optional, for other messengers: name of the event your messenger integration fires for an incoming message.",
+          "eingang_absender_feld": "Key in the event data holding the phone number or chat ID. Default: sender.",
+          "eingang_text_feld": "Key in the event data holding the message text. Default: text."
         }
       }
     },
@@ -29,12 +39,22 @@
           "timeout_minuten": "Timeout for open questions",
           "sprache": "Language of the messages",
           "ki_entity": "AI entity for evaluation",
-          "auto_freigabe": "Approve generated tasks automatically"
+          "auto_freigabe": "Approve generated tasks automatically",
+          "eingang_telegram": "Accept answers from Telegram",
+          "eingang_whatsapp": "Accept answers from WhatsApp",
+          "eingang_event": "Custom event for answers",
+          "eingang_absender_feld": "Field with the sender",
+          "eingang_text_feld": "Field with the text"
         },
         "data_description": {
           "timeout_minuten": "After this time a question counts as unanswered (not as wrong).",
           "ki_entity": "Optional. This AI task entity checks vocabulary answers that are wrong locally for synonyms and typos, evaluates math answers that are no plain numbers, explains solutions and creates math tasks. No name or other personal data is sent.",
-          "auto_freigabe": "Off: tasks created by the AI wait in the panel until you approve them. On: they are asked right away if their solution could be verified."
+          "auto_freigabe": "Off: tasks created by the AI wait in the panel until you approve them. On: they are asked right away if their solution could be verified.",
+          "eingang_telegram": "LearnBuddy takes text messages of the Telegram bot integration itself (bot set to polling or webhooks). No automation is needed. Messages are assigned by the sender ID of the child (chat ID).",
+          "eingang_whatsapp": "Applies to the integration \"WhatsApp\" (ha-wa-bridge, event whatsapp_message_received). Messages are assigned by the phone number set as sender ID of the child; group messages are ignored.",
+          "eingang_event": "Optional, for other messengers: name of the event your messenger integration fires for an incoming message.",
+          "eingang_absender_feld": "Key in the event data holding the phone number or chat ID. Default: sender.",
+          "eingang_text_feld": "Key in the event data holding the message text. Default: text."
         }
       }
     }

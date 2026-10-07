@@ -48,6 +48,8 @@ const de = {
   neue_version:
     "LearnBuddy wurde aktualisiert. Diese Seite zeigt noch die alte Version; lade sie neu, damit alle Funktionen sichtbar sind.",
   neu_laden: "Seite neu laden",
+  absender_fehlt:
+    "Bei diesem Kind fehlt die Absenderkennung (Chat-ID oder Telefonnummer). Fragen gehen raus, aber Antworten können nicht zugeordnet werden. Eintragen unter Einstellungen → Geräte & Dienste → LearnBuddy → Kind bearbeiten.",
   sim_plan: "Simulation einplanen (optional)",
   sim_plan_hilfe:
     "Zum gewählten Zeitpunkt bekommt das Kind automatisch eine Simulation dieser Arbeit per Messenger: das Aufgabenblatt als Bild, dann die Aufgaben nacheinander, am Ende die Auswertung. Ist das Kind dann pausiert oder läuft schon eine Simulation, entfällt sie.",
@@ -465,6 +467,8 @@ const en: Record<Schluessel, string> = {
   neue_version:
     "LearnBuddy was updated. This page still shows the old version; reload it to see all features.",
   neu_laden: "Reload the page",
+  absender_fehlt:
+    "This child has no sender ID (chat ID or phone number). Questions are sent, but answers cannot be assigned. Set it under Settings → Devices & services → LearnBuddy → edit the child.",
   sim_plan: "Plan a simulation (optional)",
   sim_plan_hilfe:
     "At the chosen time the child automatically gets a simulation of this exam in the messenger: the sheet as an image, then the tasks one after the other, the result at the end. If the child is paused or a simulation is already running then, it is skipped.",

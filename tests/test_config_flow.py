@@ -82,6 +82,8 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         "timeout_minuten": 45,
         "sprache": "auto",
         "auto_freigabe": False,
+        "eingang_telegram": True,
+        "eingang_whatsapp": True,
     }
     assert result["result"].state is ConfigEntryState.LOADED
 
@@ -110,6 +112,8 @@ async def test_options_flow(hass: HomeAssistant, setup_entry: MockConfigEntry) -
         "timeout_minuten": 30,
         "sprache": "en",
         "auto_freigabe": False,
+        "eingang_telegram": True,
+        "eingang_whatsapp": True,
     }
     # The entry was reloaded with the new options
     assert setup_entry.runtime_data.timeout.total_seconds() == 1800

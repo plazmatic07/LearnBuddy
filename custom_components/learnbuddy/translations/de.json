@@ -8,12 +8,22 @@
           "timeout_minuten": "Timeout für offene Fragen",
           "sprache": "Sprache der Nachrichten",
           "ki_entity": "KI-Entität für die Bewertung",
-          "auto_freigabe": "Generierte Aufgaben automatisch freigeben"
+          "auto_freigabe": "Generierte Aufgaben automatisch freigeben",
+          "eingang_telegram": "Antworten aus Telegram annehmen",
+          "eingang_whatsapp": "Antworten aus WhatsApp annehmen",
+          "eingang_event": "Eigenes Ereignis für Antworten",
+          "eingang_absender_feld": "Feld mit dem Absender",
+          "eingang_text_feld": "Feld mit dem Text"
         },
         "data_description": {
           "timeout_minuten": "Nach dieser Zeit gilt eine Frage als unbeantwortet (nicht als falsch).",
           "ki_entity": "Optional. Diese AI-Task-Entität prüft lokal falsche Vokabel-Antworten auf Synonyme und Tippfehler, bewertet Mathe-Antworten, die keine reinen Zahlen sind, erklärt Rechenwege und erzeugt Mathe-Aufgaben. Es werden kein Name und keine anderen personenbezogenen Daten übertragen.",
-          "auto_freigabe": "Aus: Von der KI erzeugte Aufgaben warten im Panel, bis du sie freigibst. An: Sie werden sofort abgefragt, wenn ihre Lösung verifiziert werden konnte."
+          "auto_freigabe": "Aus: Von der KI erzeugte Aufgaben warten im Panel, bis du sie freigibst. An: Sie werden sofort abgefragt, wenn ihre Lösung verifiziert werden konnte.",
+          "eingang_telegram": "LearnBuddy nimmt Textnachrichten der Telegram-Bot-Integration selbst an (Bot auf Polling oder Webhooks). Eine Automation ist dafür nicht nötig. Zugeordnet wird über die Absenderkennung des Kindes (Chat-ID).",
+          "eingang_whatsapp": "Gilt für die Integration „WhatsApp“ (ha-wa-bridge, Ereignis whatsapp_message_received). Zugeordnet wird über die Telefonnummer als Absenderkennung des Kindes; Nachrichten aus Gruppen werden ignoriert.",
+          "eingang_event": "Optional, für andere Messenger: Name des Ereignisses, das deine Messenger-Integration bei einer eingehenden Nachricht auslöst.",
+          "eingang_absender_feld": "Schlüssel in den Ereignisdaten mit Telefonnummer oder Chat-ID. Vorgabe: sender.",
+          "eingang_text_feld": "Schlüssel in den Ereignisdaten mit dem Nachrichtentext. Vorgabe: text."
         }
       }
     },
@@ -29,12 +39,22 @@
           "timeout_minuten": "Timeout für offene Fragen",
           "sprache": "Sprache der Nachrichten",
           "ki_entity": "KI-Entität für die Bewertung",
-          "auto_freigabe": "Generierte Aufgaben automatisch freigeben"
+          "auto_freigabe": "Generierte Aufgaben automatisch freigeben",
+          "eingang_telegram": "Antworten aus Telegram annehmen",
+          "eingang_whatsapp": "Antworten aus WhatsApp annehmen",
+          "eingang_event": "Eigenes Ereignis für Antworten",
+          "eingang_absender_feld": "Feld mit dem Absender",
+          "eingang_text_feld": "Feld mit dem Text"
         },
         "data_description": {
           "timeout_minuten": "Nach dieser Zeit gilt eine Frage als unbeantwortet (nicht als falsch).",
           "ki_entity": "Optional. Diese AI-Task-Entität prüft lokal falsche Vokabel-Antworten auf Synonyme und Tippfehler, bewertet Mathe-Antworten, die keine reinen Zahlen sind, erklärt Rechenwege und erzeugt Mathe-Aufgaben. Es werden kein Name und keine anderen personenbezogenen Daten übertragen.",
-          "auto_freigabe": "Aus: Von der KI erzeugte Aufgaben warten im Panel, bis du sie freigibst. An: Sie werden sofort abgefragt, wenn ihre Lösung verifiziert werden konnte."
+          "auto_freigabe": "Aus: Von der KI erzeugte Aufgaben warten im Panel, bis du sie freigibst. An: Sie werden sofort abgefragt, wenn ihre Lösung verifiziert werden konnte.",
+          "eingang_telegram": "LearnBuddy nimmt Textnachrichten der Telegram-Bot-Integration selbst an (Bot auf Polling oder Webhooks). Eine Automation ist dafür nicht nötig. Zugeordnet wird über die Absenderkennung des Kindes (Chat-ID).",
+          "eingang_whatsapp": "Gilt für die Integration „WhatsApp“ (ha-wa-bridge, Ereignis whatsapp_message_received). Zugeordnet wird über die Telefonnummer als Absenderkennung des Kindes; Nachrichten aus Gruppen werden ignoriert.",
+          "eingang_event": "Optional, für andere Messenger: Name des Ereignisses, das deine Messenger-Integration bei einer eingehenden Nachricht auslöst.",
+          "eingang_absender_feld": "Schlüssel in den Ereignisdaten mit Telefonnummer oder Chat-ID. Vorgabe: sender.",
+          "eingang_text_feld": "Schlüssel in den Ereignisdaten mit dem Nachrichtentext. Vorgabe: text."
         }
       }
     }
