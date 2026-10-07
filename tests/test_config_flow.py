@@ -697,6 +697,8 @@ async def test_kind_klassische_aktion_eingeklappt(
         "notify_data",
     }
     assert "notify_service" not in result["data_schema"].schema
+    reihenfolge = [str(feld) for feld in result["data_schema"].schema]
+    assert reihenfolge.index("klassisch") == reihenfolge.index("notify_entity") + 1
 
     # The test child uses the classic action: open, with its values
     result = await hass.config_entries.subentries.async_init(

@@ -211,14 +211,16 @@ _KLASSISCH_SCHEMA = vol.Schema(
 
 def _kind_schema(werte: Mapping[str, Any]) -> vol.Schema:
     """Return the child form; the classic action is open only when it is used."""
-    return KIND_SCHEMA.extend(
-        {
-            vol.Required(ABSCHNITT_KLASSISCH): section(
+    felder: dict[Any, Any] = {}
+    for feld, selector in KIND_SCHEMA.schema.items():
+        felder[feld] = selector
+        if feld == CONF_NOTIFY_ENTITY:
+            # Right below the notify entity it replaces
+            felder[vol.Required(ABSCHNITT_KLASSISCH)] = section(
                 _KLASSISCH_SCHEMA,
                 {"collapsed": not werte.get(CONF_NOTIFY_SERVICE)},
             )
-        }
-    )
+    return vol.Schema(felder)
 
 
 def _kind_vorgaben(werte: Mapping[str, Any]) -> dict[str, Any]:
