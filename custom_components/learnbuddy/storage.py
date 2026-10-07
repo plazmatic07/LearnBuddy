@@ -61,6 +61,9 @@ def migrate_config(
         # 1.10 -> 1.11: an exam can be simulated in the messenger
         for zustand in data["kinder"].values():
             zustand.setdefault("simulation", None)
+    if old_major == 1 and old_minor < 12:
+        # 1.11 -> 1.12: exam dates from a calendar can be ignored
+        data.setdefault("kalender_ignoriert", {})
     return data
 
 
@@ -151,6 +154,8 @@ class ConfigStore:
         self.arbeit_aufgaben: dict[str, list[str]] = {}
         # Planned time of the simulation that was already sent, per exam
         self.simulation_gesendet: dict[str, str] = {}
+        # Calendar events the user does not want suggested: ID and day, per child
+        self.kalender_ignoriert: dict[str, dict[str, str]] = {}
         self.aufgaben_dateien: set[str] = set()
 
     async def async_load(self) -> None:
@@ -171,6 +176,10 @@ class ConfigStore:
             for arbeit_id, wert in data.get("arbeiten", {}).items()
             if wert.get("simulation_gesendet")
         }
+        self.kalender_ignoriert = {
+            kind_id: dict(wert)
+            for kind_id, wert in data.get("kalender_ignoriert", {}).items()
+        }
         self.aufgaben_dateien = set(data.get("aufgaben_dateien", []))
 
     def zustand(self, kind_id: str) -> KindZustand:
@@ -187,10 +196,13 @@ class ConfigStore:
         ) - arbeiten
         for kind_id in alte_kinder:
             del self.kinder[kind_id]
+        alte_ignorierte = self.kalender_ignoriert.keys() - kinder
+        for kind_id in alte_ignorierte:
+            del self.kalender_ignoriert[kind_id]
         for arbeit_id in alte_arbeiten:
             self.arbeit_aufgaben.pop(arbeit_id, None)
             self.simulation_gesendet.pop(arbeit_id, None)
-        return bool(alte_kinder or alte_arbeiten)
+        return bool(alte_kinder or alte_arbeiten or alte_ignorierte)
 
     def _data(self) -> dict[str, Any]:
         return {
@@ -201,6 +213,11 @@ class ConfigStore:
                     "simulation_gesendet": self.simulation_gesendet.get(k),
                 }
                 for k in self.arbeit_aufgaben.keys() | self.simulation_gesendet.keys()
+            },
+            "kalender_ignoriert": {
+                kind_id: dict(wert)
+                for kind_id, wert in self.kalender_ignoriert.items()
+                if wert
             },
             "aufgaben_dateien": sorted(self.aufgaben_dateien),
         }

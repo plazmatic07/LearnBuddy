@@ -106,6 +106,19 @@
                 "notify_service": "Name einer klassischen Notify-Aktion, zum Beispiel notify.whatsapp.",
                 "notify_target": "Empfänger, die als target übergeben werden, zum Beispiel Telefonnummer oder Chat-ID."
               }
+            },
+            "kalender": {
+              "name": "Prüfungskalender",
+              "description": "Optional. LearnBuddy liest die Termine aus einem Kalender und schlägt sie in der Übersicht des Panels zum Eintragen vor.",
+              "data": {
+                "kalender_aktiv": "Prüfungskalender nutzen",
+                "kalender_entity": "Kalender",
+                "kalender_um": "Täglich prüfen um"
+              },
+              "data_description": {
+                "kalender_entity": "Der Kalender mit den Prüfungsterminen dieses Kindes, zum Beispiel aus WebUntis. Alle seine Termine werden vorgeschlagen; nimm deshalb nicht den Stundenplan.",
+                "kalender_um": "Zu dieser Uhrzeit liest LearnBuddy den Kalender einmal am Tag. Im Panel lässt er sich jederzeit von Hand prüfen."
+              }
             }
           }
         },
@@ -148,6 +161,19 @@
                 "notify_service": "Name einer klassischen Notify-Aktion, zum Beispiel notify.whatsapp.",
                 "notify_target": "Empfänger, die als target übergeben werden, zum Beispiel Telefonnummer oder Chat-ID."
               }
+            },
+            "kalender": {
+              "name": "Prüfungskalender",
+              "description": "Optional. LearnBuddy liest die Termine aus einem Kalender und schlägt sie in der Übersicht des Panels zum Eintragen vor.",
+              "data": {
+                "kalender_aktiv": "Prüfungskalender nutzen",
+                "kalender_entity": "Kalender",
+                "kalender_um": "Täglich prüfen um"
+              },
+              "data_description": {
+                "kalender_entity": "Der Kalender mit den Prüfungsterminen dieses Kindes, zum Beispiel aus WebUntis. Alle seine Termine werden vorgeschlagen; nimm deshalb nicht den Stundenplan.",
+                "kalender_um": "Zu dieser Uhrzeit liest LearnBuddy den Kalender einmal am Tag. Im Panel lässt er sich jederzeit von Hand prüfen."
+              }
             }
           }
         }
@@ -158,7 +184,8 @@
         "notify_genau_eins": "Bitte entweder eine Notify-Entität oder eine klassische Notify-Aktion angeben.",
         "notify_service_ungueltig": "Das ist kein gültiger Name einer Notify-Aktion.",
         "fenster_ungueltig": "Das Ende muss nach dem Beginn liegen.",
-        "bild_aktion_ungueltig": "Das sind keine gültigen Aktionen."
+        "bild_aktion_ungueltig": "Das sind keine gültigen Aktionen.",
+        "kalender_fehlt": "Bitte einen Kalender auswählen oder „Prüfungskalender nutzen“ ausschalten."
       },
       "abort": {
         "reconfigure_successful": "Das Kind wurde aktualisiert."

@@ -45,6 +45,11 @@ CONF_NOTIFY_TARGET: Final = "notify_target"
 CONF_NOTIFY_DATA: Final = "notify_data"
 CONF_BILD_AKTION: Final = "bild_aktion"
 CONF_ABSENDER_KENNUNG: Final = "absender_kennung"
+CONF_KALENDER_AKTIV: Final = "kalender_aktiv"
+CONF_KALENDER_ENTITY: Final = "kalender_entity"
+CONF_KALENDER_UM: Final = "kalender_um"
+# Calendar event an exam was created from
+CONF_KALENDER_UID: Final = "kalender_uid"
 CONF_WERKTAG_VON: Final = "werktag_von"
 CONF_WERKTAG_BIS: Final = "werktag_bis"
 CONF_WOCHENENDE_AKTIV: Final = "wochenende_aktiv"
@@ -75,6 +80,9 @@ CONF_ERSTELLT: Final = "erstellt"
 CONF_GEAENDERT: Final = "geaendert"
 
 DEFAULT_TIMEOUT_MINUTEN: Final = 60
+DEFAULT_KALENDER_UM: Final = "20:00:00"
+# How far ahead exam dates are read from a calendar
+KALENDER_TAGE_VORAUS: Final = 120
 DEFAULT_EINGANG_ABSENDER_FELD: Final = "sender"
 DEFAULT_EINGANG_TEXT_FELD: Final = "text"
 # Events fired by other integrations for incoming messages
@@ -160,7 +168,7 @@ ATTR_BESCHREIBUNG: Final = "beschreibung"
 ATTR_BIS: Final = "bis"
 
 STORAGE_VERSION: Final = 1
-STORAGE_MINOR_VERSION: Final = 11
+STORAGE_MINOR_VERSION: Final = 12
 
 # Most extra questions a child can ask for at once
 MAX_ZUSATZAUFGABEN: Final = 20

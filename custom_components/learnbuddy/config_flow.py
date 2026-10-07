@@ -59,6 +59,10 @@ from .const import (
     CONF_FACH_ID,
     CONF_GEAENDERT,
     CONF_INTENSIVIERUNG,
+    CONF_KALENDER_AKTIV,
+    CONF_KALENDER_ENTITY,
+    CONF_KALENDER_UID,
+    CONF_KALENDER_UM,
     CONF_KI_ENTITY,
     CONF_KIND_ID,
     CONF_KLASSENSTUFE,
@@ -85,6 +89,7 @@ from .const import (
     CONF_WOCHENENDE_VON,
     CONF_ZIELSPRACHE,
     DEFAULT_ABFRAGEN_PRO_TAG,
+    DEFAULT_KALENDER_UM,
     DEFAULT_SIMULATION_ANZAHL,
     DEFAULT_START_TAGE_VORHER,
     DEFAULT_TIMEOUT_MINUTEN,
@@ -110,6 +115,7 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigSubentry
 
 NOTIFY_DOMAIN = "notify"
+CALENDAR_DOMAIN = "calendar"
 # Kinds of subjects offered in the UI; each maps to a task type
 FACHART_FREMDSPRACHE = "fremdsprache"
 FACHART_MATHE = "mathe"
@@ -211,9 +217,26 @@ _KLASSISCH_SCHEMA = vol.Schema(
     }
 )
 
+# Optional: a calendar with the exam dates of the child
+ABSCHNITT_KALENDER = "kalender"
+_KALENDER_FELDER = (CONF_KALENDER_AKTIV, CONF_KALENDER_ENTITY, CONF_KALENDER_UM)
+_KALENDER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_KALENDER_AKTIV, default=False): BooleanSelector(),
+        vol.Optional(CONF_KALENDER_ENTITY): EntitySelector(
+            EntitySelectorConfig(domain=CALENDAR_DOMAIN)
+        ),
+        vol.Required(CONF_KALENDER_UM, default=DEFAULT_KALENDER_UM): TimeSelector(),
+    }
+)
+_ABSCHNITTE: dict[str, tuple[str, ...]] = {
+    ABSCHNITT_KLASSISCH: _KLASSISCH_FELDER,
+    ABSCHNITT_KALENDER: _KALENDER_FELDER,
+}
+
 
 def _kind_schema(werte: Mapping[str, Any]) -> vol.Schema:
-    """Return the child form; the classic action is open only when it is used."""
+    """Return the child form; optional parts are open only when they are used."""
     felder: dict[Any, Any] = {}
     for feld, selector in KIND_SCHEMA.schema.items():
         felder[feld] = selector
@@ -223,22 +246,26 @@ def _kind_schema(werte: Mapping[str, Any]) -> vol.Schema:
                 _KLASSISCH_SCHEMA,
                 {"collapsed": not werte.get(CONF_NOTIFY_SERVICE)},
             )
+    felder[vol.Required(ABSCHNITT_KALENDER)] = section(
+        _KALENDER_SCHEMA, {"collapsed": not werte.get(CONF_KALENDER_AKTIV)}
+    )
     return vol.Schema(felder)
 
 
 def _kind_vorgaben(werte: Mapping[str, Any]) -> dict[str, Any]:
-    """Move the stored flat values of the classic action into its section."""
-    vorgaben = {k: v for k, v in werte.items() if k not in _KLASSISCH_FELDER}
-    vorgaben[ABSCHNITT_KLASSISCH] = {
-        k: werte[k] for k in _KLASSISCH_FELDER if werte.get(k) is not None
-    }
+    """Move the stored flat values of the sections into them."""
+    in_abschnitten = {feld for felder in _ABSCHNITTE.values() for feld in felder}
+    vorgaben = {k: v for k, v in werte.items() if k not in in_abschnitten}
+    for abschnitt, felder in _ABSCHNITTE.items():
+        vorgaben[abschnitt] = {k: werte[k] for k in felder if werte.get(k) is not None}
     return vorgaben
 
 
 def _kind_eingabe(eingabe: Mapping[str, Any]) -> dict[str, Any]:
-    """Flatten the form input; subentries store the classic action flat."""
-    daten = {k: v for k, v in eingabe.items() if k != ABSCHNITT_KLASSISCH}
-    daten.update(eingabe.get(ABSCHNITT_KLASSISCH) or {})
+    """Flatten the form input; subentries store the values of sections flat."""
+    daten = {k: v for k, v in eingabe.items() if k not in _ABSCHNITTE}
+    for abschnitt in _ABSCHNITTE:
+        daten.update(eingabe.get(abschnitt) or {})
     return daten
 
 
@@ -302,6 +329,14 @@ def _pruefe_kind(
 
     if CONF_ABSENDER_KENNUNG in daten:
         daten[CONF_ABSENDER_KENNUNG] = daten[CONF_ABSENDER_KENNUNG].strip()
+
+    daten[CONF_KALENDER_AKTIV] = bool(daten.get(CONF_KALENDER_AKTIV))
+    daten.setdefault(CONF_KALENDER_UM, DEFAULT_KALENDER_UM)
+    if not daten.get(CONF_KALENDER_ENTITY):
+        daten.pop(CONF_KALENDER_ENTITY, None)
+        if daten[CONF_KALENDER_AKTIV]:
+            # Shown at the top: the field may sit in the folded section
+            fehler["base"] = "kalender_fehlt"
 
     if not daten.get(CONF_BILD_AKTION):
         daten.pop(CONF_BILD_AKTION, None)
@@ -738,6 +773,8 @@ class ArbeitSubentryFlow(ConfigSubentryFlow):
             if not fehler:
                 daten[CONF_ERSTELLT] = subentry.data.get(CONF_ERSTELLT, _jetzt_iso())
                 daten[CONF_GEAENDERT] = _jetzt_iso()
+                # The calendar event the exam came from is not part of the form
+                daten[CONF_KALENDER_UID] = subentry.data.get(CONF_KALENDER_UID)
                 return self.async_update_and_abort(
                     self._get_entry(),
                     subentry,

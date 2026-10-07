@@ -9,6 +9,8 @@ from homeassistant.components.diagnostics import async_redact_data
 from .const import (
     CONF_ABSENDER_KENNUNG,
     CONF_BILD_AKTION,
+    CONF_KALENDER_ENTITY,
+    CONF_KALENDER_UID,
     CONF_NAME,
     CONF_NOTIFY_DATA,
     CONF_NOTIFY_ENTITY,
@@ -31,6 +33,8 @@ TO_REDACT = {
     CONF_NOTIFY_TARGET,
     CONF_NOTIFY_DATA,
     CONF_BILD_AKTION,
+    CONF_KALENDER_ENTITY,
+    CONF_KALENDER_UID,
     CONF_THEMA,
     "title",
 }

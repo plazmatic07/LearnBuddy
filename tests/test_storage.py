@@ -53,7 +53,7 @@ async def test_config_store_roundtrip(
 
     gespeichert = hass_storage["learnbuddy.config"]
     assert gespeichert["version"] == 1
-    assert gespeichert["minor_version"] == 11
+    assert gespeichert["minor_version"] == 12
     assert gespeichert["data"]["kinder"]["k1"]["aktiv"] is False
 
     neu = ConfigStore(hass)
@@ -102,7 +102,7 @@ async def test_config_store_migration_from_1_0(
     await store.async_load()
     assert store.kinder["k1"].aktiv is False
     assert store.arbeit_aufgaben == {}
-    assert hass_storage["learnbuddy.config"]["minor_version"] == 11
+    assert hass_storage["learnbuddy.config"]["minor_version"] == 12
     assert hass_storage["learnbuddy.config"]["data"]["aufgaben_dateien"] == []
 
 
@@ -114,8 +114,16 @@ def test_migration_rejects_future_major() -> None:
 
 
 def test_migration_is_noop_for_current_version() -> None:
-    config = {"kinder": {}, "arbeiten": {}, "aufgaben_dateien": ["x"]}
-    assert migrate_config(1, 11, dict(config)) == config
+    config = {
+        "kinder": {},
+        "arbeiten": {},
+        "aufgaben_dateien": ["x"],
+        "kalender_ignoriert": {"k": {"uid": "2026-11-03"}},
+    }
+    assert migrate_config(1, 12, dict(config)) == config
+    # 1.11 -> 1.12 adds the ignored calendar dates
+    alt = {"kinder": {}, "arbeiten": {}, "aufgaben_dateien": []}
+    assert migrate_config(1, 11, dict(alt)) == {**alt, "kalender_ignoriert": {}}
     aufgaben = {
         "lektionen": ["B"],
         "aufgaben": [{"id": "a", "lektion": "A", "statistik": {"de>en": {"box": 4}}}],
@@ -179,7 +187,7 @@ async def test_task_store_migration_from_1_0(
     await store.async_load()
     assert len(store.aufgaben) == 1
     gespeichert = hass_storage["learnbuddy.k1_f1"]
-    assert gespeichert["minor_version"] == 11
+    assert gespeichert["minor_version"] == 12
     assert gespeichert["data"]["aufgaben"][0]["typ"] == "vokabel"
 
 
@@ -206,7 +214,7 @@ async def test_task_store_migration_from_1_1(
     await store.async_load()
     aufgabe = next(iter(store.aufgaben.values()))
     assert aufgabe.statistik["de>en"].box == box
-    assert hass_storage["learnbuddy.k1_f1"]["minor_version"] == 11
+    assert hass_storage["learnbuddy.k1_f1"]["minor_version"] == 12
 
 
 async def test_remove_task_file(
@@ -240,7 +248,7 @@ async def test_task_store_migration_from_1_2(
     await store.async_load()
     assert store.lektionen == ["Unit 1", "Unit 3"]
     gespeichert = hass_storage["learnbuddy.k1_f1"]
-    assert gespeichert["minor_version"] == 11
+    assert gespeichert["minor_version"] == 12
     assert gespeichert["data"]["lektionen"] == ["Unit 1", "Unit 3"]
 
 
@@ -296,7 +304,7 @@ async def test_task_store_migration_from_1_4(
     await store.async_load()
     assert next(iter(store.aufgaben.values())).seite is None
     gespeichert = hass_storage["learnbuddy.k1_f1"]
-    assert gespeichert["minor_version"] == 11
+    assert gespeichert["minor_version"] == 12
     assert gespeichert["data"]["aufgaben"][0]["seite"] is None
 
 

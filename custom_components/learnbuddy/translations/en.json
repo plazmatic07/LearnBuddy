@@ -106,6 +106,19 @@
                 "notify_service": "Name of a legacy notify action, for example notify.whatsapp.",
                 "notify_target": "Recipients passed as target, for example a phone number or chat ID."
               }
+            },
+            "kalender": {
+              "name": "Exam calendar",
+              "description": "Optional. LearnBuddy reads the dates from a calendar and suggests them in the overview of the panel.",
+              "data": {
+                "kalender_aktiv": "Use an exam calendar",
+                "kalender_entity": "Calendar",
+                "kalender_um": "Check daily at"
+              },
+              "data_description": {
+                "kalender_entity": "The calendar with the exam dates of this child, for example from WebUntis. All of its events are suggested, so do not pick the timetable.",
+                "kalender_um": "LearnBuddy reads the calendar once a day at this time. In the panel it can be checked by hand at any time."
+              }
             }
           }
         },
@@ -148,6 +161,19 @@
                 "notify_service": "Name of a legacy notify action, for example notify.whatsapp.",
                 "notify_target": "Recipients passed as target, for example a phone number or chat ID."
               }
+            },
+            "kalender": {
+              "name": "Exam calendar",
+              "description": "Optional. LearnBuddy reads the dates from a calendar and suggests them in the overview of the panel.",
+              "data": {
+                "kalender_aktiv": "Use an exam calendar",
+                "kalender_entity": "Calendar",
+                "kalender_um": "Check daily at"
+              },
+              "data_description": {
+                "kalender_entity": "The calendar with the exam dates of this child, for example from WebUntis. All of its events are suggested, so do not pick the timetable.",
+                "kalender_um": "LearnBuddy reads the calendar once a day at this time. In the panel it can be checked by hand at any time."
+              }
             }
           }
         }
@@ -158,7 +184,8 @@
         "notify_genau_eins": "Select either a notify entity or a legacy notify action.",
         "notify_service_ungueltig": "This is not a valid notify action name.",
         "fenster_ungueltig": "The end must be after the start.",
-        "bild_aktion_ungueltig": "These are not valid actions."
+        "bild_aktion_ungueltig": "These are not valid actions.",
+        "kalender_fehlt": "Please select a calendar or switch off \"Use an exam calendar\"."
       },
       "abort": {
         "reconfigure_successful": "The child was updated."

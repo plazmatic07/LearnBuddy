@@ -62,6 +62,7 @@ ARBEIT_SCHEMA = vol.Schema(
         vol.Optional("antwortfrist_minuten"): vol.Any(None, vol.Coerce(int)),
         vol.Optional("simulation_um"): vol.Any(None, str),
         vol.Optional("simulation_anzahl"): vol.Any(None, vol.Coerce(int)),
+        vol.Optional("kalender_uid"): vol.Any(None, str),
     }
 )
 
@@ -631,6 +632,80 @@ def ws_exams_delete(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
 
 
 @websocket_command(
+    {vol.Required("type"): "learnbuddy/calendar/refresh", vol.Required("kind_id"): str}
+)
+@require_admin
+@async_response
+async def ws_calendar_refresh(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Read the exam calendar of a child right now."""
+    verwaltung = _verwaltung(hass)
+    if verwaltung is None:
+        connection.send_error(msg["id"], "not_loaded", "nicht_geladen")
+        return
+    try:
+        ergebnis = await verwaltung.kalender_pruefen(msg["kind_id"])
+    except VerwaltungError as err:
+        connection.send_error(msg["id"], err.code, err.schluessel)
+        return
+    connection.send_result(msg["id"], ergebnis)
+
+
+@websocket_command(
+    {
+        vol.Required("type"): "learnbuddy/calendar/ignore",
+        vol.Required("kind_id"): str,
+        vol.Required("uid"): str,
+    }
+)
+@require_admin
+@_befehl
+def ws_calendar_ignore(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
+    """Stop suggesting an exam date of the calendar."""
+    verwaltung.kalender_ignorieren(msg["kind_id"], msg["uid"])
+    return {}
+
+
+@websocket_command(
+    {vol.Required("type"): "learnbuddy/calendar/restore", vol.Required("kind_id"): str}
+)
+@require_admin
+@_befehl
+def ws_calendar_restore(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
+    """Suggest all ignored exam dates of a child again."""
+    verwaltung.kalender_wiederherstellen(msg["kind_id"])
+    return {}
+
+
+@websocket_command(
+    {
+        vol.Required("type"): "learnbuddy/subjects/create",
+        vol.Required("kind_id"): str,
+        vol.Required("typ"): str,
+        vol.Optional("name"): vol.Any(None, str),
+        vol.Optional("sprache"): vol.Any(None, str),
+    }
+)
+@require_admin
+@async_response
+async def ws_subjects_create(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Add a subject of a child."""
+    verwaltung = _verwaltung(hass)
+    if verwaltung is None:
+        connection.send_error(msg["id"], "not_loaded", "nicht_geladen")
+        return
+    try:
+        fach_id = await verwaltung.fach_anlegen(msg["kind_id"], msg)
+    except VerwaltungError as err:
+        connection.send_error(msg["id"], err.code, err.schluessel)
+        return
+    connection.send_result(msg["id"], {"fach_id": fach_id})
+
+
+@websocket_command(
     {
         vol.Required("type"): "learnbuddy/sender/assign",
         vol.Required("kind_id"): str,
@@ -688,5 +763,9 @@ def async_setup_websocket_api(hass: HomeAssistant) -> None:
         ws_exams_simulate_stop,
         ws_sender_assign,
         ws_sender_dismiss,
+        ws_calendar_refresh,
+        ws_calendar_ignore,
+        ws_calendar_restore,
+        ws_subjects_create,
     ):
         async_register_command(hass, befehl)

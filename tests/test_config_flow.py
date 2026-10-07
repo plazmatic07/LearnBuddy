@@ -30,6 +30,7 @@ KIND_EINGABE: dict[str, Any] = {
     "bundesland": "rp",
     "notify_entity": "notify.lena",
     "klassisch": {},
+    "kalender": {},
     "absender_kennung": " 12345 ",
     "werktag_von": "14:00:00",
     "werktag_bis": "18:00:00",
@@ -38,12 +39,14 @@ KIND_EINGABE: dict[str, Any] = {
     "wochenende_bis": "12:00:00",
 }
 _KLASSISCH = ("notify_service", "notify_target", "notify_data")
+_KALENDER = ("kalender_aktiv", "kalender_entity", "kalender_um")
 
 
 def _formular(daten: dict[str, Any]) -> dict[str, Any]:
     """Shape stored child data like the form sends it."""
-    return {k: v for k, v in daten.items() if k not in _KLASSISCH} | {
-        "klassisch": {k: daten[k] for k in _KLASSISCH if k in daten}
+    return {k: v for k, v in daten.items() if k not in _KLASSISCH + _KALENDER} | {
+        "klassisch": {k: daten[k] for k in _KLASSISCH if k in daten},
+        "kalender": {k: daten[k] for k in _KALENDER if k in daten},
     }
 
 
@@ -749,6 +752,7 @@ async def test_kind_wechsel_zur_entitaet_raeumt_auf(
         **{k: v for k, v in KIND_DATEN.items() if not k.startswith("notify_")},
         "notify_entity": "notify.max",
         "klassisch": {"notify_target": ["491701234567"], "notify_data": {"a": 1}},
+        "kalender": {},
     }
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], eingabe
@@ -757,3 +761,64 @@ async def test_kind_wechsel_zur_entitaet_raeumt_auf(
     daten = setup_entry.subentries[KIND_ID].data
     assert daten["notify_entity"] == "notify.max"
     assert not {"notify_service", "notify_target", "notify_data"} & set(daten)
+
+
+async def test_kind_pruefungskalender(
+    hass: HomeAssistant, setup_entry: MockConfigEntry
+) -> None:
+    result = await _subentry_flow(hass, setup_entry, "kind")
+    abschnitt = result["data_schema"].schema["kalender"]
+    assert abschnitt.options == {"collapsed": True}
+
+    # Switched on without a calendar
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {**KIND_EINGABE, "kalender": {"kalender_aktiv": True}}
+    )
+    assert result["errors"] == {"base": "kalender_fehlt"}
+    # Open now, because it is in use
+    assert result["data_schema"].schema["kalender"].options == {"collapsed": False}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            **KIND_EINGABE,
+            "kalender": {
+                "kalender_aktiv": True,
+                "kalender_entity": "calendar.pruefungen",
+                "kalender_um": "19:30:00",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    daten = result["data"]
+    assert daten["kalender_aktiv"] is True
+    assert daten["kalender_entity"] == "calendar.pruefungen"
+    assert daten["kalender_um"] == "19:30:00"
+    lena = next(k for k in setup_entry.runtime_data.kinder.values() if k.name == "Lena")
+    assert lena.kalender_entity == "calendar.pruefungen"
+    assert lena.kalender_um.isoformat() == "19:30:00"
+
+    # Without the switch the calendar is kept but not used
+    assert daten.keys() >= {"kalender_aktiv", "kalender_um"}
+    subentry = next(s for s in setup_entry.subentries.values() if s.title == "Lena")
+    result = await hass.config_entries.subentries.async_init(
+        (setup_entry.entry_id, "kind"),
+        context={"source": "reconfigure", "subentry_id": subentry.subentry_id},
+    )
+    assert result["data_schema"].schema["kalender"].options == {"collapsed": False}
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            **KIND_EINGABE,
+            "kalender": {
+                "kalender_aktiv": False,
+                "kalender_entity": "calendar.pruefungen",
+                "kalender_um": "19:30:00",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    lena = next(k for k in setup_entry.runtime_data.kinder.values() if k.name == "Lena")
+    assert lena.kalender_entity is None

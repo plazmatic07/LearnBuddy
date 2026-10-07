@@ -20,6 +20,10 @@ from .const import (
     CONF_DATUM,
     CONF_FACH_ID,
     CONF_INTENSIVIERUNG,
+    CONF_KALENDER_AKTIV,
+    CONF_KALENDER_ENTITY,
+    CONF_KALENDER_UID,
+    CONF_KALENDER_UM,
     CONF_KI_ENTITY,
     CONF_KIND_ID,
     CONF_KLASSENSTUFE,
@@ -43,6 +47,7 @@ from .const import (
     CONF_WOCHENENDE_BIS,
     CONF_WOCHENENDE_VON,
     DEFAULT_ABFRAGEN_PRO_TAG,
+    DEFAULT_KALENDER_UM,
     DEFAULT_SIMULATION_ANZAHL,
     DEFAULT_START_TAGE_VORHER,
     DEFAULT_WERKTAG_BIS,
@@ -62,6 +67,7 @@ MIN_SCHWIERIGKEIT = 1
 MAX_SCHWIERIGKEIT = 5
 
 _WERKTAG_VON = time.fromisoformat(DEFAULT_WERKTAG_VON)
+_KALENDER_UM = time.fromisoformat(DEFAULT_KALENDER_UM)
 _WERKTAG_BIS = time.fromisoformat(DEFAULT_WERKTAG_BIS)
 _WOCHENENDE_VON = time.fromisoformat(DEFAULT_WOCHENENDE_VON)
 _WOCHENENDE_BIS = time.fromisoformat(DEFAULT_WOCHENENDE_BIS)
@@ -500,6 +506,9 @@ class Kind:
     # Actions that send an image, for messengers without built-in support
     bild_aktion: list[dict[str, Any]] | None = None
     absender_kennung: str | None = None
+    # Calendar with the exam dates of the child, None if it is not used
+    kalender_entity: str | None = None
+    kalender_um: time = _KALENDER_UM
     werktag_von: time = _WERKTAG_VON
     werktag_bis: time = _WERKTAG_BIS
     wochenende_aktiv: bool = True
@@ -524,6 +533,14 @@ class Kind:
             notify_data=data.get(CONF_NOTIFY_DATA) or None,
             bild_aktion=list(data.get(CONF_BILD_AKTION) or []) or None,
             absender_kennung=data.get(CONF_ABSENDER_KENNUNG) or None,
+            kalender_entity=(
+                (data.get(CONF_KALENDER_ENTITY) or None)
+                if data.get(CONF_KALENDER_AKTIV)
+                else None
+            ),
+            kalender_um=time.fromisoformat(
+                data.get(CONF_KALENDER_UM) or DEFAULT_KALENDER_UM
+            ),
             werktag_von=time.fromisoformat(
                 data.get(CONF_WERKTAG_VON, DEFAULT_WERKTAG_VON)
             ),
@@ -603,6 +620,8 @@ class Arbeit:
     # When a simulated exam is sent to the child on its own
     simulation_um: datetime | None = None
     simulation_anzahl: int = DEFAULT_SIMULATION_ANZAHL
+    # Calendar event this exam was created from
+    kalender_uid: str | None = None
 
     @classmethod
     def from_subentry(cls, subentry: ConfigSubentry) -> Self:
@@ -629,6 +648,7 @@ class Arbeit:
             simulation_anzahl=int(
                 data.get(CONF_SIMULATION_ANZAHL) or DEFAULT_SIMULATION_ANZAHL
             ),
+            kalender_uid=data.get(CONF_KALENDER_UID) or None,
         )
 
 

@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from dataclasses import replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import StrEnum
 from random import Random
 import time
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -20,6 +22,7 @@ from homeassistant.helpers.event import (
     async_track_time_change,
 )
 from homeassistant.util import dt as dt_util
+import voluptuous as vol
 
 from .ai import KiBewerter
 from .bilder import BildAblage
@@ -30,6 +33,7 @@ from .const import (
     CONF_FACH_ID,
     CONF_GEAENDERT,
     CONF_KI_ENTITY,
+    CONF_NAME,
     CONF_SPRACHE,
     CONF_TIMEOUT_MINUTEN,
     DEFAULT_TIMEOUT_MINUTEN,
@@ -38,6 +42,7 @@ from .const import (
     EVENT_ANSWER_EVALUATED,
     EVENT_QUESTION_SENT,
     EVENT_SIMULATION_FINISHED,
+    KALENDER_TAGE_VORAUS,
     LOGGER,
     MAX_ZUSATZAUFGABEN,
     SENDE_WIEDERHOLUNGEN,
@@ -50,6 +55,7 @@ from .const import (
     signal_kind_update,
 )
 from .evaluation import bewerte_vokabel
+from .kalender import Termin, lies_termine
 from .mathe import bewerte_mathe
 from .messaging import Messenger
 from .models import (
@@ -106,6 +112,18 @@ SIMULATION = "simulation"
 # A planned simulation that was missed is still sent within this time
 SIMULATION_NACHHOLEN = timedelta(hours=6)
 KI_PRUEFUNG_NACH_START = timedelta(minutes=5)
+# Calendar integrations need a moment after a start as well
+KALENDER_NACH_START = timedelta(minutes=2)
+
+
+@dataclass(slots=True)
+class KalenderStand:
+    """What was last read from the exam calendar of a child."""
+
+    termine: list[Termin] = field(default_factory=list)
+    geprueft_um: datetime | None = None
+    # The last attempt to read the calendar failed
+    fehler: bool = False
 
 
 class FrageStatus(StrEnum):
@@ -158,6 +176,9 @@ class LearnBuddyManager:
         self._letzte_antwort: dict[str, tuple[str, float, str]] = {}
         # Senders nobody is assigned to, kept in memory only: source and time
         self._unbekannte_absender: dict[str, tuple[str, datetime]] = {}
+        # Exam dates read from calendars, in memory only
+        self._kalender: dict[str, KalenderStand] = {}
+        self._kalender_uhren: list[CALLBACK_TYPE] = []
         self._rng = Random()  # noqa: S311 - not used for cryptography
         # Timers of planned simulations, per exam
         self._sim_timer: dict[str, CALLBACK_TYPE] = {}
@@ -268,6 +289,7 @@ class LearnBuddyManager:
         self._tagesuhr = async_track_time_change(
             self.hass, self._neuer_tag, hour=0, minute=0, second=10
         )
+        self._starte_kalender()
 
     @callback
     def _neuer_tag(self, _jetzt: datetime) -> None:
@@ -291,6 +313,9 @@ class LearnBuddyManager:
         if self._ki_pruefung is not None:
             self._ki_pruefung()
             self._ki_pruefung = None
+        for abmelden in self._kalender_uhren:
+            abmelden()
+        self._kalender_uhren.clear()
         self.messenger.async_cancel()
 
     async def async_flush(self) -> None:
@@ -420,6 +445,124 @@ class LearnBuddyManager:
             ):
                 return kind
         return None
+
+    # ------------------------------------------------------------------
+    # Exam calendar
+    # ------------------------------------------------------------------
+
+    @callback
+    def _starte_kalender(self) -> None:
+        """Read the exam calendars once a day and shortly after the start."""
+        mit_kalender = [k for k in self.kinder.values() if k.kalender_entity]
+        for kind in mit_kalender:
+
+            @callback
+            def _uhr(_jetzt: datetime, kind_id: str = kind.id) -> None:
+                self.hass.async_create_task(
+                    self.async_kalender_pruefen(kind_id), "learnbuddy_kalender"
+                )
+
+            self._kalender_uhren.append(
+                async_track_time_change(
+                    self.hass,
+                    _uhr,
+                    hour=kind.kalender_um.hour,
+                    minute=kind.kalender_um.minute,
+                    second=0,
+                )
+            )
+        if not mit_kalender:
+            return
+
+        async def _nach_start(_jetzt: datetime) -> None:
+            for kind in mit_kalender:
+                await self.async_kalender_pruefen(kind.id)
+
+        self._kalender_uhren.append(
+            async_call_later(self.hass, KALENDER_NACH_START, _nach_start)
+        )
+
+    def kalender_stand(self, kind_id: str) -> KalenderStand | None:
+        """Return what was read from the calendar, None if the child has none."""
+        if not self.kinder[kind_id].kalender_entity:
+            return None
+        return self._kalender.setdefault(kind_id, KalenderStand())
+
+    async def async_kalender_pruefen(self, kind_id: str) -> bool:
+        """Read the upcoming exam dates of a child from its calendar.
+
+        The events are fetched with the action of the calendar integration.
+        If that fails, the dates read last stay. Nothing is logged: the texts
+        of the events are private.
+        """
+        kind = self.kinder.get(kind_id)
+        if kind is None or not kind.kalender_entity:
+            return False
+        stand = self._kalender.setdefault(kind_id, KalenderStand())
+        heute = dt_util.start_of_local_day()
+        stand.geprueft_um = dt_util.utcnow()
+        try:
+            antwort = await self.hass.services.async_call(
+                "calendar",
+                "get_events",
+                {
+                    "entity_id": kind.kalender_entity,
+                    "start_date_time": heute,
+                    "end_date_time": heute + timedelta(days=KALENDER_TAGE_VORAUS),
+                },
+                blocking=True,
+                return_response=True,
+            )
+        except HomeAssistantError, vol.Invalid:
+            stand.fehler = True
+            return False
+        eintrag = (antwort or {}).get(kind.kalender_entity)
+        rohe = eintrag.get("events") if isinstance(eintrag, dict) else None
+        if not isinstance(rohe, list):
+            stand.fehler = True
+            return False
+        stand.termine = lies_termine(
+            [roh for roh in rohe if isinstance(roh, dict)],
+            dt_util.get_default_time_zone(),
+            heute.date(),
+        )
+        stand.fehler = False
+        # Ignored dates of the past are of no use any more
+        ignoriert = self.config_store.kalender_ignoriert.get(kind_id, {})
+        vorbei = [
+            uid for uid, tag in ignoriert.items() if tag < heute.date().isoformat()
+        ]
+        for uid in vorbei:
+            del ignoriert[uid]
+        if vorbei:
+            self.config_store.async_schedule_save()
+        return True
+
+    async def async_fach_anlegen(self, kind_id: str, daten: dict[str, Any]) -> str:
+        """Add a subject without reloading the entry, so the panel stays open."""
+        kind_subentry = self.entry.subentries[kind_id]
+        neu = ConfigSubentry(
+            data=MappingProxyType(daten),
+            subentry_type=SUBENTRY_FACH,
+            title=f"{daten[CONF_NAME]} ({kind_subentry.title})",
+            unique_id=None,
+        )
+        store = TaskStore(self.hass, kind_id, neu.subentry_id)
+        await store.async_load()
+        # The update listener may run during the call or later; in both cases
+        # it must not see a difference that needs a reload
+        self._ohne_reload = True
+        try:
+            self.hass.config_entries.async_add_subentry(self.entry, neu)
+        finally:
+            self._ohne_reload = False
+        self.faecher[neu.subentry_id] = Fach.from_subentry(neu)
+        self.task_stores[neu.subentry_id] = store
+        self.config_store.aufgaben_dateien.add(store.key)
+        self.config_store.async_schedule_save()
+        self._basis = self._signatur()
+        self._benachrichtige(kind_id)
+        return neu.subentry_id
 
     @callback
     def merke_unbekannten_absender(self, absender: str, quelle: str) -> None:

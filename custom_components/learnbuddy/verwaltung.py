@@ -21,19 +21,26 @@ from .const import (
     CONF_FACH_ID,
     CONF_GEAENDERT,
     CONF_INTENSIVIERUNG,
+    CONF_KALENDER_UID,
+    CONF_KIND_ID,
     CONF_LEKTIONEN,
+    CONF_NAME,
     CONF_SIMULATION_ANZAHL,
     CONF_SIMULATION_UM,
+    CONF_SPRACHEN,
     CONF_START_TAGE_VORHER,
     CONF_THEMA,
+    CONF_TYP,
     DEFAULT_ABFRAGEN_PRO_TAG,
     DEFAULT_SIMULATION_ANZAHL,
     DEFAULT_START_TAGE_VORHER,
     MAX_TIMEOUT_MINUTEN,
+    SPRACH_CODES,
     SUBENTRY_ARBEIT,
 )
 from .evaluation import normalisiere
 from .importer import ImportZeile, parse_mathe, parse_vokabeln
+from .kalender import passendes_fach
 from .mathe import bewerte_mathe, zerlege
 from .models import (
     MAX_SCHWIERIGKEIT,
@@ -54,7 +61,7 @@ from .panel import panel_version
 from .rechnen import berechne
 from .scheduler import MAX_BOX, abfragen_am_tag, aufgaben_der_arbeit
 from .simulation import MAX_AUFGABEN as MAX_SIM_AUFGABEN
-from .texte import waehle_sprache
+from .texte import sprachname, waehle_sprache
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -492,7 +499,119 @@ class Verwaltung:
             "faecher": fach_daten,
             "arbeiten": arbeiten,
             "schwierig": schwierig[:MAX_SCHWIERIG],
+            **self._kalender(kind_id),
         }
+
+    def _kalender(self, kind_id: str) -> dict[str, Any]:
+        """Return the exam dates of the calendar that are worth suggesting."""
+        manager = self._manager
+        stand = manager.kalender_stand(kind_id)
+        if stand is None:
+            return {"kalender": None, "vorschlaege": []}
+        heute = dt_util.now().date()
+        ignoriert = manager.config_store.kalender_ignoriert.get(kind_id, {})
+        arbeiten = manager.arbeiten_von(kind_id)
+        eingetragen = {a.kalender_uid for a in arbeiten if a.kalender_uid}
+        fachnamen = {f.id: f.name for f in manager.faecher_von(kind_id)}
+        vorschlaege = []
+        for termin in stand.termine:
+            if (
+                termin.datum < heute
+                or termin.uid in ignoriert
+                or termin.uid in eingetragen
+            ):
+                continue
+            vorschlaege.append(
+                {
+                    **termin.to_dict(),
+                    # A guess, only if exactly one subject fits
+                    "fach_id": passendes_fach(termin, fachnamen),
+                    # Exams entered by hand for the same day
+                    "gleicher_tag": [
+                        f"{fachnamen[a.fach_id]}: {a.thema}"
+                        for a in arbeiten
+                        if a.datum == termin.datum
+                    ],
+                }
+            )
+        return {
+            "kalender": {
+                "geprueft_um": None
+                if stand.geprueft_um is None
+                else stand.geprueft_um.isoformat(),
+                "fehler": stand.fehler,
+                "ignoriert": len(ignoriert),
+            },
+            "vorschlaege": vorschlaege,
+        }
+
+    async def kalender_pruefen(self, kind_id: str) -> dict[str, Any]:
+        """Read the exam calendar of a child right now."""
+        if kind_id not in self._manager.kinder:
+            raise _nicht_gefunden("kind")
+        if self._manager.kalender_stand(kind_id) is None:
+            raise _ungueltig("kalender_aus")
+        return {"gelesen": await self._manager.async_kalender_pruefen(kind_id)}
+
+    def kalender_ignorieren(self, kind_id: str, uid: str) -> None:
+        """Stop suggesting an exam date of the calendar."""
+        manager = self._manager
+        if kind_id not in manager.kinder:
+            raise _nicht_gefunden("kind")
+        stand = manager.kalender_stand(kind_id)
+        termin = next(
+            (t for t in (stand.termine if stand else []) if t.uid == uid), None
+        )
+        if termin is None:
+            raise _nicht_gefunden("termin")
+        manager.config_store.kalender_ignoriert.setdefault(kind_id, {})[uid] = (
+            termin.datum.isoformat()
+        )
+        manager.config_store.async_schedule_save()
+
+    def kalender_wiederherstellen(self, kind_id: str) -> None:
+        """Suggest all ignored exam dates of a child again."""
+        manager = self._manager
+        if kind_id not in manager.kinder:
+            raise _nicht_gefunden("kind")
+        if manager.config_store.kalender_ignoriert.pop(kind_id, None):
+            manager.config_store.async_schedule_save()
+
+    async def fach_anlegen(self, kind_id: str, daten: dict[str, Any]) -> str:
+        """Add a subject from the panel; the panel stays open."""
+        manager = self._manager
+        kind = manager.kinder.get(kind_id)
+        if kind is None:
+            raise _nicht_gefunden("kind")
+        sprache_ha = manager.hass.config.language
+        typ = daten.get("typ")
+        name = str(daten.get("name") or "").strip()
+        subentry_daten: dict[str, Any] = {CONF_KIND_ID: kind_id}
+        if typ == "fremdsprache":
+            kurz = sprache_ha.split("-", maxsplit=1)[0].lower()
+            ausgang = kind.muttersprache or (kurz if kurz in SPRACH_CODES else "de")
+            ziel = daten.get("sprache")
+            if ziel not in SPRACH_CODES or ziel == ausgang:
+                raise _ungueltig("sprache_ungueltig")
+            name = name or sprachname(sprache_ha, ziel)
+            subentry_daten[CONF_TYP] = AufgabenTyp.VOKABEL.value
+            subentry_daten[CONF_SPRACHEN] = [ausgang, ziel]
+        elif typ == "mathe":
+            name = name or ("Mathe" if sprache_ha.startswith("de") else "Math")
+            subentry_daten[CONF_TYP] = AufgabenTyp.MATHE.value
+        elif typ == "sach":
+            subentry_daten[CONF_TYP] = AufgabenTyp.SACH.value
+        else:
+            raise _ungueltig("fachart_ungueltig")
+        if not name:
+            raise _ungueltig("name_leer")
+        if any(
+            f.name.casefold() == name.casefold() for f in manager.faecher_von(kind_id)
+        ):
+            raise _ungueltig("fach_vorhanden")
+        jetzt = dt_util.utcnow().isoformat()
+        subentry_daten |= {CONF_NAME: name, CONF_ERSTELLT: jetzt, CONF_GEAENDERT: jetzt}
+        return await manager.async_fach_anlegen(kind_id, subentry_daten)
 
     async def frage_stellen(self, kind_id: str, fach_id: str | None) -> None:
         """Ask a child a question right now, optionally of one subject."""
@@ -1844,6 +1963,11 @@ class Verwaltung:
             CONF_ANTWORTFRIST: frist,
             CONF_SIMULATION_UM: sim_um,
             CONF_SIMULATION_ANZAHL: sim_anzahl,
+            # The calendar event the exam came from stays when it is edited
+            CONF_KALENDER_UID: (
+                (alt.data.get(CONF_KALENDER_UID) if alt else None)
+                or (str(daten.get("kalender_uid") or "").strip() or None)
+            ),
             CONF_ERSTELLT: alt.data.get(CONF_ERSTELLT, jetzt) if alt else jetzt,
             CONF_GEAENDERT: jetzt,
         }
