@@ -82,7 +82,7 @@ python -m script.hassfest --action validate --integration-path <repo>/custom_com
 ## Offen
 
 - Fortschrittsansicht und Wochenreport (aus der SPEC).
-- Wunsch des Users (2026-10-07, für später): die aktuell offene Abfrage abbrechen können (Panel-Knopf, evtl. Aktion/Taste); zu klären: zählt sie dann als unbeantwortet oder gar nicht, bekommt das Kind eine Nachricht.
+- Wunsch des Users (2026-10-07, für später): die aktuell offene Abfrage abbrechen können (Knopf in der Übersicht des Panels, evtl. Aktion `cancel_question`). Entschieden: Die Frage zählt nicht in der Statistik (auch `gefragt` wird zurückgenommen, Lernstufe unverändert), und das Kind bekommt eine kurze Nachricht.
 - Ferien nur über manuelles Pausieren (`pause` mit `bis`).
 
 ## Icon
