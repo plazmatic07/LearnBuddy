@@ -76,9 +76,6 @@
             "schulart": "Schulart",
             "bundesland": "Bundesland",
             "notify_entity": "Notify-Entität",
-            "notify_service": "Notify-Aktion (klassisch)",
-            "notify_target": "Ziel der Notify-Aktion",
-            "notify_data": "Zusatzdaten der Notify-Aktion",
             "absender_kennung": "Absenderkennung",
             "werktag_von": "Werktags ab",
             "werktag_bis": "Werktags bis",
@@ -90,13 +87,26 @@
           "data_description": {
             "name": "Wird für die Ansprache verwendet und nie an einen KI-Dienst gesendet.",
             "klassenstufe": "Kontext für generierte Aufgaben.",
-            "notify_entity": "Messenger-Entität, über die das Kind die Fragen erhält. Entweder diese oder die klassische Aktion angeben.",
-            "notify_service": "Name einer klassischen Notify-Aktion, zum Beispiel notify.whatsapp.",
-            "notify_target": "Empfänger, die als target übergeben werden, zum Beispiel Telefonnummer oder Chat-ID.",
+            "notify_entity": "Messenger-Entität, über die das Kind die Fragen erhält. Gibt es keine, nutze stattdessen den Abschnitt „Klassische Notify-Aktion“.",
             "absender_kennung": "Telefonnummer oder Chat-ID, über die eingehende Antworten diesem Kind zugeordnet werden.",
             "werktag_von": "Fragen werden nur innerhalb dieses Zeitfensters gesendet.",
             "muttersprache": "Ausgangssprache der Vokabeln. Fremdsprachen-Fächer dieses Kindes werden zwischen dieser Sprache und der Fremdsprache abgefragt. Eine spätere Änderung wirkt nur auf neue Fächer.",
             "bild_aktion": "Optional. Nur nötig, wenn der Messenger nicht Telegram ist: Aktionen, die ein Bild verschicken, für Aufgaben mit Diagramm. Verfügbar sind die Variablen bild_url (zehn Minuten gültige Adresse), bild_pfad (Datei) und text (die Aufgabe)."
+          },
+          "sections": {
+            "klassisch": {
+              "name": "Klassische Notify-Aktion",
+              "description": "Nur ausfüllen, wenn es für deinen Messenger keine Notify-Entität gibt. Mit gewählter Notify-Entität bleibt dieser Abschnitt leer.",
+              "data": {
+                "notify_service": "Notify-Aktion (klassisch)",
+                "notify_target": "Ziel der Notify-Aktion",
+                "notify_data": "Zusatzdaten der Notify-Aktion"
+              },
+              "data_description": {
+                "notify_service": "Name einer klassischen Notify-Aktion, zum Beispiel notify.whatsapp.",
+                "notify_target": "Empfänger, die als target übergeben werden, zum Beispiel Telefonnummer oder Chat-ID."
+              }
+            }
           }
         },
         "reconfigure": {
@@ -108,9 +118,6 @@
             "schulart": "Schulart",
             "bundesland": "Bundesland",
             "notify_entity": "Notify-Entität",
-            "notify_service": "Notify-Aktion (klassisch)",
-            "notify_target": "Ziel der Notify-Aktion",
-            "notify_data": "Zusatzdaten der Notify-Aktion",
             "absender_kennung": "Absenderkennung",
             "werktag_von": "Werktags ab",
             "werktag_bis": "Werktags bis",
@@ -122,13 +129,26 @@
           "data_description": {
             "name": "Wird für die Ansprache verwendet und nie an einen KI-Dienst gesendet.",
             "klassenstufe": "Kontext für generierte Aufgaben.",
-            "notify_entity": "Messenger-Entität, über die das Kind die Fragen erhält. Entweder diese oder die klassische Aktion angeben.",
-            "notify_service": "Name einer klassischen Notify-Aktion, zum Beispiel notify.whatsapp.",
-            "notify_target": "Empfänger, die als target übergeben werden, zum Beispiel Telefonnummer oder Chat-ID.",
+            "notify_entity": "Messenger-Entität, über die das Kind die Fragen erhält. Gibt es keine, nutze stattdessen den Abschnitt „Klassische Notify-Aktion“.",
             "absender_kennung": "Telefonnummer oder Chat-ID, über die eingehende Antworten diesem Kind zugeordnet werden.",
             "werktag_von": "Fragen werden nur innerhalb dieses Zeitfensters gesendet.",
             "muttersprache": "Ausgangssprache der Vokabeln. Fremdsprachen-Fächer dieses Kindes werden zwischen dieser Sprache und der Fremdsprache abgefragt. Eine spätere Änderung wirkt nur auf neue Fächer.",
             "bild_aktion": "Optional. Nur nötig, wenn der Messenger nicht Telegram ist: Aktionen, die ein Bild verschicken, für Aufgaben mit Diagramm. Verfügbar sind die Variablen bild_url (zehn Minuten gültige Adresse), bild_pfad (Datei) und text (die Aufgabe)."
+          },
+          "sections": {
+            "klassisch": {
+              "name": "Klassische Notify-Aktion",
+              "description": "Nur ausfüllen, wenn es für deinen Messenger keine Notify-Entität gibt. Mit gewählter Notify-Entität bleibt dieser Abschnitt leer.",
+              "data": {
+                "notify_service": "Notify-Aktion (klassisch)",
+                "notify_target": "Ziel der Notify-Aktion",
+                "notify_data": "Zusatzdaten der Notify-Aktion"
+              },
+              "data_description": {
+                "notify_service": "Name einer klassischen Notify-Aktion, zum Beispiel notify.whatsapp.",
+                "notify_target": "Empfänger, die als target übergeben werden, zum Beispiel Telefonnummer oder Chat-ID."
+              }
+            }
           }
         }
       },

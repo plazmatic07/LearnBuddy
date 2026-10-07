@@ -29,6 +29,7 @@ KIND_EINGABE: dict[str, Any] = {
     "schulart": "grundschule",
     "bundesland": "rp",
     "notify_entity": "notify.lena",
+    "klassisch": {},
     "absender_kennung": " 12345 ",
     "werktag_von": "14:00:00",
     "werktag_bis": "18:00:00",
@@ -36,6 +37,16 @@ KIND_EINGABE: dict[str, Any] = {
     "wochenende_von": "10:00:00",
     "wochenende_bis": "12:00:00",
 }
+_KLASSISCH = ("notify_service", "notify_target", "notify_data")
+
+
+def _formular(daten: dict[str, Any]) -> dict[str, Any]:
+    """Shape stored child data like the form sends it."""
+    return {k: v for k, v in daten.items() if k not in _KLASSISCH} | {
+        "klassisch": {k: daten[k] for k in _KLASSISCH if k in daten}
+    }
+
+
 ARBEIT_EINGABE: dict[str, Any] = {
     "art": "hue",
     "datum": "2026-10-20",
@@ -148,11 +159,11 @@ async def test_kind_anlegen(hass: HomeAssistant, setup_entry: MockConfigEntry) -
     [
         ({"name": "  "}, {"name": "name_leer"}),
         ({"name": "max"}, {"name": "name_vorhanden"}),
-        ({"notify_service": "notify.x"}, {"base": "notify_genau_eins"}),
+        ({"klassisch": {"notify_service": "notify.x"}}, {"base": "notify_genau_eins"}),
         ({"notify_entity": None}, {"base": "notify_genau_eins"}),
         (
-            {"notify_entity": None, "notify_service": "notify.foo bar"},
-            {"notify_service": "notify_service_ungueltig"},
+            {"notify_entity": None, "klassisch": {"notify_service": "notify.foo bar"}},
+            {"base": "notify_service_ungueltig"},
         ),
         ({"werktag_bis": "13:00:00"}, {"werktag_bis": "fenster_ungueltig"}),
         ({"wochenende_bis": "10:00:00"}, {"wochenende_bis": "fenster_ungueltig"}),
@@ -184,9 +195,11 @@ async def test_kind_mit_notify_service(
     hass: HomeAssistant, setup_entry: MockConfigEntry
 ) -> None:
     eingabe = {k: v for k, v in KIND_EINGABE.items() if k != "notify_entity"} | {
-        "notify_service": " Notify.WhatsApp ",
-        "notify_target": ["4917"],
-        "notify_data": {"x": 1},
+        "klassisch": {
+            "notify_service": " Notify.WhatsApp ",
+            "notify_target": ["4917"],
+            "notify_data": {"x": 1},
+        },
     }
     result = await _subentry_flow(hass, setup_entry, "kind")
     result = await hass.config_entries.subentries.async_configure(
@@ -206,13 +219,17 @@ async def test_kind_bearbeiten(
     assert result["step_id"] == "reconfigure"
 
     # Keeping the own name is allowed, an invalid window is not
-    eingabe = {**KIND_DATEN, "werktag_bis": "10:00:00"}
+    eingabe = {**_formular(KIND_DATEN), "werktag_bis": "10:00:00"}
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], eingabe
     )
     assert result["errors"] == {"werktag_bis": "fenster_ungueltig"}
 
-    eingabe = {**KIND_DATEN, "name": "Maximilian", "werktag_bis": "20:00:00"}
+    eingabe = {
+        **_formular(KIND_DATEN),
+        "name": "Maximilian",
+        "werktag_bis": "20:00:00",
+    }
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], eingabe
     )
@@ -665,3 +682,54 @@ async def test_sachfach_anlegen(
         result["flow_id"], {"name": "biologie"}
     )
     assert result["errors"] == {"name": "name_vorhanden"}
+
+
+async def test_kind_klassische_aktion_eingeklappt(
+    hass: HomeAssistant, setup_entry: MockConfigEntry
+) -> None:
+    """The classic action is folded away unless the child uses it."""
+    result = await _subentry_flow(hass, setup_entry, "kind")
+    abschnitt = result["data_schema"].schema["klassisch"]
+    assert abschnitt.options == {"collapsed": True}
+    assert set(abschnitt.schema.schema) == {
+        "notify_service",
+        "notify_target",
+        "notify_data",
+    }
+    assert "notify_service" not in result["data_schema"].schema
+
+    # The test child uses the classic action: open, with its values
+    result = await hass.config_entries.subentries.async_init(
+        (setup_entry.entry_id, "kind"),
+        context={"source": "reconfigure", "subentry_id": KIND_ID},
+    )
+    schema = result["data_schema"].schema
+    assert schema["klassisch"].options == {"collapsed": False}
+    vorgaben = {
+        str(feld): feld.description["suggested_value"]
+        for feld in schema["klassisch"].schema.schema
+        if feld.description
+    }
+    assert vorgaben == {"notify_service": "test", "notify_target": ["491701234567"]}
+
+
+async def test_kind_wechsel_zur_entitaet_raeumt_auf(
+    hass: HomeAssistant, setup_entry: MockConfigEntry
+) -> None:
+    """Target and extra data of the classic action go when an entity is used."""
+    result = await hass.config_entries.subentries.async_init(
+        (setup_entry.entry_id, "kind"),
+        context={"source": "reconfigure", "subentry_id": KIND_ID},
+    )
+    eingabe = {
+        **{k: v for k, v in KIND_DATEN.items() if not k.startswith("notify_")},
+        "notify_entity": "notify.max",
+        "klassisch": {"notify_target": ["491701234567"], "notify_data": {"a": 1}},
+    }
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], eingabe
+    )
+    assert result["type"] is FlowResultType.ABORT
+    daten = setup_entry.subentries[KIND_ID].data
+    assert daten["notify_entity"] == "notify.max"
+    assert not {"notify_service", "notify_target", "notify_data"} & set(daten)

@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     ActionSelector,
@@ -179,13 +180,8 @@ KIND_SCHEMA = vol.Schema(
         vol.Optional(CONF_NOTIFY_ENTITY): EntitySelector(
             EntitySelectorConfig(domain=NOTIFY_DOMAIN)
         ),
-        vol.Optional(CONF_NOTIFY_SERVICE): TextSelector(),
-        vol.Optional(CONF_NOTIFY_TARGET): TextSelector(
-            TextSelectorConfig(multiple=True)
-        ),
-        vol.Optional(CONF_NOTIFY_DATA): ObjectSelector(),
-        vol.Optional(CONF_BILD_AKTION): ActionSelector(),
         vol.Optional(CONF_ABSENDER_KENNUNG): TextSelector(),
+        vol.Optional(CONF_BILD_AKTION): ActionSelector(),
         vol.Required(CONF_WERKTAG_VON, default=DEFAULT_WERKTAG_VON): TimeSelector(),
         vol.Required(CONF_WERKTAG_BIS, default=DEFAULT_WERKTAG_BIS): TimeSelector(),
         vol.Required(CONF_WOCHENENDE_AKTIV, default=True): BooleanSelector(),
@@ -197,6 +193,48 @@ KIND_SCHEMA = vol.Schema(
         ): TimeSelector(),
     }
 )
+
+
+# Only needed without a notify entity, so it is folded away by default
+ABSCHNITT_KLASSISCH = "klassisch"
+_KLASSISCH_FELDER = (CONF_NOTIFY_SERVICE, CONF_NOTIFY_TARGET, CONF_NOTIFY_DATA)
+_KLASSISCH_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NOTIFY_SERVICE): TextSelector(),
+        vol.Optional(CONF_NOTIFY_TARGET): TextSelector(
+            TextSelectorConfig(multiple=True)
+        ),
+        vol.Optional(CONF_NOTIFY_DATA): ObjectSelector(),
+    }
+)
+
+
+def _kind_schema(werte: Mapping[str, Any]) -> vol.Schema:
+    """Return the child form; the classic action is open only when it is used."""
+    return KIND_SCHEMA.extend(
+        {
+            vol.Required(ABSCHNITT_KLASSISCH): section(
+                _KLASSISCH_SCHEMA,
+                {"collapsed": not werte.get(CONF_NOTIFY_SERVICE)},
+            )
+        }
+    )
+
+
+def _kind_vorgaben(werte: Mapping[str, Any]) -> dict[str, Any]:
+    """Move the stored flat values of the classic action into its section."""
+    vorgaben = {k: v for k, v in werte.items() if k not in _KLASSISCH_FELDER}
+    vorgaben[ABSCHNITT_KLASSISCH] = {
+        k: werte[k] for k in _KLASSISCH_FELDER if werte.get(k) is not None
+    }
+    return vorgaben
+
+
+def _kind_eingabe(eingabe: Mapping[str, Any]) -> dict[str, Any]:
+    """Flatten the form input; subentries store the classic action flat."""
+    daten = {k: v for k, v in eingabe.items() if k != ABSCHNITT_KLASSISCH}
+    daten.update(eingabe.get(ABSCHNITT_KLASSISCH) or {})
+    return daten
 
 
 def standard_muttersprache(hass: HomeAssistant) -> str:
@@ -248,11 +286,14 @@ def _pruefe_kind(
     elif hat_service:
         service = _normalisiere_notify_service(daten[CONF_NOTIFY_SERVICE])
         if service is None:
-            fehler[CONF_NOTIFY_SERVICE] = "notify_service_ungueltig"
+            # Shown at the top: the field may sit in the folded section
+            fehler["base"] = "notify_service_ungueltig"
         else:
             daten[CONF_NOTIFY_SERVICE] = service
     if not hat_service:
-        daten.pop(CONF_NOTIFY_SERVICE, None)
+        # Target and extra data belong to the classic action only
+        for feld in _KLASSISCH_FELDER:
+            daten.pop(feld, None)
 
     if CONF_ABSENDER_KENNUNG in daten:
         daten[CONF_ABSENDER_KENNUNG] = daten[CONF_ABSENDER_KENNUNG].strip()
@@ -339,17 +380,18 @@ class KindSubentryFlow(ConfigSubentryFlow):
                 s.data[CONF_NAME].casefold()
                 for s in _subentries(self._get_entry(), SUBENTRY_KIND)
             }
+            user_input = _kind_eingabe(user_input)
             daten, fehler = _pruefe_kind(user_input, namen)
             if not fehler:
                 jetzt = _jetzt_iso()
                 daten[CONF_ERSTELLT] = jetzt
                 daten[CONF_GEAENDERT] = jetzt
                 return self.async_create_entry(title=daten[CONF_NAME], data=daten)
+        werte = user_input or {CONF_MUTTERSPRACHE: standard_muttersprache(self.hass)}
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                KIND_SCHEMA,
-                user_input or {CONF_MUTTERSPRACHE: standard_muttersprache(self.hass)},
+                _kind_schema(werte), _kind_vorgaben(werte)
             ),
             errors=fehler,
         )
@@ -366,6 +408,7 @@ class KindSubentryFlow(ConfigSubentryFlow):
                 for s in _subentries(self._get_entry(), SUBENTRY_KIND)
                 if s.subentry_id != subentry.subentry_id
             }
+            user_input = _kind_eingabe(user_input)
             daten, fehler = _pruefe_kind(user_input, namen)
             if not fehler:
                 daten[CONF_ERSTELLT] = subentry.data.get(CONF_ERSTELLT, _jetzt_iso())
@@ -376,15 +419,14 @@ class KindSubentryFlow(ConfigSubentryFlow):
                     title=daten[CONF_NAME],
                     data=daten,
                 )
+        werte = user_input or {
+            CONF_MUTTERSPRACHE: muttersprache(self.hass, subentry),
+            **subentry.data,
+        }
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                KIND_SCHEMA,
-                user_input
-                or {
-                    CONF_MUTTERSPRACHE: muttersprache(self.hass, subentry),
-                    **subentry.data,
-                },
+                _kind_schema(werte), _kind_vorgaben(werte)
             ),
             errors=fehler,
         )

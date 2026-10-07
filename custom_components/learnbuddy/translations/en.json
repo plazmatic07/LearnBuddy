@@ -76,9 +76,6 @@
             "schulart": "School type",
             "bundesland": "Federal state",
             "notify_entity": "Notify entity",
-            "notify_service": "Notify action (legacy)",
-            "notify_target": "Target of the notify action",
-            "notify_data": "Additional data of the notify action",
             "absender_kennung": "Sender ID",
             "werktag_von": "Weekdays from",
             "werktag_bis": "Weekdays until",
@@ -90,13 +87,26 @@
           "data_description": {
             "name": "Used to address the child. It is never sent to an AI service.",
             "klassenstufe": "Context for generated tasks.",
-            "notify_entity": "Messenger entity that delivers questions to the child. Use either this or the legacy action.",
-            "notify_service": "Name of a legacy notify action, for example notify.whatsapp.",
-            "notify_target": "Recipients passed as target, for example a phone number or chat ID.",
+            "notify_entity": "Messenger entity that delivers the questions to the child. If there is none, use the section \"Classic notify action\" instead.",
             "absender_kennung": "Phone number or chat ID used to match incoming answers to this child.",
             "werktag_von": "Questions are only sent inside this time window.",
             "muttersprache": "Source language of the vocabulary. Foreign language subjects of this child are asked between this language and the foreign language. Changing it later only affects new subjects.",
             "bild_aktion": "Optional. Only needed if the messenger is not Telegram: actions that send an image, for tasks with a diagram. The variables bild_url (address valid for ten minutes), bild_pfad (file) and text (the task) are available."
+          },
+          "sections": {
+            "klassisch": {
+              "name": "Classic notify action",
+              "description": "Only fill this in if your messenger has no notify entity. Leave this section empty when a notify entity is selected.",
+              "data": {
+                "notify_service": "Notify action (legacy)",
+                "notify_target": "Target of the notify action",
+                "notify_data": "Additional data of the notify action"
+              },
+              "data_description": {
+                "notify_service": "Name of a legacy notify action, for example notify.whatsapp.",
+                "notify_target": "Recipients passed as target, for example a phone number or chat ID."
+              }
+            }
           }
         },
         "reconfigure": {
@@ -108,9 +118,6 @@
             "schulart": "School type",
             "bundesland": "Federal state",
             "notify_entity": "Notify entity",
-            "notify_service": "Notify action (legacy)",
-            "notify_target": "Target of the notify action",
-            "notify_data": "Additional data of the notify action",
             "absender_kennung": "Sender ID",
             "werktag_von": "Weekdays from",
             "werktag_bis": "Weekdays until",
@@ -122,13 +129,26 @@
           "data_description": {
             "name": "Used to address the child. It is never sent to an AI service.",
             "klassenstufe": "Context for generated tasks.",
-            "notify_entity": "Messenger entity that delivers questions to the child. Use either this or the legacy action.",
-            "notify_service": "Name of a legacy notify action, for example notify.whatsapp.",
-            "notify_target": "Recipients passed as target, for example a phone number or chat ID.",
+            "notify_entity": "Messenger entity that delivers the questions to the child. If there is none, use the section \"Classic notify action\" instead.",
             "absender_kennung": "Phone number or chat ID used to match incoming answers to this child.",
             "werktag_von": "Questions are only sent inside this time window.",
             "muttersprache": "Source language of the vocabulary. Foreign language subjects of this child are asked between this language and the foreign language. Changing it later only affects new subjects.",
             "bild_aktion": "Optional. Only needed if the messenger is not Telegram: actions that send an image, for tasks with a diagram. The variables bild_url (address valid for ten minutes), bild_pfad (file) and text (the task) are available."
+          },
+          "sections": {
+            "klassisch": {
+              "name": "Classic notify action",
+              "description": "Only fill this in if your messenger has no notify entity. Leave this section empty when a notify entity is selected.",
+              "data": {
+                "notify_service": "Notify action (legacy)",
+                "notify_target": "Target of the notify action",
+                "notify_data": "Additional data of the notify action"
+              },
+              "data_description": {
+                "notify_service": "Name of a legacy notify action, for example notify.whatsapp.",
+                "notify_target": "Recipients passed as target, for example a phone number or chat ID."
+              }
+            }
           }
         }
       },
