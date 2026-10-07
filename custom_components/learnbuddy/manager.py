@@ -13,7 +13,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
@@ -114,6 +114,7 @@ SIMULATION_NACHHOLEN = timedelta(hours=6)
 KI_PRUEFUNG_NACH_START = timedelta(minutes=5)
 # Calendar integrations need a moment after a start as well
 KALENDER_NACH_START = timedelta(minutes=2)
+KALENDER_NACH_RELOAD = timedelta(seconds=5)
 
 
 @dataclass(slots=True)
@@ -478,9 +479,11 @@ class LearnBuddyManager:
             for kind in mit_kalender:
                 await self.async_kalender_pruefen(kind.id)
 
-        self._kalender_uhren.append(
-            async_call_later(self.hass, KALENDER_NACH_START, _nach_start)
-        )
+        # After a restart the calendar integration needs a moment; when only
+        # the settings were saved, the dates should show up right away
+        laeuft = self.hass.state is CoreState.running
+        warten = KALENDER_NACH_RELOAD if laeuft else KALENDER_NACH_START
+        self._kalender_uhren.append(async_call_later(self.hass, warten, _nach_start))
 
     def kalender_stand(self, kind_id: str) -> KalenderStand | None:
         """Return what was read from the calendar, None if the child has none."""

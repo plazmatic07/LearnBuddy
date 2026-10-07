@@ -186,6 +186,8 @@ interface ArbeitEntwurf {
   simAnzahl: number;
   // Calendar event the exam is created from; the subject is chosen in the dialog
   kalenderUid: string | null;
+  // The subject could not be guessed and has to be chosen first
+  fachOffen: boolean;
   modus: "alle" | "auswahl";
   lektionen: Set<string>;
   ids: Set<string>;
@@ -1549,6 +1551,7 @@ export class LearnBuddyPanel extends LitElement {
       simUm: lokaleZeit(arbeit?.simulation_um ?? null),
       simAnzahl: arbeit?.simulation_anzahl ?? 10,
       kalenderUid: null,
+      fachOffen: false,
       modus: gezielt ? "auswahl" : "alle",
       lektionen: new Set(arbeit?.lektionen ?? []),
       ids: new Set(arbeit?.aufgaben_ids ?? ids),
@@ -1584,6 +1587,8 @@ export class LearnBuddyPanel extends LitElement {
         datum: vorschlag.datum,
         thema: vorschlag.text,
         kalenderUid: vorschlag.uid,
+        // Without a clear match nothing is chosen for the user
+        fachOffen: fachId !== vorschlag.fach_id,
       };
     }
     if (!fachId) {
@@ -1593,7 +1598,11 @@ export class LearnBuddyPanel extends LitElement {
 
   /** Change the subject of the exam that is being entered from the calendar. */
   private async _wechsleFachImDialog(fachId: string): Promise<void> {
-    if (!this._arbeit || fachId === this._fachId) {
+    if (!this._arbeit || !fachId) {
+      return;
+    }
+    if (fachId === this._fachId) {
+      this._arbeit = { ...this._arbeit, fachOffen: false };
       return;
     }
     this._fachId = fachId;
@@ -1602,6 +1611,7 @@ export class LearnBuddyPanel extends LitElement {
     // Lessons and tasks belong to the subject
     this._arbeit = {
       ...this._arbeit,
+      fachOffen: false,
       modus: "alle",
       lektionen: new Set(),
       ids: new Set(),
@@ -3806,6 +3816,7 @@ export class LearnBuddyPanel extends LitElement {
     const sprache = this.hass?.language ?? "en";
     const neu = this._neuesFach;
     const faecher = this._faecherDesKindes;
+    const offen = this._arbeit?.fachOffen ?? false;
     const setze = (teil: Partial<NeuesFach>): void => {
       if (this._neuesFach) {
         this._neuesFach = { ...this._neuesFach, ...teil };
@@ -3817,12 +3828,18 @@ export class LearnBuddyPanel extends LitElement {
             <label class="feld" style="flex: 1">
               ${t("arbeit_fach")}
               <select
-                .value=${this._fachId}
+                .value=${offen ? "" : this._fachId}
                 @change=${(e: Event) => this._wechsleFachImDialog(wert(e))}
               >
+                ${offen
+                  ? html`<option value="" selected disabled>${t("arbeit_fach_waehlen")}</option>`
+                  : nothing}
                 ${faecher.map(
                   (fach) =>
-                    html`<option value=${fach.id} ?selected=${fach.id === this._fachId}>
+                    html`<option
+                      value=${fach.id}
+                      ?selected=${!offen && fach.id === this._fachId}
+                    >
                       ${fach.name}
                     </option>`,
                 )}
@@ -3951,8 +3968,9 @@ export class LearnBuddyPanel extends LitElement {
       </label>
     `;
     const ohneThema = !arbeit.thema.trim();
-    const fehlt =
-      ohneThema && !arbeit.datum
+    const fehlt = arbeit.fachOffen
+      ? "arbeit_fehlt_fach"
+      : ohneThema && !arbeit.datum
         ? "arbeit_fehlt_beides"
         : ohneThema
           ? "arbeit_fehlt_thema"

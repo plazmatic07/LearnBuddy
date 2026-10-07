@@ -8,6 +8,7 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import (
+    CoreState,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -171,8 +172,8 @@ async def test_taeglich_und_nach_start(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     assert kalender["aufrufe"] == []
-    # Shortly after the start
-    freezer.tick(timedelta(minutes=2, seconds=1))
+    # Shortly after the settings were saved
+    freezer.tick(timedelta(seconds=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(kalender["aufrufe"]) == 1
@@ -455,3 +456,32 @@ async def test_websocket(
     ):
         fehler = await befehl(typ, **daten_)
         assert fehler["error"]["message"] == "nicht_geladen"
+
+
+async def test_nach_neustart_spaeter(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+    kalender: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """While Home Assistant starts, calendar integrations get more time."""
+    hass.config_entries.async_update_subentry(
+        config_entry,
+        config_entry.subentries[KIND_ID],
+        data={**KIND_DATEN, "kalender_aktiv": True, "kalender_entity": KALENDER},
+    )
+    hass.set_state(CoreState.starting)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    _registriere(hass, kalender)
+    hass.set_state(CoreState.running)
+
+    freezer.tick(timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert kalender["aufrufe"] == []
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(kalender["aufrufe"]) == 1
