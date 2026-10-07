@@ -142,6 +142,7 @@ SERVICE_IMPORT_TASKS: Final = "import_tasks"
 SERVICE_GENERATE_TASKS: Final = "generate_tasks"
 SERVICE_PAUSE: Final = "pause"
 SERVICE_RESUME: Final = "resume"
+SERVICE_CANCEL_QUESTION: Final = "cancel_question"
 
 ATTR_KIND_ID: Final = "kind_id"
 ATTR_DEVICE_ID: Final = "device_id"

@@ -569,6 +569,32 @@ async def ws_exams_simulate(
 
 @websocket_command(
     {
+        vol.Required("type"): "learnbuddy/cancel_question",
+        vol.Required("kind_id"): str,
+    }
+)
+@require_admin
+@async_response
+async def ws_cancel_question(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Withdraw the open question of a child."""
+    verwaltung = _verwaltung(hass)
+    if verwaltung is None:
+        connection.send_error(msg["id"], "not_loaded", "nicht_geladen")
+        return
+    try:
+        ergebnis = await verwaltung.frage_abbrechen(msg["kind_id"])
+    except VerwaltungError as err:
+        connection.send_error(msg["id"], err.code, err.schluessel)
+        return
+    connection.send_result(msg["id"], ergebnis)
+
+
+@websocket_command(
+    {
         vol.Required("type"): "learnbuddy/exams/simulate_stop",
         vol.Required("kind_id"): str,
     }
@@ -638,6 +664,7 @@ def async_setup_websocket_api(hass: HomeAssistant) -> None:
         ws_dashboard,
         ws_set_active,
         ws_ask,
+        ws_cancel_question,
         ws_tasks_list,
         ws_tasks_create,
         ws_tasks_update,

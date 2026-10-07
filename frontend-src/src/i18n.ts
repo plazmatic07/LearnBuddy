@@ -94,6 +94,9 @@ const de = {
   sim_laeuft: "Simulation",
   sim_laeuft_text: "läuft: Aufgabe {nr} von {n}",
   sim_abbrechen: "Simulation abbrechen",
+  frage_abbrechen: "Frage abbrechen",
+  frage_abbrechen_frage:
+    "Die offene Frage zurückziehen? Sie wird nicht gezählt, und das Kind bekommt eine kurze Nachricht.",
   sim_abbrechen_frage: "Die laufende Simulation ohne Auswertung beenden?",
   err_simulation_laeuft: "Für dieses Kind läuft gerade eine Simulation.",
   err_weg_ungueltig: "Unbekannter Weg für die Simulation.",
@@ -523,6 +526,9 @@ const en: Record<Schluessel, string> = {
   sim_laeuft: "Simulation",
   sim_laeuft_text: "running: task {nr} of {n}",
   sim_abbrechen: "Stop the simulation",
+  frage_abbrechen: "Cancel question",
+  frage_abbrechen_frage:
+    "Withdraw the open question? It is not counted, and the child gets a short message.",
   sim_abbrechen_frage: "Stop the running simulation without a result?",
   err_simulation_laeuft: "A simulation is running for this child.",
   err_weg_ungueltig: "Unknown way of simulating.",

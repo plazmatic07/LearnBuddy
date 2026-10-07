@@ -309,6 +309,19 @@ export class LhUebersicht extends LitElement {
     }
   }
 
+  private async _brichFrageAb(): Promise<void> {
+    if (!window.confirm(this._t("frage_abbrechen_frage"))) {
+      return;
+    }
+    try {
+      await this._api.frageAbbrechen(this.kindId);
+      this._fehler = "";
+    } catch (fehler) {
+      this._fehler = fehlertext(this._t, fehler);
+    }
+    await this._lade();
+  }
+
   private async _brichSimulationAb(): Promise<void> {
     if (!window.confirm(this._t("sim_abbrechen_frage"))) {
       return;
@@ -530,6 +543,11 @@ export class LhUebersicht extends LitElement {
           <button @click=${() => this._setzeAktiv(!zustand.aktiv || zustand.pausiert)}>
             ${t(zustand.pausiert ? "fortsetzen" : "pausieren")}
           </button>
+          ${offen && !zustand.simulation
+            ? html`<button class="gefahr" @click=${this._brichFrageAb}>
+                ${t("frage_abbrechen")}
+              </button>`
+            : nothing}
           ${zustand.simulation
             ? html`<button class="gefahr" @click=${this._brichSimulationAb}>
                 ${t("sim_abbrechen")}

@@ -67,6 +67,11 @@ resume:
     device_id: *kind_device
     kind_id: *kind_id
 
+cancel_question:
+  fields:
+    device_id: *kind_device
+    kind_id: *kind_id
+
 generate_tasks:
   fields:
     device_id: *kind_device

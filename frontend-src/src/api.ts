@@ -38,6 +38,13 @@ export class Api {
     return this.call("ask", { kind_id: kindId, fach_id: fachId });
   }
 
+  async frageAbbrechen(kindId: string): Promise<boolean> {
+    const antwort = await this.call<{ abgebrochen: boolean }>("cancel_question", {
+      kind_id: kindId,
+    });
+    return antwort.abgebrochen;
+  }
+
   setzeAktiv(kindId: string, aktiv: boolean): Promise<void> {
     return this.call("set_active", { kind_id: kindId, aktiv });
   }

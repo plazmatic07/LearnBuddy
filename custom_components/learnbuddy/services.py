@@ -32,6 +32,7 @@ from .const import (
     ATTR_TRENNZEICHEN,
     DOMAIN,
     SERVICE_ASK_NOW,
+    SERVICE_CANCEL_QUESTION,
     SERVICE_GENERATE_TASKS,
     SERVICE_IMPORT_TASKS,
     SERVICE_PAUSE,
@@ -150,6 +151,11 @@ async def _async_pause(call: ServiceCall) -> None:
     manager.async_set_aktiv(kind_id, aktiv=False, bis=call.data.get(ATTR_BIS))
 
 
+async def _async_cancel_question(call: ServiceCall) -> None:
+    manager = _manager(call.hass)
+    await manager.async_frage_abbrechen(_kind_id(call.hass, manager, call.data))
+
+
 async def _async_resume(call: ServiceCall) -> None:
     manager = _manager(call.hass)
     manager.async_set_aktiv(_kind_id(call.hass, manager, call.data), aktiv=True)
@@ -222,6 +228,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN, SERVICE_RESUME, _async_resume, schema=KIND_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_CANCEL_QUESTION, _async_cancel_question, schema=KIND_SCHEMA
     )
     hass.services.async_register(
         DOMAIN,

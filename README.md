@@ -248,6 +248,8 @@ Wie gut gelesen wird, hängt vom Modell und vom Foto ab; die Vorschau ist deshal
 
 **Zusatzaufgaben auf Wunsch:** Ist gerade keine Frage offen, kann das Kind selbst weitere Aufgaben anfordern: mit 👍 als Nachricht (eine Aufgabe) oder mit einem Text wie „noch eine“, „mehr“, „noch 10 mehr“ oder „5 more“. Die Aufgaben kommen nacheinander, höchstens 20 auf einmal, auch außerhalb der Zeitfenster. Die Serie endet, wenn eine Frage unbeantwortet bleibt oder die Abfragen pausiert werden. Eine Reaktion auf die Nachricht (z. B. der Daumen als Telegram-Reaktion) funktioniert nicht, weil Home Assistant Reaktionen nicht als Ereignis meldet.
 
+**Frage abbrechen:** Eine offene Frage lässt sich in der Übersicht des Panels oder mit der Aktion `learnbuddy.cancel_question` zurückziehen. Sie zählt dann nicht in der Statistik, die Lernstufe der Aufgabe bleibt unverändert, und das Kind bekommt eine kurze Nachricht. Eine laufende Serie von Zusatzaufgaben endet damit.
+
 **Pausieren:** über den Schalter „Abfragen aktiv“, das Panel oder die Aktion `learnbuddy.pause`, optional bis zu einem Zeitpunkt (z. B. für Ferien).
 
 ## Klassenarbeit oder HÜ simulieren
@@ -302,6 +304,7 @@ Das Kind wird über `device_id`, `kind_id` oder (bei `submit_answer`) `absender`
 | `learnbuddy.ask_now` | Sofort eine Frage senden | – |
 | `learnbuddy.import_tasks` | Vokabeln oder Mathe-Aufgaben aus Text importieren | `fach` oder `fach_id`, `inhalt`, `lektion`, `trennzeichen`, `geprueft` |
 | `learnbuddy.generate_tasks` | Mathe-Aufgaben von der KI erzeugen lassen | `fach` oder `fach_id`, `anzahl`, `lektion`, `schwierigkeit`, `beschreibung` |
+| `learnbuddy.cancel_question` | Offene Frage zurückziehen, ohne dass sie zählt | – |
 | `learnbuddy.pause` | Abfragen pausieren | `bis` (optional) |
 | `learnbuddy.resume` | Abfragen fortsetzen | – |
 

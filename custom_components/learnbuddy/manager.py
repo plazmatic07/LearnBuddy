@@ -1130,6 +1130,35 @@ class LearnBuddyManager:
             self._benachrichtige(kind_id)
             self._plane(kind_id)
 
+    async def async_frage_abbrechen(self, kind_id: str) -> bool:
+        """Withdraw the open question of a child.
+
+        It does not count: the question counter is taken back and the level
+        of the task stays as it is. The child is told that the question is
+        gone. A simulated exam is stopped with its own command.
+        """
+        async with self._sperren[kind_id]:
+            kind = self.kinder[kind_id]
+            zustand = self.zustand(kind_id)
+            frage = zustand.offene_frage
+            if frage is None or zustand.simulation is not None:
+                return False
+            zustand.offene_frage = None
+            # The extra questions the child asked for end as well
+            zustand.zusatz_offen = 0
+            aufgabe = self._aufgabe(frage)
+            if aufgabe is not None:
+                stat = aufgabe.statistik_fuer(frage.richtung)
+                stat.gefragt = max(0, stat.gefragt - 1)
+                self.task_stores[frage.fach_id].async_schedule_save()
+            self.config_store.async_schedule_save()
+            await self.messenger.async_send(
+                kind, text(self.sprache, "frage_abgebrochen", name=kind.name)
+            )
+            self._benachrichtige(kind_id)
+            self._plane(kind_id)
+            return True
+
     # ------------------------------------------------------------------
     # Simulated exams
     # ------------------------------------------------------------------

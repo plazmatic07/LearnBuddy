@@ -1916,6 +1916,12 @@ class Verwaltung:
             raise VerwaltungError("send_failed", "senden_fehlgeschlagen") from err
         return {"weg": weg, "anzahl": gestellt, "bilder": []}
 
+    async def frage_abbrechen(self, kind_id: str) -> dict[str, Any]:
+        """Withdraw the open question of a child without counting it."""
+        if kind_id not in self._manager.kinder:
+            raise _nicht_gefunden("kind")
+        return {"abgebrochen": await self._manager.async_frage_abbrechen(kind_id)}
+
     async def simulation_abbrechen(self, kind_id: str) -> dict[str, Any]:
         """Stop the simulated exam of a child."""
         if kind_id not in self._manager.kinder:

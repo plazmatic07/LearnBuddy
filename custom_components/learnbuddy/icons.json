@@ -26,6 +26,7 @@
     "ask_now": { "service": "mdi:chat-question" },
     "import_tasks": { "service": "mdi:database-import" },
     "pause": { "service": "mdi:pause-circle" },
-    "resume": { "service": "mdi:play-circle" }
+    "resume": { "service": "mdi:play-circle" },
+    "cancel_question": { "service": "mdi:message-off" }
   }
 }
