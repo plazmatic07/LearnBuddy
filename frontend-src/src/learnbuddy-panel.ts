@@ -11,6 +11,7 @@ import type {
   Aufgabe,
   AufgabeEingabe,
   Fach,
+  Fachart,
   FotoZeile,
   Hass,
   ImportVorschau,
@@ -22,6 +23,7 @@ import type {
   SachForm,
   SimulationsWeg,
   Uebersicht,
+  Vorschlag,
 } from "./types";
 
 type Tab = "uebersicht" | "aufgaben" | "arbeiten";
@@ -159,6 +161,16 @@ interface GenerierEntwurf {
   beschreibung: string;
 }
 
+interface NeuesFach {
+  typ: Fachart;
+  name: string;
+  sprache: string;
+}
+
+const FACHARTEN: Fachart[] = ["fremdsprache", "mathe", "sach"];
+const SPRACH_CODES = ["en", "fr", "es", "it", "la", "de"];
+const LEERES_FACH: NeuesFach = { typ: "fremdsprache", name: "", sprache: "en" };
+
 interface ArbeitEntwurf {
   id: string | null;
   art: "arbeit" | "hue";
@@ -172,6 +184,8 @@ interface ArbeitEntwurf {
   simAktiv: boolean;
   simUm: string;
   simAnzahl: number;
+  // Calendar event the exam is created from; the subject is chosen in the dialog
+  kalenderUid: string | null;
   modus: "alle" | "auswahl";
   lektionen: Set<string>;
   ids: Set<string>;
@@ -318,6 +332,8 @@ export class LearnBuddyPanel extends LitElement {
   @state() private _jsonDaten: Record<string, unknown> | null = null;
 
   @state() private _arbeit: ArbeitEntwurf | null = null;
+  // Form for a new subject inside the exam dialog
+  @state() private _neuesFach: NeuesFach | null = null;
 
   @state() private _dialogFehler = "";
 
@@ -1008,6 +1024,7 @@ export class LearnBuddyPanel extends LitElement {
     this._vorschau = null;
     this._jsonDaten = null;
     this._arbeit = null;
+    this._neuesFach = null;
     this._generieren = null;
     this._nachgerechnet = null;
     if (this._bildEntwurf?.vorschau) {
@@ -1531,6 +1548,7 @@ export class LearnBuddyPanel extends LitElement {
       simAktiv: Boolean(arbeit?.simulation_um),
       simUm: lokaleZeit(arbeit?.simulation_um ?? null),
       simAnzahl: arbeit?.simulation_anzahl ?? 10,
+      kalenderUid: null,
       modus: gezielt ? "auswahl" : "alle",
       lektionen: new Set(arbeit?.lektionen ?? []),
       ids: new Set(arbeit?.aufgaben_ids ?? ids),
@@ -1538,8 +1556,85 @@ export class LearnBuddyPanel extends LitElement {
       seiteVon: "",
       seiteBis: "",
     };
+    this._neuesFach = null;
     this._dialogFehler = "";
     this._dialog = "arbeit";
+  }
+
+  /** Open the exam dialog filled from a date of the calendar. */
+  private async _oeffneVorschlag(ereignis: CustomEvent): Promise<void> {
+    const { vorschlag } = ereignis.detail as { vorschlag: Vorschlag };
+    const faecher = this._faecherDesKindes;
+    const fachId =
+      (vorschlag.fach_id && faecher.some((f) => f.id === vorschlag.fach_id)
+        ? vorschlag.fach_id
+        : null) ??
+      (faecher.some((f) => f.id === this._fachId) ? this._fachId : faecher[0]?.id) ??
+      "";
+    if (fachId !== this._fachId) {
+      this._fachId = fachId;
+      this._zuruecksetzen();
+      await this._ladeAufgaben();
+    }
+    this._oeffneArbeit(null);
+    if (this._arbeit) {
+      this._arbeit = {
+        ...this._arbeit,
+        art: vorschlag.art,
+        datum: vorschlag.datum,
+        thema: vorschlag.text,
+        kalenderUid: vorschlag.uid,
+      };
+    }
+    if (!fachId) {
+      this._neuesFach = { ...LEERES_FACH };
+    }
+  }
+
+  /** Change the subject of the exam that is being entered from the calendar. */
+  private async _wechsleFachImDialog(fachId: string): Promise<void> {
+    if (!this._arbeit || fachId === this._fachId) {
+      return;
+    }
+    this._fachId = fachId;
+    this._zuruecksetzen();
+    await this._ladeAufgaben();
+    // Lessons and tasks belong to the subject
+    this._arbeit = {
+      ...this._arbeit,
+      modus: "alle",
+      lektionen: new Set(),
+      ids: new Set(),
+      seit: "",
+      seiteVon: "",
+      seiteBis: "",
+    };
+  }
+
+  private async _legeFachAn(): Promise<void> {
+    const neu = this._neuesFach;
+    if (!neu) {
+      return;
+    }
+    this._beschaeftigt = true;
+    this._dialogFehler = "";
+    try {
+      const fachId = await this._api.fachAnlegen(
+        this._kindId,
+        neu.typ,
+        neu.name.trim(),
+        neu.typ === "fremdsprache" ? neu.sprache : null,
+      );
+      this._uebersicht = await this._api.uebersicht();
+      this._neuesFach = null;
+      // The subject has no tasks yet; _wechsleFachImDialog loads them anyway
+      this._fachId = "";
+      await this._wechsleFachImDialog(fachId);
+    } catch (fehler) {
+      this._dialogFehler = fehlertext(this._t, fehler);
+    } finally {
+      this._beschaeftigt = false;
+    }
   }
 
   private _setzeArbeit<K extends keyof ArbeitEntwurf>(
@@ -1637,6 +1732,9 @@ export class LearnBuddyPanel extends LitElement {
         arbeit.simAktiv && arbeit.simUm ? new Date(arbeit.simUm).toISOString() : null,
       simulation_anzahl: arbeit.simAnzahl,
     };
+    if (arbeit.kalenderUid) {
+      eingabe.kalender_uid = arbeit.kalenderUid;
+    }
     if (!arbeit.id) {
       eingabe.fach_id = this._fachId;
     }
@@ -1863,6 +1961,7 @@ export class LearnBuddyPanel extends LitElement {
             .narrow=${this.narrow}
             .kindId=${this._kindId}
             @lh-oeffnen=${this._oeffne}
+            @lh-vorschlag=${this._oeffneVorschlag}
           ></lh-uebersicht>`
         : this._fachBereich()}
     `;
@@ -3701,12 +3800,134 @@ export class LearnBuddyPanel extends LitElement {
     `;
   }
 
+  /** Subject of an exam entered from the calendar, with a form for a new one. */
+  private _fachWahl(): TemplateResult {
+    const t = this._t;
+    const sprache = this.hass?.language ?? "en";
+    const neu = this._neuesFach;
+    const faecher = this._faecherDesKindes;
+    const setze = (teil: Partial<NeuesFach>): void => {
+      if (this._neuesFach) {
+        this._neuesFach = { ...this._neuesFach, ...teil };
+      }
+    };
+    return html`
+      ${faecher.length
+        ? html`<div class="zeile" style="align-items: end; margin-bottom: 12px">
+            <label class="feld" style="flex: 1">
+              ${t("arbeit_fach")}
+              <select
+                .value=${this._fachId}
+                @change=${(e: Event) => this._wechsleFachImDialog(wert(e))}
+              >
+                ${faecher.map(
+                  (fach) =>
+                    html`<option value=${fach.id} ?selected=${fach.id === this._fachId}>
+                      ${fach.name}
+                    </option>`,
+                )}
+              </select>
+            </label>
+            <button
+              title=${t("fach_neu")}
+              aria-label=${t("fach_neu")}
+              ?disabled=${neu !== null}
+              @click=${() => {
+                this._neuesFach = { ...LEERES_FACH };
+              }}
+            >
+              + ${t("fach_neu")}
+            </button>
+          </div>`
+        : nothing}
+      ${neu
+        ? html`<fieldset style="margin-bottom: 12px">
+            <legend>${t("fach_neu_titel")}</legend>
+            <div class="raster">
+              <label class="feld">
+                ${t("fach_neu_art")}
+                <select
+                  .value=${neu.typ}
+                  @change=${(e: Event) => setze({ typ: wert(e) as Fachart })}
+                >
+                  ${FACHARTEN.map(
+                    (art) =>
+                      html`<option value=${art} ?selected=${art === neu.typ}>
+                        ${t(`fachart_${art}`)}
+                      </option>`,
+                  )}
+                </select>
+              </label>
+              ${neu.typ === "fremdsprache"
+                ? html`<label class="feld">
+                    ${t("fach_neu_sprache")}
+                    <select
+                      .value=${neu.sprache}
+                      @change=${(e: Event) => setze({ sprache: wert(e) })}
+                    >
+                      ${SPRACH_CODES.map(
+                        (code) =>
+                          html`<option value=${code} ?selected=${code === neu.sprache}>
+                            ${sprachname(sprache, code)}
+                          </option>`,
+                      )}
+                    </select>
+                  </label>`
+                : nothing}
+              <label class="feld">
+                ${t(neu.typ === "sach" ? "fach_neu_name" : "fach_neu_name_optional")}
+                <input
+                  type="text"
+                  maxlength="60"
+                  .value=${neu.name}
+                  @input=${(e: Event) => setze({ name: wert(e) })}
+                />
+              </label>
+            </div>
+            <div class="zeile" style="margin-top: 8px">
+              <button
+                class="primaer"
+                ?disabled=${this._beschaeftigt ||
+                (neu.typ === "sach" && !neu.name.trim())}
+                @click=${this._legeFachAn}
+              >
+                ${t("fach_neu_anlegen")}
+              </button>
+              ${faecher.length
+                ? html`<button
+                    @click=${() => {
+                      this._neuesFach = null;
+                    }}
+                  >
+                    ${t("abbrechen")}
+                  </button>`
+                : nothing}
+            </div>
+          </fieldset>`
+        : nothing}
+    `;
+  }
+
   private _arbeitDialog(): TemplateResult {
     const t = this._t;
     const arbeit = this._arbeit;
     const fach = this._fach;
-    if (!arbeit || !fach) {
+    if (!arbeit) {
       return html``;
+    }
+    if (!fach) {
+      // Entering a date of the calendar for a child without any subject
+      return html`
+        <h2>${t("arbeit_titel_neu")}</h2>
+        <p class="klein">${t("fach_neu_fehlt")}</p>
+        ${this._fachWahl()}
+        ${this._dialogFehler
+          ? html`<div class="meldung fehler" role="alert">${this._dialogFehler}</div>`
+          : nothing}
+        <div class="aktionen">
+          <button @click=${this._schliesseDialog}>${t("abbrechen")}</button>
+        </div>
+      `;
     }
     const [a = "", b = ""] = fach.sprachen;
     const umfang =
@@ -3740,6 +3961,7 @@ export class LearnBuddyPanel extends LitElement {
             : null;
     return html`
       <h2>${t(arbeit.id ? "arbeit_titel_bearbeiten" : "arbeit_titel_neu")}</h2>
+      ${arbeit.kalenderUid ? this._fachWahl() : nothing}
       <div class="raster">
         <label class="feld">
           ${t("thema")} *

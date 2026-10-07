@@ -4,7 +4,13 @@ import { property, state } from "lit/decorators.js";
 import { Api } from "./api";
 import { fehlertext, sprachname, uebersetzer, type Uebersetzer } from "./i18n";
 import { styles } from "./styles";
-import type { Dashboard, DashboardArbeit, DashboardFach, Hass } from "./types";
+import type {
+  Dashboard,
+  DashboardArbeit,
+  DashboardFach,
+  Hass,
+  Vorschlag,
+} from "./types";
 
 /**
  * Ordinal one-hue ramps for the five Leitner boxes (box 1 -> box 5). Every
@@ -153,6 +159,23 @@ export class LhUebersicht extends LitElement {
         border-top: none;
         padding-top: 0;
       }
+      h2.abstand {
+        margin-top: 20px;
+      }
+      .kalenderfuss {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-top: 10px;
+      }
+      .kalenderfuss span {
+        flex: 1 1 160px;
+      }
+      .warnung {
+        color: var(--lh-error);
+        margin-bottom: 6px;
+      }
       .zeile .mitte {
         flex: 1;
         min-width: 0;
@@ -214,6 +237,7 @@ export class LhUebersicht extends LitElement {
   @state() private _daten?: Dashboard;
 
   @state() private _fehler = "";
+  @state() private _kalenderLaeuft = false;
 
   @state() private _erfolg = "";
 
@@ -628,7 +652,107 @@ export class LhUebersicht extends LitElement {
       ${daten.arbeiten.length
         ? daten.arbeiten.map(zeile)
         : html`<div class="leer">${t("keine_anstehend")}</div>`}
+      ${this._vorschlaege(daten)}
     `;
+  }
+
+  /** Exam dates of the calendar of the child that are not entered yet. */
+  private _vorschlaege(daten: Dashboard): TemplateResult | typeof nothing {
+    const kalender = daten.kalender;
+    if (!kalender) {
+      return nothing;
+    }
+    const t = this._t;
+    const liste = daten.vorschlaege ?? [];
+    const zeile = (vorschlag: Vorschlag): TemplateResult => html`
+      <div class="zeile">
+        <div class="countdown">
+          <div class="klein">${this._datum(vorschlag.datum)}</div>
+        </div>
+        <div class="mitte">
+          <div class="titel">
+            ${vorschlag.text}
+            <span class="marke">
+              ${t(vorschlag.art === "hue" ? "art_hue" : "art_arbeit")}
+            </span>
+          </div>
+          ${vorschlag.gleicher_tag.length
+            ? html`<div class="klein">
+                ${t("vorschlag_gleicher_tag", {
+                  arbeiten: vorschlag.gleicher_tag.join(", "),
+                })}
+              </div>`
+            : nothing}
+        </div>
+        <button class="primaer" @click=${() => this._trageEin(vorschlag)}>
+          ${t("vorschlag_eintragen")}
+        </button>
+        <button @click=${() => this._ignoriere(vorschlag)}>
+          ${t("vorschlag_ignorieren")}
+        </button>
+      </div>
+    `;
+    return html`
+      <h2 class="abstand">${t("vorschlaege")}</h2>
+      ${kalender.fehler
+        ? html`<div class="klein warnung" role="status">${t("kalender_fehler")}</div>`
+        : nothing}
+      ${liste.length
+        ? liste.map(zeile)
+        : html`<div class="leer">${t("keine_vorschlaege")}</div>`}
+      <div class="kalenderfuss">
+        <span class="klein">
+          ${kalender.geprueft_um
+            ? t("kalender_geprueft", { zeit: this._zeit(kalender.geprueft_um) })
+            : t("kalender_nie")}
+        </span>
+        <button ?disabled=${this._kalenderLaeuft} @click=${this._pruefeKalender}>
+          ${t("kalender_pruefen")}
+        </button>
+        ${kalender.ignoriert
+          ? html`<button @click=${this._zeigeIgnorierte}>
+              ${t("kalender_ignorierte", { n: kalender.ignoriert })}
+            </button>`
+          : nothing}
+      </div>
+    `;
+  }
+
+  private _trageEin(vorschlag: Vorschlag): void {
+    this.dispatchEvent(new CustomEvent("lh-vorschlag", { detail: { vorschlag } }));
+  }
+
+  private async _ignoriere(vorschlag: Vorschlag): Promise<void> {
+    try {
+      await this._api.kalenderIgnorieren(this.kindId, vorschlag.uid);
+      this._fehler = "";
+    } catch (fehler) {
+      this._fehler = fehlertext(this._t, fehler);
+    }
+    await this._lade();
+  }
+
+  private async _zeigeIgnorierte(): Promise<void> {
+    try {
+      await this._api.kalenderWiederherstellen(this.kindId);
+      this._fehler = "";
+    } catch (fehler) {
+      this._fehler = fehlertext(this._t, fehler);
+    }
+    await this._lade();
+  }
+
+  private async _pruefeKalender(): Promise<void> {
+    this._kalenderLaeuft = true;
+    try {
+      await this._api.kalenderPruefen(this.kindId);
+      this._fehler = "";
+    } catch (fehler) {
+      this._fehler = fehlertext(this._t, fehler);
+    } finally {
+      this._kalenderLaeuft = false;
+    }
+    await this._lade();
   }
 
   private _faecher(daten: Dashboard): TemplateResult {

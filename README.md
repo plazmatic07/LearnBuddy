@@ -14,6 +14,7 @@ LearnBuddy bringt weder einen eigenen Messenger noch eine eigene KI-Anbindung mi
 - **Bewertung** zuerst lokal (Tippfehler, Artikel, Schreibweisen von Zahlen, Einheiten), bei Bedarf durch die KI (Synonyme, Textantworten).
 - **Rechenweg auf Nachfrage:** Nach einer falschen Mathe-Antwort kann sich das Kind die Lösung Schritt für Schritt erklären lassen.
 - **Aufgaben beschaffen:** eintippen, als Text importieren, aus Fotos von Buchseiten auslesen oder von der KI erzeugen lassen – erzeugte Aufgaben werden nachgerechnet und warten auf deine Freigabe.
+- **Vorschläge aus dem Schulkalender:** Termine aus einem Prüfungskalender (z. B. WebUntis) erscheinen im Panel und lassen sich mit einem Klick als Arbeit eintragen.
 - **Klassenarbeit simulieren:** als druckbares Aufgabenblatt oder als Durchlauf im Messenger mit Auswertung am Ende, auch zu einem geplanten Zeitpunkt.
 - **Zusatzaufgaben auf Wunsch:** Das Kind fordert mit 👍 oder „noch 5“ selbst weitere Aufgaben an.
 - **Panel** in der Seitenleiste für Übersicht, Aufgaben, Lektionen und Arbeiten.
@@ -31,6 +32,7 @@ LearnBuddy bringt weder einen eigenen Messenger noch eine eigene KI-Anbindung mi
 - [Mathematik](#mathematik)
 - [Sachfächer](#sachfächer)
 - [Aufgaben aus Fotos importieren](#aufgaben-aus-fotos-importieren)
+- [Vorschläge aus dem Prüfungskalender](#vorschläge-aus-dem-prüfungskalender)
 - [Wann und was gefragt wird](#wann-und-was-gefragt-wird)
 - [Klassenarbeit oder HÜ simulieren](#klassenarbeit-oder-hü-simulieren)
 - [KI](#ki)
@@ -90,6 +92,8 @@ Danach legst du auf der Seite der Integration der Reihe nach Kind, Fach und Arbe
 | Absenderkennung | Telefonnummer oder Chat-ID, an der eingehende Antworten dem Kind zugeordnet werden. |
 | Werktags ab/bis, Wochenende ab/bis | Zeitfenster, in denen gefragt werden darf; das Wochenende lässt sich ganz abschalten. |
 | Aktion für Bilder | Nur für Aufgaben mit Bild bei anderen Messengern als Telegram, siehe [Aufgaben mit Bild](#aufgaben-mit-bild). |
+| Abschnitt „Klassische Notify-Aktion“ | Nur nötig, wenn es für deinen Messenger keine Notify-Entität gibt. |
+| Abschnitt „Prüfungskalender“ | Optional, siehe [Vorschläge aus dem Prüfungskalender](#vorschläge-aus-dem-prüfungskalender). |
 
 ### Fach
 
@@ -240,6 +244,20 @@ Bei Vokabel- und Mathe-Fächern liest „Aus Foto importieren“ bis zu vier Fot
 
 Wie gut gelesen wird, hängt vom Modell und vom Foto ab; die Vorschau ist deshalb Pflicht.
 
+## Vorschläge aus dem Prüfungskalender
+
+Führt die Schule oder ihr selbst einen Kalender mit den Prüfungsterminen, kann LearnBuddy daraus Vorschläge machen. Das ist optional und wird je Kind eingeschaltet.
+
+**Einrichten:** Beim Kind im Abschnitt „Prüfungskalender“ den Haken „Prüfungskalender nutzen“ setzen, die Kalender-Entität wählen und die Uhrzeit, zu der einmal am Tag geprüft wird (Vorgabe 20:00 Uhr). Es funktioniert jede Kalender-Integration von Home Assistant, zum Beispiel WebUntis, CalDAV, Google Kalender oder der lokale Kalender. Wähle den Kalender mit den Prüfungen, nicht den Stundenplan: Jeder Termin darin wird vorgeschlagen.
+
+**Im Panel:** In der Übersicht des Kindes steht unter den anstehenden Arbeiten der Block „Vorschläge aus dem Kalender“ mit allen Terminen der nächsten 120 Tage, die noch nicht eingetragen sind.
+
+- **Eintragen** öffnet den Arbeits-Dialog, vorbelegt mit Datum, Art und dem Text des Termins als Thema. „KA“, „Klassenarbeit“ oder „Klausur“ im Termin ergibt eine Klassenarbeit, „HÜ“ oder „Test“ eine HÜ. Das Fach wählst du im Dialog; passt das Kürzel des Termins eindeutig zu einem Fach („E“ → Englisch), ist es vorausgewählt. Fehlt das Fach noch, legst du es über „+ Neues Fach“ direkt im Dialog an.
+- **Ignorieren** blendet einen Termin aus. Ignorierte lassen sich wieder anzeigen.
+- **Jetzt prüfen** liest den Kalender sofort.
+
+Ein Termin verschwindet aus den Vorschlägen, sobald die Arbeit daraus angelegt ist. Gibt es am selben Tag schon eine von Hand angelegte Arbeit, weist der Vorschlag darauf hin. Wird ein Termin im Kalender verschoben, ändert sich eine schon angelegte Arbeit nicht von selbst.
+
 ## Wann und was gefragt wird
 
 **Zeitplan:** Gefragt wird nur in den Zeitfenstern des Kindes und nur, solange eine Arbeit ansteht: ab dem eingestellten Beginn bis zum Termin, so oft am Tag wie eingestellt. Eine neue Frage kommt erst, wenn die vorige beantwortet oder abgelaufen ist. Verpasste Zeitpunkte werden nicht nachgeholt.
@@ -353,6 +371,7 @@ actions:
 - An die KI gehen zur Bewertung nur die Aufgabe, die Lösung samt Alternativen bzw. Kernpunkten, die Sprachen und die Antwort des Kindes. Name und Absenderkennung werden nie übertragen. Die Antwort ist Freitext des Kindes und geht unverändert an den gewählten KI-Dienst.
 - Beim Erzeugen und Auslesen von Aufgaben gehen zusätzlich Klassenstufe, Schulart und Bundesland an die KI, dazu Thema, deine Beschreibung und bis zu zehn Beispielaufgaben.
 - Bilder von Aufgaben gehen an den Messenger und, wenn die KI beteiligt ist, an den KI-Dienst. Fotos von Buchseiten gehen nur an den KI-Dienst. Metadaten werden vorher entfernt.
+- Termine aus dem Prüfungskalender bleiben in Home Assistant. Sie werden nicht protokolliert und nicht an eine KI geschickt.
 - Das Panel und seine Schnittstelle sind nur für Administratoren erreichbar.
 
 ## Bekannte Einschränkungen

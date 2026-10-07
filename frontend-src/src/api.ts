@@ -16,6 +16,7 @@ import type {
   JsonImportErgebnis,
   LoeschErgebnis,
   Uebersicht,
+  Fachart,
 } from "./types";
 
 /** Thin typed wrapper around the admin-only WebSocket API of the integration. */
@@ -47,6 +48,36 @@ export class Api {
 
   setzeAktiv(kindId: string, aktiv: boolean): Promise<void> {
     return this.call("set_active", { kind_id: kindId, aktiv });
+  }
+
+  async kalenderPruefen(kindId: string): Promise<boolean> {
+    const antwort = await this.call<{ gelesen: boolean }>("calendar/refresh", {
+      kind_id: kindId,
+    });
+    return antwort.gelesen;
+  }
+
+  kalenderIgnorieren(kindId: string, uid: string): Promise<void> {
+    return this.call("calendar/ignore", { kind_id: kindId, uid });
+  }
+
+  kalenderWiederherstellen(kindId: string): Promise<void> {
+    return this.call("calendar/restore", { kind_id: kindId });
+  }
+
+  async fachAnlegen(
+    kindId: string,
+    typ: Fachart,
+    name: string,
+    sprache: string | null,
+  ): Promise<string> {
+    const antwort = await this.call<{ fach_id: string }>("subjects/create", {
+      kind_id: kindId,
+      typ,
+      name: name || null,
+      sprache,
+    });
+    return antwort.fach_id;
   }
 
   absenderZuordnen(kindId: string, kennung: string): Promise<void> {

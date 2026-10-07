@@ -169,7 +169,22 @@ export interface ArbeitEingabe {
   antwortfrist_minuten: number | null;
   simulation_um: string | null;
   simulation_anzahl: number;
+  kalender_uid?: string | null;
 }
+
+/** An exam date of the calendar that is not entered yet. */
+export interface Vorschlag {
+  uid: string;
+  datum: string;
+  art: "arbeit" | "hue";
+  text: string;
+  // A guess of the server, only if exactly one subject fits
+  fach_id: string | null;
+  // Exams entered by hand for the same day
+  gleicher_tag: string[];
+}
+
+export type Fachart = "fremdsprache" | "mathe" | "sach";
 
 export interface VorschauZeile {
   frage?: Record<string, string>;
@@ -326,6 +341,9 @@ export interface Dashboard {
   };
   faecher: DashboardFach[];
   arbeiten: DashboardArbeit[];
+  // Missing on older servers; null if the child uses no exam calendar
+  kalender?: { geprueft_um: string | null; fehler: boolean; ignoriert: number } | null;
+  vorschlaege?: Vorschlag[];
   schwierig: {
     fach_id: string;
     fach: string;
