@@ -1820,7 +1820,7 @@ export class LearnBuddyPanel extends LitElement {
       return html`<div class="card leer">${t("keine_faecher")}</div>`;
     }
     return html`
-      ${faecher.length > 1
+      ${faecher.length > 0
         ? html`<div class="kinder fachwahl" role="group" aria-label=${t("fach")}>
             ${faecher.map(
               (fach) =>

@@ -924,7 +924,7 @@ var Ve=Object.defineProperty;var Ge=Object.getOwnPropertyDescriptor;var p=(o,n,e
             @lh-oeffnen=${this._oeffne}
           ></lh-uebersicht>`:this._fachBereich()}
     `}_fachBereich(){let e=this._t,t=this._faecherDesKindes;return this._fach?r`
-      ${t.length>1?r`<div class="kinder fachwahl" role="group" aria-label=${e("fach")}>
+      ${t.length>0?r`<div class="kinder fachwahl" role="group" aria-label=${e("fach")}>
             ${t.map(i=>r`<button
                   class="kindwahl"
                   aria-pressed=${i.id===this._fachId?"true":"false"}
