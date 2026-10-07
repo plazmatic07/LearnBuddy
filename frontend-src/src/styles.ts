@@ -276,6 +276,7 @@ export const styles = css`
     margin-bottom: 12px;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
     background: rgba(67, 160, 71, 0.14);
   }
@@ -284,7 +285,7 @@ export const styles = css`
     color: var(--lh-error);
   }
   .meldung span {
-    flex: 1;
+    flex: 1 1 220px;
   }
   .leer {
     padding: 28px 16px;
