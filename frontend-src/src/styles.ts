@@ -67,11 +67,13 @@ export const styles = css`
     color: var(--text-primary-color, #fff);
   }
   header button.kindwahl[aria-pressed="true"] {
-    background: var(--app-header-text-color, #fff);
-    border-color: var(--app-header-text-color, #fff);
-    color: var(--app-header-background-color, var(--lh-accent));
+    /* A tint of the header text colour: readable with every theme, also
+       when the theme makes the header background transparent */
+    background: color-mix(in srgb, currentColor 24%, transparent);
+    border-color: currentColor;
+    color: inherit;
     opacity: 1;
-    font-weight: 500;
+    font-weight: 600;
   }
   main {
     padding: 16px;
