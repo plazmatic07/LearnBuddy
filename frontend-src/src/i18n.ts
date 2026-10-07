@@ -48,6 +48,16 @@ const de = {
   neue_version:
     "LearnBuddy wurde aktualisiert. Diese Seite zeigt noch die alte Version; lade sie neu, damit alle Funktionen sichtbar sind.",
   neu_laden: "Seite neu laden",
+  absender_unbekannt:
+    "Eine Nachricht von einem unbekannten Absender ist eingegangen: {kennung} ({quelle}). Sie konnte keinem Kind zugeordnet werden.",
+  absender_uebernehmen: "Als Absenderkennung für {name} übernehmen",
+  absender_verwerfen: "Verwerfen",
+  absender_uebernommen: "Absenderkennung übernommen. Die nächste Antwort wird zugeordnet.",
+  quelle_telegram: "Telegram",
+  quelle_whatsapp: "WhatsApp",
+  quelle_event: "eigenes Ereignis",
+  err_absender_leer: "Die Absenderkennung ist leer.",
+  err_absender_vergeben: "Diese Absenderkennung gehört schon zu einem anderen Kind.",
   absender_fehlt:
     "Bei diesem Kind fehlt die Absenderkennung (Chat-ID oder Telefonnummer). Fragen gehen raus, aber Antworten können nicht zugeordnet werden. Eintragen unter Einstellungen → Geräte & Dienste → LearnBuddy → Kind bearbeiten.",
   sim_plan: "Simulation einplanen (optional)",
@@ -467,6 +477,16 @@ const en: Record<Schluessel, string> = {
   neue_version:
     "LearnBuddy was updated. This page still shows the old version; reload it to see all features.",
   neu_laden: "Reload the page",
+  absender_unbekannt:
+    "A message from an unknown sender arrived: {kennung} ({quelle}). It could not be assigned to a child.",
+  absender_uebernehmen: "Use as sender ID for {name}",
+  absender_verwerfen: "Dismiss",
+  absender_uebernommen: "Sender ID saved. The next answer will be assigned.",
+  quelle_telegram: "Telegram",
+  quelle_whatsapp: "WhatsApp",
+  quelle_event: "custom event",
+  err_absender_leer: "The sender ID is empty.",
+  err_absender_vergeben: "This sender ID already belongs to another child.",
   absender_fehlt:
     "This child has no sender ID (chat ID or phone number). Questions are sent, but answers cannot be assigned. Set it under Settings → Devices & services → LearnBuddy → edit the child.",
   sim_plan: "Plan a simulation (optional)",

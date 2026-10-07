@@ -25,8 +25,10 @@ from .ai import KiBewerter
 from .bilder import BildAblage
 from .blatt import Art, BlattAufgabe, BlattTexte, zeichne
 from .const import (
+    CONF_ABSENDER_KENNUNG,
     CONF_AUTO_FREIGABE,
     CONF_FACH_ID,
+    CONF_GEAENDERT,
     CONF_KI_ENTITY,
     CONF_SPRACHE,
     CONF_TIMEOUT_MINUTEN,
@@ -43,6 +45,8 @@ from .const import (
     SUBENTRY_ARBEIT,
     SUBENTRY_FACH,
     SUBENTRY_KIND,
+    UNBEKANNTE_ABSENDER_MAX,
+    UNBEKANNTE_ABSENDER_STUNDEN,
     signal_kind_update,
 )
 from .evaluation import bewerte_vokabel
@@ -147,9 +151,13 @@ class LearnBuddyManager:
         self._tagesuhr: CALLBACK_TYPE | None = None
         self._ki_pruefung: CALLBACK_TYPE | None = None
         self._basis: tuple[dict[str, Any], dict[str, Any]] = ({}, {})
+        # Set while the manager itself changes a subentry it applies in place
+        self._ohne_reload = False
         self._sperren: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
         # Last incoming answer per child: text, monotonic time, path it came on
         self._letzte_antwort: dict[str, tuple[str, float, str]] = {}
+        # Senders nobody is assigned to, kept in memory only: source and time
+        self._unbekannte_absender: dict[str, tuple[str, datetime]] = {}
         self._rng = Random()  # noqa: S311 - not used for cryptography
         # Timers of planned simulations, per exam
         self._sim_timer: dict[str, CALLBACK_TYPE] = {}
@@ -218,7 +226,7 @@ class LearnBuddyManager:
     @callback
     def async_nur_arbeiten_geaendert(self) -> bool:
         """Return whether the entry only differs in its exams since setup."""
-        return self._signatur() == self._basis
+        return self._ohne_reload or self._signatur() == self._basis
 
     @callback
     def async_arbeiten_aktualisieren(self) -> None:
@@ -412,6 +420,66 @@ class LearnBuddyManager:
             ):
                 return kind
         return None
+
+    @callback
+    def merke_unbekannten_absender(self, absender: str, quelle: str) -> None:
+        """Remember a sender no child is assigned to, for the hint in the panel.
+
+        Only while a child waits for an answer, so that unrelated messages to
+        the same messenger account are not collected. Nothing is written to
+        disk or to the log.
+        """
+        kennung = normalisiere_absender(absender)
+        if not kennung or not any(
+            zustand.offene_frage is not None or zustand.simulation is not None
+            for zustand in map(self.zustand, self.kinder)
+        ):
+            return
+        self._unbekannte_absender.pop(kennung, None)
+        self._unbekannte_absender[kennung] = (quelle, dt_util.utcnow())
+        while len(self._unbekannte_absender) > UNBEKANNTE_ABSENDER_MAX:
+            del self._unbekannte_absender[next(iter(self._unbekannte_absender))]
+
+    def unbekannte_absender(self) -> list[dict[str, str]]:
+        """Return the recently seen unknown senders, newest first."""
+        grenze = dt_util.utcnow() - timedelta(hours=UNBEKANNTE_ABSENDER_STUNDEN)
+        self._unbekannte_absender = {
+            kennung: wert
+            for kennung, wert in self._unbekannte_absender.items()
+            if wert[1] >= grenze
+        }
+        return [
+            {"kennung": kennung, "quelle": quelle, "zuletzt": zeit.isoformat()}
+            for kennung, (quelle, zeit) in reversed(self._unbekannte_absender.items())
+        ]
+
+    @callback
+    def vergiss_absender(self, absender: str) -> None:
+        """Drop an unknown sender from the hint."""
+        self._unbekannte_absender.pop(normalisiere_absender(absender), None)
+
+    @callback
+    def async_setze_absender(self, kind_id: str, absender: str) -> None:
+        """Set the sender ID of a child without reloading the entry."""
+        subentry = self.entry.subentries[kind_id]
+        # The update listener may run during the call or later; in both cases
+        # it must not see a difference that needs a reload
+        self._ohne_reload = True
+        try:
+            self.hass.config_entries.async_update_subentry(
+                self.entry,
+                subentry,
+                data={
+                    **subentry.data,
+                    CONF_ABSENDER_KENNUNG: absender,
+                    CONF_GEAENDERT: dt_util.utcnow().isoformat(),
+                },
+            )
+        finally:
+            self._ohne_reload = False
+        self.kinder[kind_id] = Kind.from_subentry(self.entry.subentries[kind_id])
+        self._basis = self._signatur()
+        self.vergiss_absender(absender)
 
     def antwort_doppelt(self, kind_id: str, antwort: str, quelle: str) -> bool:
         """Tell whether the same message just arrived on the other path.

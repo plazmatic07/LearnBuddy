@@ -82,6 +82,9 @@ EVENT_TELEGRAM_TEXT: Final = "telegram_text"
 EVENT_WHATSAPP_NACHRICHT: Final = "whatsapp_message_received"
 # Two paths (built-in listener and an automation) may deliver the same message
 DOPPELT_SEKUNDEN: Final = 5.0
+# Unknown senders are remembered in memory only, for the hint in the panel
+UNBEKANNTE_ABSENDER_MAX: Final = 5
+UNBEKANNTE_ABSENDER_STUNDEN: Final = 1
 DEFAULT_SIMULATION_ANZAHL: Final = 10
 MAX_TIMEOUT_MINUTEN: Final = 1440
 DEFAULT_ABFRAGEN_PRO_TAG: Final = 3

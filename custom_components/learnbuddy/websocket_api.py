@@ -604,6 +604,32 @@ def ws_exams_delete(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
     return {}
 
 
+@websocket_command(
+    {
+        vol.Required("type"): "learnbuddy/sender/assign",
+        vol.Required("kind_id"): str,
+        vol.Required("kennung"): str,
+    }
+)
+@require_admin
+@_befehl
+def ws_sender_assign(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
+    """Set an unknown sender as the sender ID of a child."""
+    verwaltung.absender_zuordnen(msg["kind_id"], msg["kennung"])
+    return {}
+
+
+@websocket_command(
+    {vol.Required("type"): "learnbuddy/sender/dismiss", vol.Required("kennung"): str}
+)
+@require_admin
+@_befehl
+def ws_sender_dismiss(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
+    """Dismiss the hint about an unknown sender."""
+    verwaltung.absender_verwerfen(msg["kennung"])
+    return {}
+
+
 @callback
 def async_setup_websocket_api(hass: HomeAssistant) -> None:
     """Register the commands of the panel."""
@@ -633,5 +659,7 @@ def async_setup_websocket_api(hass: HomeAssistant) -> None:
         ws_exams_delete,
         ws_exams_simulate,
         ws_exams_simulate_stop,
+        ws_sender_assign,
+        ws_sender_dismiss,
     ):
         async_register_command(hass, befehl)

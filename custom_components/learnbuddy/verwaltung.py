@@ -249,6 +249,8 @@ class Verwaltung:
         manager = self._manager
         return {
             "panel_version": panel_version(manager.hass),
+            # Messages nobody could be assigned to while a child waited
+            "unbekannte_absender": manager.unbekannte_absender(),
             "kinder": [
                 {
                     "id": k.id,
@@ -513,6 +515,23 @@ class Verwaltung:
         if kind_id not in self._manager.kinder:
             raise _nicht_gefunden("kind")
         self._manager.async_set_aktiv(kind_id, aktiv=aktiv)
+
+    def absender_zuordnen(self, kind_id: str, kennung: str) -> None:
+        """Take a sender seen in an incoming message as the sender ID of a child."""
+        manager = self._manager
+        if kind_id not in manager.kinder:
+            raise _nicht_gefunden("kind")
+        kennung = kennung.strip()
+        if not kennung:
+            raise _ungueltig("absender_leer")
+        anderes = manager.kind_per_absender(kennung)
+        if anderes is not None and anderes.id != kind_id:
+            raise _ungueltig("absender_vergeben")
+        manager.async_setze_absender(kind_id, kennung)
+
+    def absender_verwerfen(self, kennung: str) -> None:
+        """Dismiss the hint about an unknown sender."""
+        self._manager.vergiss_absender(kennung)
 
     # ------------------------------------------------------------------
     # Tasks

@@ -42,6 +42,14 @@ export class Api {
     return this.call("set_active", { kind_id: kindId, aktiv });
   }
 
+  absenderZuordnen(kindId: string, kennung: string): Promise<void> {
+    return this.call("sender/assign", { kind_id: kindId, kennung });
+  }
+
+  absenderVerwerfen(kennung: string): Promise<void> {
+    return this.call("sender/dismiss", { kennung });
+  }
+
   async aufgaben(fachId: string): Promise<Aufgabe[]> {
     const antwort = await this.call<{ aufgaben: Aufgabe[] }>("tasks/list", {
       fach_id: fachId,

@@ -122,6 +122,7 @@ async def test_nicht_geladen(
 
 async def test_overview(client: Client) -> None:
     ergebnis = await client.ok("overview")
+    assert ergebnis["unbekannte_absender"] == []
     assert ergebnis["kinder"] == [
         {"id": KIND_ID, "name": "Max", "bilder": False, "absender": True}
     ]
@@ -942,3 +943,19 @@ async def test_antwortfrist_der_arbeit(
     uebersicht = await client.ok("overview")
     eigene = {a["thema"]: a["antwortfrist_minuten"] for a in uebersicht["arbeiten"]}
     assert eigene == {"Unit 3": None, "HÜ": 5}
+
+
+async def test_sender_befehle(hass: HomeAssistant, client: Client) -> None:
+    await client.ok("ask", kind_id=KIND_ID, fach_id=None)
+    hass.bus.async_fire("telegram_text", {"chat_id": 4711, "text": "x"})
+    hass.bus.async_fire("telegram_text", {"chat_id": 4712, "text": "x"})
+    await hass.async_block_till_done()
+    ergebnis = await client.ok("overview")
+    assert [e["kennung"] for e in ergebnis["unbekannte_absender"]] == ["4712", "4711"]
+
+    await client.ok("sender/dismiss", kennung="4712")
+    fehler = await client.fehler("sender/assign", kind_id="x", kennung="4711")
+    assert fehler["message"] == "kind_unbekannt"
+    await client.ok("sender/assign", kind_id=KIND_ID, kennung="4711")
+    ergebnis = await client.ok("overview")
+    assert ergebnis["unbekannte_absender"] == []

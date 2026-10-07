@@ -219,3 +219,78 @@ async def test_gleiche_antwort_zweimal_auf_einem_weg(
     assert not manager.antwort_doppelt(KIND_ID, "ja", "aktion")
     assert manager.antwort_doppelt(KIND_ID, "ja", "eingang")
     assert not manager.antwort_doppelt(KIND_ID, "nein", "eingang")
+
+
+async def test_unbekannter_absender_wird_angeboten(
+    hass: HomeAssistant,
+    mit_vokabeln: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+) -> None:
+    manager: LearnBuddyManager = mit_vokabeln.runtime_data
+    verwaltung = manager.verwaltung
+
+    # Nobody waits for an answer: nothing is collected
+    hass.bus.async_fire("telegram_text", {"chat_id": 4711, "text": "hallo"})
+    await hass.async_block_till_done()
+    assert verwaltung.uebersicht()["unbekannte_absender"] == []
+
+    await _frage(hass, manager)
+    hass.bus.async_fire("telegram_text", {"chat_id": 4711, "text": "x"})
+    hass.bus.async_fire(
+        "whatsapp_message_received", {"from": "4930123@s.whatsapp.net", "body": "x"}
+    )
+    hass.bus.async_fire("telegram_text", {"chat_id": 4711, "text": "y"})
+    await hass.async_block_till_done()
+    liste = verwaltung.uebersicht()["unbekannte_absender"]
+    assert [(e["kennung"], e["quelle"]) for e in liste] == [
+        ("4711", "telegram"),
+        ("4930123", "whatsapp"),
+    ]
+    assert _gefragt(manager)
+
+    verwaltung.absender_verwerfen("4930123")
+    verwaltung.absender_zuordnen(KIND_ID, " 4711 ")
+    await hass.async_block_till_done()
+    assert verwaltung.uebersicht()["unbekannte_absender"] == []
+    # Taken over without a reload: same manager, question still open
+    assert mit_vokabeln.runtime_data is manager
+    assert manager.kinder[KIND_ID].absender_kennung == "4711"
+    assert mit_vokabeln.subentries[KIND_ID].data["absender_kennung"] == "4711"
+
+    hass.bus.async_fire("telegram_text", {"chat_id": 4711, "text": "x"})
+    await hass.async_block_till_done()
+    assert not _gefragt(manager)
+
+
+async def test_unbekannte_absender_begrenzt_und_befristet(
+    hass: HomeAssistant,
+    mit_vokabeln: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+    freezer: Any,
+) -> None:
+    manager: LearnBuddyManager = mit_vokabeln.runtime_data
+    await _frage(hass, manager)
+    for nummer in range(8):
+        manager.merke_unbekannten_absender(str(1000 + nummer), "telegram")
+    manager.merke_unbekannten_absender(" ", "telegram")
+    kennungen = [e["kennung"] for e in manager.unbekannte_absender()]
+    assert kennungen == ["1007", "1006", "1005", "1004", "1003"]
+
+    freezer.tick(3601)
+    assert manager.unbekannte_absender() == []
+
+
+async def test_absender_zuordnen_fehler(
+    hass: HomeAssistant, mit_vokabeln: MockConfigEntry
+) -> None:
+    from custom_components.learnbuddy.verwaltung import VerwaltungError  # noqa: PLC0415
+
+    verwaltung = mit_vokabeln.runtime_data.verwaltung
+    with pytest.raises(VerwaltungError) as fehler:
+        verwaltung.absender_zuordnen("gibtsnicht", "1")
+    assert fehler.value.schluessel == "kind_unbekannt"
+    with pytest.raises(VerwaltungError) as fehler:
+        verwaltung.absender_zuordnen(KIND_ID, "  ")
+    assert fehler.value.schluessel == "absender_leer"
+    # The own sender ID may be set again
+    verwaltung.absender_zuordnen(KIND_ID, "491701234567")

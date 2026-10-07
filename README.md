@@ -123,7 +123,9 @@ LearnBuddy verschickt Fragen selbst und nimmt Antworten selbst entgegen. Dazu la
 | WhatsApp ([ha-wa-bridge](https://github.com/raulpetruta/ha-wa-bridge)) | `whatsapp_message_received` | Telefonnummer, z. B. `491701234567` |
 | Andere | in den Optionen einstellbar: Name des Ereignisses, Feld mit dem Absender (Vorgabe `sender`), Feld mit dem Text (Vorgabe `text`) | was die Integration als Absender liefert |
 
-Zugeordnet wird eine Nachricht über die **Absenderkennung** des Kindes. Fehlt sie, gehen Fragen raus, aber Antworten kommen nicht an; das Panel weist beim Kind darauf hin. Nachrichten unbekannter Absender und WhatsApp-Nachrichten aus Gruppen werden ignoriert. Telefonnummern werden nur nach ihren Ziffern verglichen.
+Zugeordnet wird eine Nachricht über die **Absenderkennung** des Kindes. Fehlt sie, gehen Fragen raus, aber Antworten kommen nicht an; das Panel weist beim Kind darauf hin.
+
+Kommt eine Nachricht von einem unbekannten Absender, während ein Kind auf eine Antwort wartet, zeigt das Panel dessen Kennung an. Mit einem Klick übernimmst du sie als Absenderkennung des gewählten Kindes – so musst du Chat-IDs nicht selbst heraussuchen. Diese Liste wird nur im Arbeitsspeicher gehalten (höchstens fünf Einträge, eine Stunde lang) und weder gespeichert noch protokolliert. Nachrichten unbekannter Absender und WhatsApp-Nachrichten aus Gruppen werden ignoriert. Telefonnummern werden nur nach ihren Ziffern verglichen.
 
 Beide eingebauten Wege lassen sich in den Optionen abschalten.
 

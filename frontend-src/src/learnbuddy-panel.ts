@@ -1735,6 +1735,30 @@ export class LearnBuddyPanel extends LitElement {
               <span>${t("absender_fehlt")}</span>
             </div>`
           : nothing}
+        ${(this._uebersicht?.unbekannte_absender ?? []).map(
+          (absender) =>
+            html`<div class="meldung" role="status">
+              <span>
+                ${t("absender_unbekannt", {
+                  kennung: absender.kennung,
+                  quelle: t(`quelle_${absender.quelle}`),
+                })}
+              </span>
+              <button
+                class="primaer"
+                @click=${() => this._absenderZuordnen(absender.kennung)}
+              >
+                ${t("absender_uebernehmen", {
+                  name:
+                    this._uebersicht?.kinder.find((k) => k.id === this._kindId)?.name ??
+                    "",
+                })}
+              </button>
+              <button @click=${() => this._absenderVerwerfen(absender.kennung)}>
+                ${t("absender_verwerfen")}
+              </button>
+            </div>`,
+        )}
         ${this._meldung
           ? html`<div
               class="meldung ${this._meldung.fehler ? "fehler" : ""}"
@@ -1766,6 +1790,25 @@ export class LearnBuddyPanel extends LitElement {
     }
     this._tab = ziel;
     await this._neuLaden();
+  }
+
+  private async _absenderZuordnen(kennung: string): Promise<void> {
+    try {
+      await this._api.absenderZuordnen(this._kindId, kennung);
+      await this._neuLaden();
+      this._zeigeErfolg(this._t("absender_uebernommen"));
+    } catch (err) {
+      this._zeigeFehler(err);
+    }
+  }
+
+  private async _absenderVerwerfen(kennung: string): Promise<void> {
+    try {
+      await this._api.absenderVerwerfen(kennung);
+      await this._neuLaden();
+    } catch (err) {
+      this._zeigeFehler(err);
+    }
   }
 
   private async _waehleTab(tab: Tab): Promise<void> {

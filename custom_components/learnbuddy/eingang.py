@@ -92,24 +92,28 @@ class Eingang:
 
     @callback
     def _von_telegram(self, event: Event) -> None:
-        self._annehmen(event.data.get("chat_id"), event.data.get("text"))
+        self._annehmen(event.data.get("chat_id"), event.data.get("text"), "telegram")
 
     @callback
     def _von_whatsapp(self, event: Event) -> None:
         if event.data.get("isGroup") or event.data.get("fromMe"):
             return
         self._annehmen(
-            whatsapp_absender(event.data.get("from")), event.data.get("body")
+            whatsapp_absender(event.data.get("from")),
+            event.data.get("body"),
+            "whatsapp",
         )
 
     @callback
     def _von_event(self, event: Event) -> None:
         self._annehmen(
-            event.data.get(self._absender_feld), event.data.get(self._text_feld)
+            event.data.get(self._absender_feld),
+            event.data.get(self._text_feld),
+            "event",
         )
 
     @callback
-    def _annehmen(self, absender: Any, inhalt: Any) -> None:
+    def _annehmen(self, absender: Any, inhalt: Any, quelle: str) -> None:
         """Hand a message over if its sender is a known child."""
         if absender is None or inhalt is None:
             return
@@ -118,6 +122,7 @@ class Eingang:
             return
         kind = self._manager.kind_per_absender(str(absender))
         if kind is None:
+            self._manager.merke_unbekannten_absender(str(absender), quelle)
             return
         if self._manager.antwort_doppelt(kind.id, nachricht, QUELLE_EINGANG):
             return

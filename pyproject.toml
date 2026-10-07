@@ -1,6 +1,6 @@
 [project]
 name = "learnbuddy"
-version = "0.6.2"
+version = "0.6.3"
 description = "Home Assistant custom integration that quizzes children for upcoming exams via messenger"
 requires-python = ">=3.14.2"
 dependencies = []

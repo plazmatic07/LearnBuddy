@@ -59,8 +59,16 @@ export interface Arbeit {
 /** What the AI of a subject can do right now. */
 export type KiStatus = "keine" | "nicht_verfuegbar" | "ohne_bilder" | "ok";
 
+export interface UnbekannterAbsender {
+  kennung: string;
+  quelle: "telegram" | "whatsapp" | "event";
+  zuletzt: string;
+}
+
 export interface Uebersicht {
   panel_version?: string | null;
+  // Missing on older servers
+  unbekannte_absender?: UnbekannterAbsender[];
   kinder: Kind[];
   faecher: Fach[];
   arbeiten: Arbeit[];
