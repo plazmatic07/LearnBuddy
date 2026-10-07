@@ -258,14 +258,16 @@
             "start_tage_vorher": "Beginn (Tage vor dem Termin)",
             "intensivierung": "Frequenz zum Termin hin steigern",
             "antwortfrist_minuten": "Antwortfrist",
-            "simulation_um": "Simulation einplanen (Datum und Uhrzeit)",
+            "simulation_aktiv": "Simulation einplanen",
+            "simulation_um": "Zeitpunkt der Simulation",
             "simulation_anzahl": "Aufgaben in der Simulation"
           },
           "data_description": {
             "lektionen": "Aufgaben dieser Lektionen werden abgefragt. Leer lassen, um alle Aufgaben des Fachs zu verwenden. Lektionen werden im LearnBuddy-Panel angelegt.",
             "intensivierung": "Die Zahl der Abfragen steigt bis zum letzten Tag auf das Doppelte.",
             "antwortfrist_minuten": "Optional. Nach dieser Zeit gilt eine Frage dieser Arbeit als unbeantwortet. Leer: Es gilt die allgemeine Einstellung. Gehört eine Aufgabe zu mehreren laufenden Arbeiten, gilt die kürzeste Frist.",
-            "simulation_um": "Optional. Zu diesem Zeitpunkt bekommt das Kind automatisch eine Simulation dieser Arbeit per Messenger: das Aufgabenblatt als Bild, dann die Aufgaben nacheinander, am Ende die Auswertung. Es gibt genau einen Versuch."
+            "simulation_um": "Zu diesem Zeitpunkt bekommt das Kind automatisch eine Simulation dieser Arbeit per Messenger: das Aufgabenblatt als Bild, dann die Aufgaben nacheinander, am Ende die Auswertung. Es gibt genau einen Versuch.",
+            "simulation_aktiv": "Schickt dem Kind zum Zeitpunkt unten automatisch eine Simulation dieser Arbeit. Aus lassen, wenn du keine möchtest."
           }
         },
         "reconfigure": {
@@ -279,21 +281,24 @@
             "start_tage_vorher": "Beginn (Tage vor dem Termin)",
             "intensivierung": "Frequenz zum Termin hin steigern",
             "antwortfrist_minuten": "Antwortfrist",
-            "simulation_um": "Simulation einplanen (Datum und Uhrzeit)",
+            "simulation_aktiv": "Simulation einplanen",
+            "simulation_um": "Zeitpunkt der Simulation",
             "simulation_anzahl": "Aufgaben in der Simulation"
           },
           "data_description": {
             "lektionen": "Aufgaben dieser Lektionen werden abgefragt. Leer lassen, um alle Aufgaben des Fachs zu verwenden. Lektionen werden im LearnBuddy-Panel angelegt.",
             "intensivierung": "Die Zahl der Abfragen steigt bis zum letzten Tag auf das Doppelte.",
             "antwortfrist_minuten": "Optional. Nach dieser Zeit gilt eine Frage dieser Arbeit als unbeantwortet. Leer: Es gilt die allgemeine Einstellung. Gehört eine Aufgabe zu mehreren laufenden Arbeiten, gilt die kürzeste Frist.",
-            "simulation_um": "Optional. Zu diesem Zeitpunkt bekommt das Kind automatisch eine Simulation dieser Arbeit per Messenger: das Aufgabenblatt als Bild, dann die Aufgaben nacheinander, am Ende die Auswertung. Es gibt genau einen Versuch."
+            "simulation_um": "Zu diesem Zeitpunkt bekommt das Kind automatisch eine Simulation dieser Arbeit per Messenger: das Aufgabenblatt als Bild, dann die Aufgaben nacheinander, am Ende die Auswertung. Es gibt genau einen Versuch.",
+            "simulation_aktiv": "Schickt dem Kind zum Zeitpunkt unten automatisch eine Simulation dieser Arbeit. Aus lassen, wenn du keine möchtest."
           }
         }
       },
       "error": {
         "thema_leer": "Bitte ein Thema eingeben.",
         "datum_vergangen": "Das Datum liegt in der Vergangenheit.",
-        "simulation_um_vergangen": "Der Zeitpunkt der Simulation liegt in der Vergangenheit."
+        "simulation_um_vergangen": "Der Zeitpunkt der Simulation liegt in der Vergangenheit.",
+        "simulation_um_fehlt": "Bitte Datum und Uhrzeit der Simulation angeben."
       },
       "abort": {
         "keine_faecher": "Bitte zuerst ein Fach anlegen.",

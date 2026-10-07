@@ -195,6 +195,9 @@ KIND_SCHEMA = vol.Schema(
 )
 
 
+# Form-only switch of the exam form, not stored
+SIMULATION_AKTIV = "simulation_aktiv"
+
 # Only needed without a notify entity, so it is folded away by default
 ABSCHNITT_KLASSISCH = "klassisch"
 _KLASSISCH_FELDER = (CONF_NOTIFY_SERVICE, CONF_NOTIFY_TARGET, CONF_NOTIFY_DATA)
@@ -803,6 +806,9 @@ class ArbeitSubentryFlow(ConfigSubentryFlow):
                         unit_of_measurement="min",
                     )
                 ),
+                # Home Assistant shows a date in an empty date field, so the
+                # plan has to be switched on explicitly
+                vol.Required(SIMULATION_AKTIV, default=False): BooleanSelector(),
                 vol.Optional(CONF_SIMULATION_UM): DateTimeSelector(),
                 vol.Optional(
                     CONF_SIMULATION_ANZAHL, default=DEFAULT_SIMULATION_ANZAHL
@@ -825,6 +831,7 @@ class ArbeitSubentryFlow(ConfigSubentryFlow):
             werte[CONF_SIMULATION_UM] = dt_util.as_local(zeitpunkt).strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
+        werte.setdefault(SIMULATION_AKTIV, zeitpunkt is not None)
         return werte
 
     def _pruefe(
@@ -847,9 +854,16 @@ class ArbeitSubentryFlow(ConfigSubentryFlow):
             daten.get(CONF_SIMULATION_ANZAHL) or DEFAULT_SIMULATION_ANZAHL
         )
         # The form gives local time, stored is UTC like the panel sends it
-        zeitpunkt = dt_util.parse_datetime(daten.get(CONF_SIMULATION_UM) or "")
+        aktiv = bool(daten.pop(SIMULATION_AKTIV, False))
+        zeitpunkt = (
+            dt_util.parse_datetime(daten.get(CONF_SIMULATION_UM) or "")
+            if aktiv
+            else None
+        )
         if zeitpunkt is None:
             daten[CONF_SIMULATION_UM] = None
+            if aktiv:
+                fehler[CONF_SIMULATION_UM] = "simulation_um_fehlt"
         else:
             if zeitpunkt.tzinfo is None:
                 zeitpunkt = zeitpunkt.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)

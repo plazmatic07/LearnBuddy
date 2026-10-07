@@ -61,10 +61,10 @@ const de = {
   absender_fehlt:
     "Bei diesem Kind fehlt die Absenderkennung (Chat-ID oder Telefonnummer). Fragen gehen raus, aber Antworten können nicht zugeordnet werden. Eintragen unter Einstellungen → Geräte & Dienste → LearnBuddy → Kind bearbeiten.",
   sim_plan: "Simulation einplanen (optional)",
+  sim_plan_aktiv: "Zu einem festen Zeitpunkt automatisch eine Simulation schicken",
   sim_plan_hilfe:
     "Zum gewählten Zeitpunkt bekommt das Kind automatisch eine Simulation dieser Arbeit per Messenger: das Aufgabenblatt als Bild, dann die Aufgaben nacheinander, am Ende die Auswertung. Ist das Kind dann pausiert oder läuft schon eine Simulation, entfällt sie.",
   sim_plan_um: "Datum und Uhrzeit",
-  sim_plan_entfernen: "Planung entfernen",
   sim_plan_offen: "Simulation geplant für {zeit} ({n} Aufgaben)",
   sim_plan_erledigt: "Geplante Simulation vom {zeit} ist erledigt",
   err_simulation_um_vergangen: "Der Zeitpunkt der Simulation liegt in der Vergangenheit.",
@@ -493,10 +493,10 @@ const en: Record<Schluessel, string> = {
   absender_fehlt:
     "This child has no sender ID (chat ID or phone number). Questions are sent, but answers cannot be assigned. Set it under Settings → Devices & services → LearnBuddy → edit the child.",
   sim_plan: "Plan a simulation (optional)",
+  sim_plan_aktiv: "Send a simulation automatically at a fixed time",
   sim_plan_hilfe:
     "At the chosen time the child automatically gets a simulation of this exam in the messenger: the sheet as an image, then the tasks one after the other, the result at the end. If the child is paused or a simulation is already running then, it is skipped.",
   sim_plan_um: "Date and time",
-  sim_plan_entfernen: "Remove the plan",
   sim_plan_offen: "Simulation planned for {zeit} ({n} tasks)",
   sim_plan_erledigt: "The simulation planned for {zeit} is done",
   err_simulation_um_vergangen: "The time of the simulation is in the past.",

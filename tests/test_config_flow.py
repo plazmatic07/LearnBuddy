@@ -450,14 +450,24 @@ async def test_arbeit_formular_plant_simulation(
     result = await _reconfigure_flow(hass, mit_vokabeln, "arbeit", ARBEIT_ID)
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {**ARBEIT_EINGABE, "simulation_um": "2026-10-06 07:00:00"},
+        {
+            **ARBEIT_EINGABE,
+            "simulation_aktiv": True,
+            "simulation_um": "2026-10-06 07:00:00",
+        },
     )
     assert result["errors"] == {"simulation_um": "simulation_um_vergangen"}
+    # Switched on without a time
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {**ARBEIT_EINGABE, "simulation_aktiv": True}
+    )
+    assert result["errors"] == {"simulation_um": "simulation_um_fehlt"}
     # The form takes local time
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
             **ARBEIT_EINGABE,
+            "simulation_aktiv": True,
             "simulation_um": "2026-10-08 15:00:00",
             "simulation_anzahl": 7,
         },
@@ -477,18 +487,30 @@ async def test_arbeit_formular_plant_simulation(
         for schluessel in result["data_schema"].schema
     }
     assert vorbelegt["simulation_um"] == {"suggested_value": "2026-10-08 15:00:00"}
+    assert vorbelegt["simulation_aktiv"] == {"suggested_value": True}
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {**ARBEIT_EINGABE, "simulation_um": "2026-10-08 15:00:00"},
+        {
+            **ARBEIT_EINGABE,
+            "simulation_aktiv": True,
+            "simulation_um": "2026-10-08 15:00:00",
+        },
     )
     await hass.async_block_till_done()
     daten = mit_vokabeln.subentries[ARBEIT_ID].data
     assert daten["simulation_um"] == "2026-10-08T13:00:00+00:00"
-    # Without a value the default number applies; an empty time removes the plan
+    # Without a value the default number applies
     assert daten["simulation_anzahl"] == 10
+    # Switched off, the plan goes, even if the date field still holds a value
+    # (Home Assistant fills an empty date field on its own)
     result = await _reconfigure_flow(hass, mit_vokabeln, "arbeit", ARBEIT_ID)
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], ARBEIT_EINGABE
+        result["flow_id"],
+        {
+            **ARBEIT_EINGABE,
+            "simulation_aktiv": False,
+            "simulation_um": "2026-10-08 15:00:00",
+        },
     )
     await hass.async_block_till_done()
     assert mit_vokabeln.subentries[ARBEIT_ID].data["simulation_um"] is None

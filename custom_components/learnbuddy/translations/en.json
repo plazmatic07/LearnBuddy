@@ -258,14 +258,16 @@
             "start_tage_vorher": "Start (days before the date)",
             "intensivierung": "Increase frequency towards the date",
             "antwortfrist_minuten": "Time to answer",
-            "simulation_um": "Planned simulation (date and time)",
+            "simulation_aktiv": "Plan a simulation",
+            "simulation_um": "Time of the simulation",
             "simulation_anzahl": "Tasks in the simulation"
           },
           "data_description": {
             "lektionen": "Tasks of these lessons are asked. Leave empty to use all tasks of the subject. Lessons are created in the LearnBuddy panel.",
             "intensivierung": "The number of questions grows up to twice the value on the last day.",
             "antwortfrist_minuten": "Optional. After this time a question of this exam counts as unanswered. Empty: the general setting applies. If a task belongs to several running exams, the shortest time wins.",
-            "simulation_um": "Optional. At this time the child automatically gets a simulation of this exam in the messenger: the sheet as an image, then the tasks one after the other, the result at the end. It is tried once."
+            "simulation_um": "At this time the child automatically gets a simulation of this exam in the messenger: the sheet as an image, then the tasks one after the other, the result at the end. It is tried once.",
+            "simulation_aktiv": "Sends the child a simulation of this exam at the time below. Leave it off if you do not want one."
           }
         },
         "reconfigure": {
@@ -279,21 +281,24 @@
             "start_tage_vorher": "Start (days before the date)",
             "intensivierung": "Increase frequency towards the date",
             "antwortfrist_minuten": "Time to answer",
-            "simulation_um": "Planned simulation (date and time)",
+            "simulation_aktiv": "Plan a simulation",
+            "simulation_um": "Time of the simulation",
             "simulation_anzahl": "Tasks in the simulation"
           },
           "data_description": {
             "lektionen": "Tasks of these lessons are asked. Leave empty to use all tasks of the subject. Lessons are created in the LearnBuddy panel.",
             "intensivierung": "The number of questions grows up to twice the value on the last day.",
             "antwortfrist_minuten": "Optional. After this time a question of this exam counts as unanswered. Empty: the general setting applies. If a task belongs to several running exams, the shortest time wins.",
-            "simulation_um": "Optional. At this time the child automatically gets a simulation of this exam in the messenger: the sheet as an image, then the tasks one after the other, the result at the end. It is tried once."
+            "simulation_um": "At this time the child automatically gets a simulation of this exam in the messenger: the sheet as an image, then the tasks one after the other, the result at the end. It is tried once.",
+            "simulation_aktiv": "Sends the child a simulation of this exam at the time below. Leave it off if you do not want one."
           }
         }
       },
       "error": {
         "thema_leer": "Please enter a topic.",
         "datum_vergangen": "The date is in the past.",
-        "simulation_um_vergangen": "The time of the simulation is in the past."
+        "simulation_um_vergangen": "The time of the simulation is in the past.",
+        "simulation_um_fehlt": "Please enter date and time of the simulation."
       },
       "abort": {
         "keine_faecher": "Add a subject first.",

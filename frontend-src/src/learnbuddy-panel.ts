@@ -169,6 +169,7 @@ interface ArbeitEntwurf {
   intensivierung: boolean;
   frist: number | null;
   // Planned simulation: local date and time as in a datetime-local field
+  simAktiv: boolean;
   simUm: string;
   simAnzahl: number;
   modus: "alle" | "auswahl";
@@ -1527,6 +1528,7 @@ export class LearnBuddyPanel extends LitElement {
       start: arbeit?.start_tage_vorher ?? 7,
       intensivierung: arbeit?.intensivierung ?? true,
       frist: arbeit?.antwortfrist_minuten ?? null,
+      simAktiv: Boolean(arbeit?.simulation_um),
       simUm: lokaleZeit(arbeit?.simulation_um ?? null),
       simAnzahl: arbeit?.simulation_anzahl ?? 10,
       modus: gezielt ? "auswahl" : "alle",
@@ -1615,6 +1617,10 @@ export class LearnBuddyPanel extends LitElement {
     if (!arbeit) {
       return;
     }
+    if (arbeit.simAktiv && !arbeit.simUm) {
+      this._zeigeFehler({ message: "simulation_um_ungueltig" });
+      return;
+    }
     const gezielt = arbeit.modus === "auswahl";
     const eingabe: ArbeitEingabe = {
       datum: arbeit.datum,
@@ -1627,7 +1633,8 @@ export class LearnBuddyPanel extends LitElement {
       intensivierung: arbeit.intensivierung,
       antwortfrist_minuten: arbeit.frist,
       // Sent with its zone so that the server does not have to guess
-      simulation_um: arbeit.simUm ? new Date(arbeit.simUm).toISOString() : null,
+      simulation_um:
+        arbeit.simAktiv && arbeit.simUm ? new Date(arbeit.simUm).toISOString() : null,
       simulation_anzahl: arbeit.simAnzahl,
     };
     if (!arbeit.id) {
@@ -3800,38 +3807,43 @@ export class LearnBuddyPanel extends LitElement {
 
       <fieldset>
         <legend>${t("sim_plan")}</legend>
-        <p class="klein" style="margin-top: 0">${t("sim_plan_hilfe")}</p>
-        <div class="raster">
-          <label class="feld">
-            ${t("sim_plan_um")}
-            <input
-              type="datetime-local"
-              .value=${arbeit.simUm}
-              @change=${(e: Event) => this._setzeArbeit("simUm", wert(e))}
-            />
-          </label>
-          <label class="feld">
-            ${t("sim_anzahl")}
-            <input
-              type="number"
-              min="1"
-              max=${MAX_SIM_AUFGABEN}
-              .value=${String(arbeit.simAnzahl)}
-              @input=${(e: Event) =>
-                this._setzeArbeit(
-                  "simAnzahl",
-                  Math.max(1, Math.min(Math.round(Number(wert(e))) || 1, MAX_SIM_AUFGABEN)),
-                )}
-            />
-          </label>
-        </div>
-        ${arbeit.simUm
-          ? html`<button
-              style="margin-top: 8px"
-              @click=${() => this._setzeArbeit("simUm", "")}
-            >
-              ${t("sim_plan_entfernen")}
-            </button>`
+        <label class="feld zeile">
+          <input
+            type="checkbox"
+            .checked=${arbeit.simAktiv}
+            @change=${(e: Event) => this._setzeArbeit("simAktiv", angehakt(e))}
+          />
+          ${t("sim_plan_aktiv")}
+        </label>
+        ${arbeit.simAktiv
+          ? html`<p class="klein">${t("sim_plan_hilfe")}</p>
+              <div class="raster">
+                <label class="feld">
+                  ${t("sim_plan_um")}
+                  <input
+                    type="datetime-local"
+                    .value=${arbeit.simUm}
+                    @change=${(e: Event) => this._setzeArbeit("simUm", wert(e))}
+                  />
+                </label>
+                <label class="feld">
+                  ${t("sim_anzahl")}
+                  <input
+                    type="number"
+                    min="1"
+                    max=${MAX_SIM_AUFGABEN}
+                    .value=${String(arbeit.simAnzahl)}
+                    @input=${(e: Event) =>
+                      this._setzeArbeit(
+                        "simAnzahl",
+                        Math.max(
+                          1,
+                          Math.min(Math.round(Number(wert(e))) || 1, MAX_SIM_AUFGABEN),
+                        ),
+                      )}
+                  />
+                </label>
+              </div>`
           : nothing}
       </fieldset>
 
