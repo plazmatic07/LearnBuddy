@@ -1,0 +1,26 @@
+{
+  "domain": "learnbuddy",
+  "name": "LearnBuddy",
+  "after_dependencies": [
+    "ai_task",
+    "media_source",
+    "notify"
+  ],
+  "codeowners": [
+    "@plazmatic07"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "frontend",
+    "http",
+    "panel_custom",
+    "websocket_api"
+  ],
+  "documentation": "https://github.com/plazmatic07/learnbuddy",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/plazmatic07/learnbuddy/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.6.0"
+}

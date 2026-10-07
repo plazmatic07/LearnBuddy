@@ -1,0 +1,567 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up LearnBuddy",
+        "description": "Children, subjects and exams are added afterwards on the integration page.",
+        "data": {
+          "timeout_minuten": "Timeout for open questions",
+          "sprache": "Language of the messages",
+          "ki_entity": "AI entity for evaluation",
+          "auto_freigabe": "Approve generated tasks automatically"
+        },
+        "data_description": {
+          "timeout_minuten": "After this time a question counts as unanswered (not as wrong).",
+          "ki_entity": "Optional. This AI task entity checks vocabulary answers that are wrong locally for synonyms and typos, evaluates math answers that are no plain numbers, explains solutions and creates math tasks. No name or other personal data is sent.",
+          "auto_freigabe": "Off: tasks created by the AI wait in the panel until you approve them. On: they are asked right away if their solution could be verified."
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "LearnBuddy is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "LearnBuddy options",
+        "data": {
+          "timeout_minuten": "Timeout for open questions",
+          "sprache": "Language of the messages",
+          "ki_entity": "AI entity for evaluation",
+          "auto_freigabe": "Approve generated tasks automatically"
+        },
+        "data_description": {
+          "timeout_minuten": "After this time a question counts as unanswered (not as wrong).",
+          "ki_entity": "Optional. This AI task entity checks vocabulary answers that are wrong locally for synonyms and typos, evaluates math answers that are no plain numbers, explains solutions and creates math tasks. No name or other personal data is sent.",
+          "auto_freigabe": "Off: tasks created by the AI wait in the panel until you approve them. On: they are asked right away if their solution could be verified."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "kind": {
+      "entry_type": "Child",
+      "initiate_flow": {
+        "user": "Add child",
+        "reconfigure": "Edit child"
+      },
+      "step": {
+        "user": {
+          "title": "Add child",
+          "data": {
+            "name": "First name",
+            "muttersprache": "Native language",
+            "klassenstufe": "Grade",
+            "schulart": "School type",
+            "bundesland": "Federal state",
+            "notify_entity": "Notify entity",
+            "notify_service": "Notify action (legacy)",
+            "notify_target": "Target of the notify action",
+            "notify_data": "Additional data of the notify action",
+            "absender_kennung": "Sender ID",
+            "werktag_von": "Weekdays from",
+            "werktag_bis": "Weekdays until",
+            "wochenende_aktiv": "Ask on weekends",
+            "wochenende_von": "Weekend from",
+            "wochenende_bis": "Weekend until",
+            "bild_aktion": "Action for images"
+          },
+          "data_description": {
+            "name": "Used to address the child. It is never sent to an AI service.",
+            "klassenstufe": "Context for generated tasks.",
+            "notify_entity": "Messenger entity that delivers questions to the child. Use either this or the legacy action.",
+            "notify_service": "Name of a legacy notify action, for example notify.whatsapp.",
+            "notify_target": "Recipients passed as target, for example a phone number or chat ID.",
+            "absender_kennung": "Phone number or chat ID used to match incoming answers to this child.",
+            "werktag_von": "Questions are only sent inside this time window.",
+            "muttersprache": "Source language of the vocabulary. Foreign language subjects of this child are asked between this language and the foreign language. Changing it later only affects new subjects.",
+            "bild_aktion": "Optional. Only needed if the messenger is not Telegram: actions that send an image, for tasks with a diagram. The variables bild_url (address valid for ten minutes), bild_pfad (file) and text (the task) are available."
+          }
+        },
+        "reconfigure": {
+          "title": "Edit child",
+          "data": {
+            "name": "First name",
+            "muttersprache": "Native language",
+            "klassenstufe": "Grade",
+            "schulart": "School type",
+            "bundesland": "Federal state",
+            "notify_entity": "Notify entity",
+            "notify_service": "Notify action (legacy)",
+            "notify_target": "Target of the notify action",
+            "notify_data": "Additional data of the notify action",
+            "absender_kennung": "Sender ID",
+            "werktag_von": "Weekdays from",
+            "werktag_bis": "Weekdays until",
+            "wochenende_aktiv": "Ask on weekends",
+            "wochenende_von": "Weekend from",
+            "wochenende_bis": "Weekend until",
+            "bild_aktion": "Action for images"
+          },
+          "data_description": {
+            "name": "Used to address the child. It is never sent to an AI service.",
+            "klassenstufe": "Context for generated tasks.",
+            "notify_entity": "Messenger entity that delivers questions to the child. Use either this or the legacy action.",
+            "notify_service": "Name of a legacy notify action, for example notify.whatsapp.",
+            "notify_target": "Recipients passed as target, for example a phone number or chat ID.",
+            "absender_kennung": "Phone number or chat ID used to match incoming answers to this child.",
+            "werktag_von": "Questions are only sent inside this time window.",
+            "muttersprache": "Source language of the vocabulary. Foreign language subjects of this child are asked between this language and the foreign language. Changing it later only affects new subjects.",
+            "bild_aktion": "Optional. Only needed if the messenger is not Telegram: actions that send an image, for tasks with a diagram. The variables bild_url (address valid for ten minutes), bild_pfad (file) and text (the task) are available."
+          }
+        }
+      },
+      "error": {
+        "name_leer": "Please enter a name.",
+        "name_vorhanden": "This name is already in use.",
+        "notify_genau_eins": "Select either a notify entity or a legacy notify action.",
+        "notify_service_ungueltig": "This is not a valid notify action name.",
+        "fenster_ungueltig": "The end must be after the start.",
+        "bild_aktion_ungueltig": "These are not valid actions."
+      },
+      "abort": {
+        "reconfigure_successful": "The child was updated."
+      }
+    },
+    "fach": {
+      "entry_type": "Subject",
+      "initiate_flow": {
+        "user": "Add subject",
+        "reconfigure": "Edit subject"
+      },
+      "step": {
+        "user": {
+          "title": "Add subject",
+          "data": {
+            "kind_id": "Child",
+            "typ": "Kind of subject"
+          }
+        },
+        "reconfigure": {
+          "title": "Edit subject",
+          "data": {
+            "name": "Name",
+            "ki_entity": "AI entity (override)"
+          },
+          "data_description": {
+            "ki_entity": "Optional. Overrides the global AI entity for this subject."
+          }
+        },
+        "fremdsprache": {
+          "title": "Foreign language",
+          "description": "Vocabulary is asked in both directions between {ausgangssprache} and the foreign language. The language cannot be changed later.",
+          "data": {
+            "zielsprache": "Language",
+            "name": "Name of the subject",
+            "ki_entity": "AI entity (override)"
+          },
+          "data_description": {
+            "name": "Optional. Without a name the subject is called like the language.",
+            "ki_entity": "Optional. Overrides the global AI entity for this subject."
+          }
+        },
+        "mathe": {
+          "title": "Mathematics",
+          "description": "Math tasks have one short result. You can enter them, import them or let the AI create them from examples.",
+          "data": {
+            "name": "Name of the subject",
+            "ki_entity": "AI entity (override)"
+          },
+          "data_description": {
+            "name": "Optional. Without a name the subject is called Math.",
+            "ki_entity": "Optional. Overrides the global AI entity for this subject."
+          }
+        },
+        "sach": {
+          "title": "Knowledge subject",
+          "description": "For subjects like biology, geography or history. Questions have a model answer; the AI can create them from a photo of a textbook page and judges free answers.",
+          "data": {
+            "name": "Name of the subject",
+            "ki_entity": "AI entity (override)"
+          },
+          "data_description": {
+            "ki_entity": "Optional. Overrides the global AI entity for this subject. Without an AI only multiple-choice questions can be asked."
+          }
+        }
+      },
+      "error": {
+        "name_leer": "Please enter a name.",
+        "name_vorhanden": "This child already has a subject with this name."
+      },
+      "abort": {
+        "keine_kinder": "Add a child first.",
+        "reconfigure_successful": "The subject was updated."
+      }
+    },
+    "arbeit": {
+      "entry_type": "Exam",
+      "initiate_flow": {
+        "user": "Add exam",
+        "reconfigure": "Edit exam"
+      },
+      "step": {
+        "user": {
+          "title": "Add exam",
+          "data": {
+            "fach_id": "Subject"
+          }
+        },
+        "details": {
+          "title": "Exam details",
+          "data": {
+            "art": "Type",
+            "datum": "Date",
+            "thema": "Topic",
+            "lektionen": "Lessons / topics",
+            "abfragen_pro_tag": "Questions per day",
+            "start_tage_vorher": "Start (days before the date)",
+            "intensivierung": "Increase frequency towards the date",
+            "antwortfrist_minuten": "Time to answer",
+            "simulation_um": "Planned simulation (date and time)",
+            "simulation_anzahl": "Tasks in the simulation"
+          },
+          "data_description": {
+            "lektionen": "Tasks of these lessons are asked. Leave empty to use all tasks of the subject. Lessons are created in the LearnBuddy panel.",
+            "intensivierung": "The number of questions grows up to twice the value on the last day.",
+            "antwortfrist_minuten": "Optional. After this time a question of this exam counts as unanswered. Empty: the general setting applies. If a task belongs to several running exams, the shortest time wins.",
+            "simulation_um": "Optional. At this time the child automatically gets a simulation of this exam in the messenger: the sheet as an image, then the tasks one after the other, the result at the end. It is tried once."
+          }
+        },
+        "reconfigure": {
+          "title": "Edit exam",
+          "data": {
+            "art": "Type",
+            "datum": "Date",
+            "thema": "Topic",
+            "lektionen": "Lessons / topics",
+            "abfragen_pro_tag": "Questions per day",
+            "start_tage_vorher": "Start (days before the date)",
+            "intensivierung": "Increase frequency towards the date",
+            "antwortfrist_minuten": "Time to answer",
+            "simulation_um": "Planned simulation (date and time)",
+            "simulation_anzahl": "Tasks in the simulation"
+          },
+          "data_description": {
+            "lektionen": "Tasks of these lessons are asked. Leave empty to use all tasks of the subject. Lessons are created in the LearnBuddy panel.",
+            "intensivierung": "The number of questions grows up to twice the value on the last day.",
+            "antwortfrist_minuten": "Optional. After this time a question of this exam counts as unanswered. Empty: the general setting applies. If a task belongs to several running exams, the shortest time wins.",
+            "simulation_um": "Optional. At this time the child automatically gets a simulation of this exam in the messenger: the sheet as an image, then the tasks one after the other, the result at the end. It is tried once."
+          }
+        }
+      },
+      "error": {
+        "thema_leer": "Please enter a topic.",
+        "datum_vergangen": "The date is in the past.",
+        "simulation_um_vergangen": "The time of the simulation is in the past."
+      },
+      "abort": {
+        "keine_faecher": "Add a subject first.",
+        "reconfigure_successful": "The exam was updated."
+      }
+    }
+  },
+  "selector": {
+    "nachrichten_sprache": {
+      "options": {
+        "auto": "Same as Home Assistant",
+        "de": "German",
+        "en": "English"
+      }
+    },
+    "schulart": {
+      "options": {
+        "grundschule": "Primary school",
+        "hauptschule": "Hauptschule",
+        "realschule": "Realschule",
+        "gymnasium": "Gymnasium",
+        "gesamtschule": "Comprehensive school",
+        "sonstige": "Other"
+      }
+    },
+    "bundesland": {
+      "options": {
+        "bw": "Baden-Württemberg",
+        "by": "Bavaria",
+        "be": "Berlin",
+        "bb": "Brandenburg",
+        "hb": "Bremen",
+        "hh": "Hamburg",
+        "he": "Hesse",
+        "mv": "Mecklenburg-Western Pomerania",
+        "ni": "Lower Saxony",
+        "nw": "North Rhine-Westphalia",
+        "rp": "Rhineland-Palatinate",
+        "sl": "Saarland",
+        "sn": "Saxony",
+        "st": "Saxony-Anhalt",
+        "sh": "Schleswig-Holstein",
+        "th": "Thuringia"
+      }
+    },
+    "sprache": {
+      "options": {
+        "de": "German",
+        "en": "English",
+        "fr": "French",
+        "es": "Spanish",
+        "it": "Italian",
+        "la": "Latin"
+      }
+    },
+    "art": {
+      "options": {
+        "arbeit": "Exam",
+        "hue": "Homework check"
+      }
+    },
+    "fachart": {
+      "options": {
+        "fremdsprache": "Foreign language",
+        "mathe": "Mathematics",
+        "sach": "Knowledge subject (e.g. biology)"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "naechste_arbeit": {
+        "name": "Next exam"
+      },
+      "trefferquote": {
+        "name": "Success rate"
+      },
+      "offene_frage": {
+        "name": "Open question",
+        "state": {
+          "keine": "None",
+          "offen": "Open"
+        }
+      }
+    },
+    "switch": {
+      "abfragen_aktiv": {
+        "name": "Questions enabled"
+      }
+    },
+    "button": {
+      "jetzt_abfragen": {
+        "name": "Ask now"
+      }
+    },
+    "calendar": {
+      "arbeiten": {
+        "name": "Exams"
+      }
+    }
+  },
+  "services": {
+    "submit_answer": {
+      "name": "Submit answer",
+      "description": "Evaluates the answer of a child to its open question.",
+      "fields": {
+        "device_id": {
+          "name": "Child",
+          "description": "The child that answered."
+        },
+        "kind_id": {
+          "name": "Child ID",
+          "description": "ID of the child as an alternative to selecting the device."
+        },
+        "absender": {
+          "name": "Sender",
+          "description": "Phone number or chat ID of the sender. It is matched against the sender ID of the children."
+        },
+        "text": {
+          "name": "Text",
+          "description": "The answer."
+        }
+      }
+    },
+    "ask_now": {
+      "name": "Ask now",
+      "description": "Sends a question to a child immediately.",
+      "fields": {
+        "device_id": {
+          "name": "Child",
+          "description": "The child to ask."
+        },
+        "kind_id": {
+          "name": "Child ID",
+          "description": "ID of the child as an alternative to selecting the device."
+        }
+      }
+    },
+    "import_tasks": {
+      "name": "Import tasks",
+      "description": "Imports vocabulary from text, one pair per line.",
+      "fields": {
+        "device_id": {
+          "name": "Child",
+          "description": "The child the subject belongs to."
+        },
+        "kind_id": {
+          "name": "Child ID",
+          "description": "ID of the child as an alternative to selecting the device."
+        },
+        "fach": {
+          "name": "Subject",
+          "description": "Name of the subject."
+        },
+        "fach_id": {
+          "name": "Subject ID",
+          "description": "ID of the subject as an alternative to child and subject name."
+        },
+        "inhalt": {
+          "name": "Content",
+          "description": "One line per word: source language; target language; optional hint. Alternatives are separated by |."
+        },
+        "lektion": {
+          "name": "Lesson",
+          "description": "Lesson assigned to all imported tasks."
+        },
+        "trennzeichen": {
+          "name": "Separator",
+          "description": "Column separator. It is detected automatically if omitted."
+        },
+        "geprueft": {
+          "name": "Approved",
+          "description": "Only approved tasks are asked."
+        }
+      }
+    },
+    "pause": {
+      "name": "Pause",
+      "description": "Pauses the questions for a child.",
+      "fields": {
+        "device_id": {
+          "name": "Child",
+          "description": "The child to pause."
+        },
+        "kind_id": {
+          "name": "Child ID",
+          "description": "ID of the child as an alternative to selecting the device."
+        },
+        "bis": {
+          "name": "Until",
+          "description": "End of the pause. Without it the questions stay paused until they are resumed."
+        }
+      }
+    },
+    "resume": {
+      "name": "Resume",
+      "description": "Resumes the questions for a child.",
+      "fields": {
+        "device_id": {
+          "name": "Child",
+          "description": "The child to resume."
+        },
+        "kind_id": {
+          "name": "Child ID",
+          "description": "ID of the child as an alternative to selecting the device."
+        }
+      }
+    },
+    "generate_tasks": {
+      "name": "Generate tasks",
+      "description": "Lets the AI create math tasks similar to the existing ones. Only tasks whose solution could be verified are stored.",
+      "fields": {
+        "device_id": {
+          "name": "Child",
+          "description": "The child the subject belongs to."
+        },
+        "kind_id": {
+          "name": "Child ID",
+          "description": "ID of the child as an alternative to selecting the device."
+        },
+        "fach": {
+          "name": "Subject",
+          "description": "Name of the math subject."
+        },
+        "fach_id": {
+          "name": "Subject ID",
+          "description": "ID of the subject as an alternative to child and subject name."
+        },
+        "anzahl": {
+          "name": "Number",
+          "description": "How many tasks to create (1 to 20)."
+        },
+        "lektion": {
+          "name": "Topic",
+          "description": "Existing lesson or topic of the subject the tasks belong to."
+        },
+        "schwierigkeit": {
+          "name": "Difficulty",
+          "description": "From 1 (easy) to 5 (hard)."
+        },
+        "beschreibung": {
+          "name": "Description",
+          "description": "Optional details about the tasks you want."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "nicht_geladen": {
+      "message": "LearnBuddy is not set up or not loaded."
+    },
+    "kind_fehlt": {
+      "message": "Specify the child by device, child ID or sender."
+    },
+    "kind_unbekannt": {
+      "message": "No child matches the given device, ID or sender."
+    },
+    "fach_unbekannt": {
+      "message": "The subject was not found."
+    },
+    "keine_aufgaben": {
+      "message": "There are no approved tasks that could be asked."
+    },
+    "senden_fehlgeschlagen": {
+      "message": "The message could not be delivered: {fehler}"
+    },
+    "import_leer": {
+      "message": "The content does not contain any valid line."
+    },
+    "generieren_nur_mathe": {
+      "message": "Tasks can only be generated for math subjects."
+    },
+    "ki_fehlt": {
+      "message": "No AI entity is selected for this subject."
+    },
+    "ki_fehler": {
+      "message": "The AI did not return usable tasks. Please try again later."
+    },
+    "anzahl_ungueltig": {
+      "message": "The number must be between 1 and 20."
+    },
+    "schwierigkeit_ungueltig": {
+      "message": "The difficulty must be between 1 and 5."
+    },
+    "beschreibung_ungueltig": {
+      "message": "The description is too long."
+    },
+    "lektion_unbekannt": {
+      "message": "This lesson or topic does not exist in the subject."
+    },
+    "generieren_ohne_vorgabe": {
+      "message": "Enter a topic or a description, or add example tasks first."
+    },
+    "import_sachfach": {
+      "message": "Lists cannot be imported into knowledge subjects."
+    },
+    "simulation_laeuft": {
+      "message": "A simulated exam is running for this child."
+    }
+  },
+  "issues": {
+    "senden_fehlgeschlagen": {
+      "title": "Messages to {name} cannot be delivered",
+      "description": "LearnBuddy could not send a message using `{ziel}`. Check that the messenger integration works and that the notify target of the child is correct. The issue disappears after the next successful message."
+    },
+    "ki_gestoert": {
+      "title": "The AI of LearnBuddy does not work",
+      "description": "The AI entity `{entity}` that is selected in LearnBuddy is missing or failed several times. Check that the AI integration works (account, credit, model) or select another entity in the options of LearnBuddy or of the subject. Until then answers are only judged locally and AI features are switched off. The issue disappears as soon as the AI works again."
+    }
+  }
+}

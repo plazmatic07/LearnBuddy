@@ -1,0 +1,567 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "LearnBuddy einrichten",
+        "description": "Kinder, Fächer und Arbeiten werden anschließend auf der Seite der Integration angelegt.",
+        "data": {
+          "timeout_minuten": "Timeout für offene Fragen",
+          "sprache": "Sprache der Nachrichten",
+          "ki_entity": "KI-Entität für die Bewertung",
+          "auto_freigabe": "Generierte Aufgaben automatisch freigeben"
+        },
+        "data_description": {
+          "timeout_minuten": "Nach dieser Zeit gilt eine Frage als unbeantwortet (nicht als falsch).",
+          "ki_entity": "Optional. Diese AI-Task-Entität prüft lokal falsche Vokabel-Antworten auf Synonyme und Tippfehler, bewertet Mathe-Antworten, die keine reinen Zahlen sind, erklärt Rechenwege und erzeugt Mathe-Aufgaben. Es werden kein Name und keine anderen personenbezogenen Daten übertragen.",
+          "auto_freigabe": "Aus: Von der KI erzeugte Aufgaben warten im Panel, bis du sie freigibst. An: Sie werden sofort abgefragt, wenn ihre Lösung verifiziert werden konnte."
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "LearnBuddy ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "LearnBuddy-Optionen",
+        "data": {
+          "timeout_minuten": "Timeout für offene Fragen",
+          "sprache": "Sprache der Nachrichten",
+          "ki_entity": "KI-Entität für die Bewertung",
+          "auto_freigabe": "Generierte Aufgaben automatisch freigeben"
+        },
+        "data_description": {
+          "timeout_minuten": "Nach dieser Zeit gilt eine Frage als unbeantwortet (nicht als falsch).",
+          "ki_entity": "Optional. Diese AI-Task-Entität prüft lokal falsche Vokabel-Antworten auf Synonyme und Tippfehler, bewertet Mathe-Antworten, die keine reinen Zahlen sind, erklärt Rechenwege und erzeugt Mathe-Aufgaben. Es werden kein Name und keine anderen personenbezogenen Daten übertragen.",
+          "auto_freigabe": "Aus: Von der KI erzeugte Aufgaben warten im Panel, bis du sie freigibst. An: Sie werden sofort abgefragt, wenn ihre Lösung verifiziert werden konnte."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "kind": {
+      "entry_type": "Kind",
+      "initiate_flow": {
+        "user": "Kind hinzufügen",
+        "reconfigure": "Kind bearbeiten"
+      },
+      "step": {
+        "user": {
+          "title": "Kind hinzufügen",
+          "data": {
+            "name": "Vorname",
+            "muttersprache": "Muttersprache",
+            "klassenstufe": "Klassenstufe",
+            "schulart": "Schulart",
+            "bundesland": "Bundesland",
+            "notify_entity": "Notify-Entität",
+            "notify_service": "Notify-Aktion (klassisch)",
+            "notify_target": "Ziel der Notify-Aktion",
+            "notify_data": "Zusatzdaten der Notify-Aktion",
+            "absender_kennung": "Absenderkennung",
+            "werktag_von": "Werktags ab",
+            "werktag_bis": "Werktags bis",
+            "wochenende_aktiv": "Am Wochenende abfragen",
+            "wochenende_von": "Wochenende ab",
+            "wochenende_bis": "Wochenende bis",
+            "bild_aktion": "Aktion für Bilder"
+          },
+          "data_description": {
+            "name": "Wird für die Ansprache verwendet und nie an einen KI-Dienst gesendet.",
+            "klassenstufe": "Kontext für generierte Aufgaben.",
+            "notify_entity": "Messenger-Entität, über die das Kind die Fragen erhält. Entweder diese oder die klassische Aktion angeben.",
+            "notify_service": "Name einer klassischen Notify-Aktion, zum Beispiel notify.whatsapp.",
+            "notify_target": "Empfänger, die als target übergeben werden, zum Beispiel Telefonnummer oder Chat-ID.",
+            "absender_kennung": "Telefonnummer oder Chat-ID, über die eingehende Antworten diesem Kind zugeordnet werden.",
+            "werktag_von": "Fragen werden nur innerhalb dieses Zeitfensters gesendet.",
+            "muttersprache": "Ausgangssprache der Vokabeln. Fremdsprachen-Fächer dieses Kindes werden zwischen dieser Sprache und der Fremdsprache abgefragt. Eine spätere Änderung wirkt nur auf neue Fächer.",
+            "bild_aktion": "Optional. Nur nötig, wenn der Messenger nicht Telegram ist: Aktionen, die ein Bild verschicken, für Aufgaben mit Diagramm. Verfügbar sind die Variablen bild_url (zehn Minuten gültige Adresse), bild_pfad (Datei) und text (die Aufgabe)."
+          }
+        },
+        "reconfigure": {
+          "title": "Kind bearbeiten",
+          "data": {
+            "name": "Vorname",
+            "muttersprache": "Muttersprache",
+            "klassenstufe": "Klassenstufe",
+            "schulart": "Schulart",
+            "bundesland": "Bundesland",
+            "notify_entity": "Notify-Entität",
+            "notify_service": "Notify-Aktion (klassisch)",
+            "notify_target": "Ziel der Notify-Aktion",
+            "notify_data": "Zusatzdaten der Notify-Aktion",
+            "absender_kennung": "Absenderkennung",
+            "werktag_von": "Werktags ab",
+            "werktag_bis": "Werktags bis",
+            "wochenende_aktiv": "Am Wochenende abfragen",
+            "wochenende_von": "Wochenende ab",
+            "wochenende_bis": "Wochenende bis",
+            "bild_aktion": "Aktion für Bilder"
+          },
+          "data_description": {
+            "name": "Wird für die Ansprache verwendet und nie an einen KI-Dienst gesendet.",
+            "klassenstufe": "Kontext für generierte Aufgaben.",
+            "notify_entity": "Messenger-Entität, über die das Kind die Fragen erhält. Entweder diese oder die klassische Aktion angeben.",
+            "notify_service": "Name einer klassischen Notify-Aktion, zum Beispiel notify.whatsapp.",
+            "notify_target": "Empfänger, die als target übergeben werden, zum Beispiel Telefonnummer oder Chat-ID.",
+            "absender_kennung": "Telefonnummer oder Chat-ID, über die eingehende Antworten diesem Kind zugeordnet werden.",
+            "werktag_von": "Fragen werden nur innerhalb dieses Zeitfensters gesendet.",
+            "muttersprache": "Ausgangssprache der Vokabeln. Fremdsprachen-Fächer dieses Kindes werden zwischen dieser Sprache und der Fremdsprache abgefragt. Eine spätere Änderung wirkt nur auf neue Fächer.",
+            "bild_aktion": "Optional. Nur nötig, wenn der Messenger nicht Telegram ist: Aktionen, die ein Bild verschicken, für Aufgaben mit Diagramm. Verfügbar sind die Variablen bild_url (zehn Minuten gültige Adresse), bild_pfad (Datei) und text (die Aufgabe)."
+          }
+        }
+      },
+      "error": {
+        "name_leer": "Bitte einen Namen eingeben.",
+        "name_vorhanden": "Dieser Name wird bereits verwendet.",
+        "notify_genau_eins": "Bitte entweder eine Notify-Entität oder eine klassische Notify-Aktion angeben.",
+        "notify_service_ungueltig": "Das ist kein gültiger Name einer Notify-Aktion.",
+        "fenster_ungueltig": "Das Ende muss nach dem Beginn liegen.",
+        "bild_aktion_ungueltig": "Das sind keine gültigen Aktionen."
+      },
+      "abort": {
+        "reconfigure_successful": "Das Kind wurde aktualisiert."
+      }
+    },
+    "fach": {
+      "entry_type": "Fach",
+      "initiate_flow": {
+        "user": "Fach hinzufügen",
+        "reconfigure": "Fach bearbeiten"
+      },
+      "step": {
+        "user": {
+          "title": "Fach hinzufügen",
+          "data": {
+            "kind_id": "Kind",
+            "typ": "Art des Fachs"
+          }
+        },
+        "reconfigure": {
+          "title": "Fach bearbeiten",
+          "data": {
+            "name": "Name",
+            "ki_entity": "KI-Entität (Abweichung)"
+          },
+          "data_description": {
+            "ki_entity": "Optional. Ersetzt für dieses Fach die globale KI-Entität."
+          }
+        },
+        "fremdsprache": {
+          "title": "Fremdsprache",
+          "description": "Vokabeln werden in beide Richtungen zwischen {ausgangssprache} und der Fremdsprache abgefragt. Die Sprache lässt sich später nicht ändern.",
+          "data": {
+            "zielsprache": "Sprache",
+            "name": "Name des Fachs",
+            "ki_entity": "KI-Entität (Abweichung)"
+          },
+          "data_description": {
+            "name": "Optional. Ohne Angabe heißt das Fach wie die Sprache.",
+            "ki_entity": "Optional. Ersetzt für dieses Fach die globale KI-Entität."
+          }
+        },
+        "mathe": {
+          "title": "Mathematik",
+          "description": "Mathe-Aufgaben haben ein kurzes Ergebnis. Du kannst sie eingeben, importieren oder von der KI anhand von Beispielen erzeugen lassen.",
+          "data": {
+            "name": "Name des Fachs",
+            "ki_entity": "KI-Entität (Override)"
+          },
+          "data_description": {
+            "name": "Optional. Ohne Namen heißt das Fach Mathe.",
+            "ki_entity": "Optional. Überschreibt die globale KI-Entität für dieses Fach."
+          }
+        },
+        "sach": {
+          "title": "Sachfach",
+          "description": "Für Fächer wie Biologie, Erdkunde oder Geschichte. Fragen haben eine Musterantwort; die KI kann sie aus dem Foto einer Buchseite erzeugen und bewertet frei formulierte Antworten.",
+          "data": {
+            "name": "Name des Fachs",
+            "ki_entity": "KI-Entität (Override)"
+          },
+          "data_description": {
+            "ki_entity": "Optional. Überschreibt die globale KI-Entität für dieses Fach. Ohne KI können nur Auswahlfragen gestellt werden."
+          }
+        }
+      },
+      "error": {
+        "name_leer": "Bitte einen Namen eingeben.",
+        "name_vorhanden": "Dieses Kind hat bereits ein Fach mit diesem Namen."
+      },
+      "abort": {
+        "keine_kinder": "Bitte zuerst ein Kind anlegen.",
+        "reconfigure_successful": "Das Fach wurde aktualisiert."
+      }
+    },
+    "arbeit": {
+      "entry_type": "Arbeit / HÜ",
+      "initiate_flow": {
+        "user": "Arbeit / HÜ hinzufügen",
+        "reconfigure": "Arbeit / HÜ bearbeiten"
+      },
+      "step": {
+        "user": {
+          "title": "Arbeit / HÜ hinzufügen",
+          "data": {
+            "fach_id": "Fach"
+          }
+        },
+        "details": {
+          "title": "Details der Arbeit / HÜ",
+          "data": {
+            "art": "Art",
+            "datum": "Datum",
+            "thema": "Thema",
+            "lektionen": "Lektionen / Themen",
+            "abfragen_pro_tag": "Abfragen pro Tag",
+            "start_tage_vorher": "Beginn (Tage vor dem Termin)",
+            "intensivierung": "Frequenz zum Termin hin steigern",
+            "antwortfrist_minuten": "Antwortfrist",
+            "simulation_um": "Simulation einplanen (Datum und Uhrzeit)",
+            "simulation_anzahl": "Aufgaben in der Simulation"
+          },
+          "data_description": {
+            "lektionen": "Aufgaben dieser Lektionen werden abgefragt. Leer lassen, um alle Aufgaben des Fachs zu verwenden. Lektionen werden im LearnBuddy-Panel angelegt.",
+            "intensivierung": "Die Zahl der Abfragen steigt bis zum letzten Tag auf das Doppelte.",
+            "antwortfrist_minuten": "Optional. Nach dieser Zeit gilt eine Frage dieser Arbeit als unbeantwortet. Leer: Es gilt die allgemeine Einstellung. Gehört eine Aufgabe zu mehreren laufenden Arbeiten, gilt die kürzeste Frist.",
+            "simulation_um": "Optional. Zu diesem Zeitpunkt bekommt das Kind automatisch eine Simulation dieser Arbeit per Messenger: das Aufgabenblatt als Bild, dann die Aufgaben nacheinander, am Ende die Auswertung. Es gibt genau einen Versuch."
+          }
+        },
+        "reconfigure": {
+          "title": "Arbeit / HÜ bearbeiten",
+          "data": {
+            "art": "Art",
+            "datum": "Datum",
+            "thema": "Thema",
+            "lektionen": "Lektionen / Themen",
+            "abfragen_pro_tag": "Abfragen pro Tag",
+            "start_tage_vorher": "Beginn (Tage vor dem Termin)",
+            "intensivierung": "Frequenz zum Termin hin steigern",
+            "antwortfrist_minuten": "Antwortfrist",
+            "simulation_um": "Simulation einplanen (Datum und Uhrzeit)",
+            "simulation_anzahl": "Aufgaben in der Simulation"
+          },
+          "data_description": {
+            "lektionen": "Aufgaben dieser Lektionen werden abgefragt. Leer lassen, um alle Aufgaben des Fachs zu verwenden. Lektionen werden im LearnBuddy-Panel angelegt.",
+            "intensivierung": "Die Zahl der Abfragen steigt bis zum letzten Tag auf das Doppelte.",
+            "antwortfrist_minuten": "Optional. Nach dieser Zeit gilt eine Frage dieser Arbeit als unbeantwortet. Leer: Es gilt die allgemeine Einstellung. Gehört eine Aufgabe zu mehreren laufenden Arbeiten, gilt die kürzeste Frist.",
+            "simulation_um": "Optional. Zu diesem Zeitpunkt bekommt das Kind automatisch eine Simulation dieser Arbeit per Messenger: das Aufgabenblatt als Bild, dann die Aufgaben nacheinander, am Ende die Auswertung. Es gibt genau einen Versuch."
+          }
+        }
+      },
+      "error": {
+        "thema_leer": "Bitte ein Thema eingeben.",
+        "datum_vergangen": "Das Datum liegt in der Vergangenheit.",
+        "simulation_um_vergangen": "Der Zeitpunkt der Simulation liegt in der Vergangenheit."
+      },
+      "abort": {
+        "keine_faecher": "Bitte zuerst ein Fach anlegen.",
+        "reconfigure_successful": "Die Arbeit / HÜ wurde aktualisiert."
+      }
+    }
+  },
+  "selector": {
+    "nachrichten_sprache": {
+      "options": {
+        "auto": "Wie Home Assistant",
+        "de": "Deutsch",
+        "en": "Englisch"
+      }
+    },
+    "schulart": {
+      "options": {
+        "grundschule": "Grundschule",
+        "hauptschule": "Hauptschule",
+        "realschule": "Realschule",
+        "gymnasium": "Gymnasium",
+        "gesamtschule": "Gesamtschule",
+        "sonstige": "Sonstige"
+      }
+    },
+    "bundesland": {
+      "options": {
+        "bw": "Baden-Württemberg",
+        "by": "Bayern",
+        "be": "Berlin",
+        "bb": "Brandenburg",
+        "hb": "Bremen",
+        "hh": "Hamburg",
+        "he": "Hessen",
+        "mv": "Mecklenburg-Vorpommern",
+        "ni": "Niedersachsen",
+        "nw": "Nordrhein-Westfalen",
+        "rp": "Rheinland-Pfalz",
+        "sl": "Saarland",
+        "sn": "Sachsen",
+        "st": "Sachsen-Anhalt",
+        "sh": "Schleswig-Holstein",
+        "th": "Thüringen"
+      }
+    },
+    "sprache": {
+      "options": {
+        "de": "Deutsch",
+        "en": "Englisch",
+        "fr": "Französisch",
+        "es": "Spanisch",
+        "it": "Italienisch",
+        "la": "Latein"
+      }
+    },
+    "art": {
+      "options": {
+        "arbeit": "Klassenarbeit",
+        "hue": "Hausaufgabenüberprüfung (HÜ)"
+      }
+    },
+    "fachart": {
+      "options": {
+        "fremdsprache": "Fremdsprache",
+        "mathe": "Mathematik",
+        "sach": "Sachfach (z. B. Biologie)"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "naechste_arbeit": {
+        "name": "Nächste Arbeit"
+      },
+      "trefferquote": {
+        "name": "Trefferquote"
+      },
+      "offene_frage": {
+        "name": "Offene Frage",
+        "state": {
+          "keine": "Keine",
+          "offen": "Offen"
+        }
+      }
+    },
+    "switch": {
+      "abfragen_aktiv": {
+        "name": "Abfragen aktiv"
+      }
+    },
+    "button": {
+      "jetzt_abfragen": {
+        "name": "Jetzt abfragen"
+      }
+    },
+    "calendar": {
+      "arbeiten": {
+        "name": "Arbeiten"
+      }
+    }
+  },
+  "services": {
+    "submit_answer": {
+      "name": "Antwort übermitteln",
+      "description": "Bewertet die Antwort eines Kindes auf seine offene Frage.",
+      "fields": {
+        "device_id": {
+          "name": "Kind",
+          "description": "Das Kind, das geantwortet hat."
+        },
+        "kind_id": {
+          "name": "Kind-ID",
+          "description": "ID des Kindes als Alternative zur Geräteauswahl."
+        },
+        "absender": {
+          "name": "Absender",
+          "description": "Telefonnummer oder Chat-ID des Absenders. Sie wird mit der Absenderkennung der Kinder abgeglichen."
+        },
+        "text": {
+          "name": "Text",
+          "description": "Die Antwort."
+        }
+      }
+    },
+    "ask_now": {
+      "name": "Jetzt abfragen",
+      "description": "Sendet einem Kind sofort eine Frage.",
+      "fields": {
+        "device_id": {
+          "name": "Kind",
+          "description": "Das Kind, das gefragt werden soll."
+        },
+        "kind_id": {
+          "name": "Kind-ID",
+          "description": "ID des Kindes als Alternative zur Geräteauswahl."
+        }
+      }
+    },
+    "import_tasks": {
+      "name": "Aufgaben importieren",
+      "description": "Importiert Vokabeln aus Text, ein Paar pro Zeile.",
+      "fields": {
+        "device_id": {
+          "name": "Kind",
+          "description": "Das Kind, zu dem das Fach gehört."
+        },
+        "kind_id": {
+          "name": "Kind-ID",
+          "description": "ID des Kindes als Alternative zur Geräteauswahl."
+        },
+        "fach": {
+          "name": "Fach",
+          "description": "Name des Fachs."
+        },
+        "fach_id": {
+          "name": "Fach-ID",
+          "description": "ID des Fachs als Alternative zu Kind und Fachname."
+        },
+        "inhalt": {
+          "name": "Inhalt",
+          "description": "Eine Zeile pro Vokabel: Ausgangssprache; Zielsprache; optionaler Hinweis. Alternativen werden mit | getrennt."
+        },
+        "lektion": {
+          "name": "Lektion",
+          "description": "Lektion, die allen importierten Aufgaben zugewiesen wird."
+        },
+        "trennzeichen": {
+          "name": "Trennzeichen",
+          "description": "Spaltentrenner. Ohne Angabe wird er automatisch erkannt."
+        },
+        "geprueft": {
+          "name": "Geprüft",
+          "description": "Nur geprüfte Aufgaben werden abgefragt."
+        }
+      }
+    },
+    "pause": {
+      "name": "Pausieren",
+      "description": "Pausiert die Abfragen für ein Kind.",
+      "fields": {
+        "device_id": {
+          "name": "Kind",
+          "description": "Das Kind, dessen Abfragen pausiert werden."
+        },
+        "kind_id": {
+          "name": "Kind-ID",
+          "description": "ID des Kindes als Alternative zur Geräteauswahl."
+        },
+        "bis": {
+          "name": "Bis",
+          "description": "Ende der Pause. Ohne Angabe bleiben die Abfragen pausiert, bis sie fortgesetzt werden."
+        }
+      }
+    },
+    "resume": {
+      "name": "Fortsetzen",
+      "description": "Setzt die Abfragen für ein Kind fort.",
+      "fields": {
+        "device_id": {
+          "name": "Kind",
+          "description": "Das Kind, dessen Abfragen fortgesetzt werden."
+        },
+        "kind_id": {
+          "name": "Kind-ID",
+          "description": "ID des Kindes als Alternative zur Geräteauswahl."
+        }
+      }
+    },
+    "generate_tasks": {
+      "name": "Aufgaben generieren",
+      "description": "Lässt die KI Mathe-Aufgaben erzeugen, die den vorhandenen ähneln. Gespeichert werden nur Aufgaben, deren Lösung verifiziert werden konnte.",
+      "fields": {
+        "device_id": {
+          "name": "Kind",
+          "description": "Das Kind, zu dem das Fach gehört."
+        },
+        "kind_id": {
+          "name": "Kind-ID",
+          "description": "ID des Kindes als Alternative zur Geräteauswahl."
+        },
+        "fach": {
+          "name": "Fach",
+          "description": "Name des Mathe-Fachs."
+        },
+        "fach_id": {
+          "name": "Fach-ID",
+          "description": "ID des Fachs als Alternative zu Kind und Fachname."
+        },
+        "anzahl": {
+          "name": "Anzahl",
+          "description": "Wie viele Aufgaben erzeugt werden sollen (1 bis 20)."
+        },
+        "lektion": {
+          "name": "Thema",
+          "description": "Vorhandene Lektion bzw. vorhandenes Thema des Fachs, zu dem die Aufgaben gehören."
+        },
+        "schwierigkeit": {
+          "name": "Schwierigkeit",
+          "description": "Von 1 (leicht) bis 5 (schwer)."
+        },
+        "beschreibung": {
+          "name": "Beschreibung",
+          "description": "Optionale Angaben zu den gewünschten Aufgaben."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "nicht_geladen": {
+      "message": "LearnBuddy ist nicht eingerichtet oder nicht geladen."
+    },
+    "kind_fehlt": {
+      "message": "Bitte das Kind über Gerät, Kind-ID oder Absender angeben."
+    },
+    "kind_unbekannt": {
+      "message": "Zu Gerät, ID oder Absender wurde kein Kind gefunden."
+    },
+    "fach_unbekannt": {
+      "message": "Das Fach wurde nicht gefunden."
+    },
+    "keine_aufgaben": {
+      "message": "Es gibt keine geprüften Aufgaben, die abgefragt werden könnten."
+    },
+    "senden_fehlgeschlagen": {
+      "message": "Die Nachricht konnte nicht zugestellt werden: {fehler}"
+    },
+    "import_leer": {
+      "message": "Der Inhalt enthält keine gültige Zeile."
+    },
+    "generieren_nur_mathe": {
+      "message": "Aufgaben lassen sich nur für Mathe-Fächer generieren."
+    },
+    "ki_fehlt": {
+      "message": "Für dieses Fach ist keine KI-Entität gewählt."
+    },
+    "ki_fehler": {
+      "message": "Die KI hat keine brauchbaren Aufgaben geliefert. Bitte später erneut versuchen."
+    },
+    "anzahl_ungueltig": {
+      "message": "Die Anzahl muss zwischen 1 und 20 liegen."
+    },
+    "schwierigkeit_ungueltig": {
+      "message": "Die Schwierigkeit muss zwischen 1 und 5 liegen."
+    },
+    "beschreibung_ungueltig": {
+      "message": "Die Beschreibung ist zu lang."
+    },
+    "lektion_unbekannt": {
+      "message": "Diese Lektion bzw. dieses Thema gibt es im Fach nicht."
+    },
+    "generieren_ohne_vorgabe": {
+      "message": "Bitte ein Thema oder eine Beschreibung angeben oder zuerst Beispielaufgaben anlegen."
+    },
+    "import_sachfach": {
+      "message": "In Sachfächer lassen sich keine Listen importieren."
+    },
+    "simulation_laeuft": {
+      "message": "Für dieses Kind läuft gerade eine simulierte Arbeit."
+    }
+  },
+  "issues": {
+    "senden_fehlgeschlagen": {
+      "title": "Nachrichten an {name} können nicht zugestellt werden",
+      "description": "LearnBuddy konnte über `{ziel}` keine Nachricht senden. Bitte prüfen, ob die Messenger-Integration funktioniert und das Notify-Ziel des Kindes stimmt. Der Hinweis verschwindet nach der nächsten erfolgreichen Nachricht."
+    },
+    "ki_gestoert": {
+      "title": "Die KI von LearnBuddy funktioniert nicht",
+      "description": "Die in LearnBuddy gewählte KI-Entität `{entity}` fehlt oder ist mehrmals fehlgeschlagen. Prüfe, ob die KI-Integration funktioniert (Konto, Guthaben, Modell), oder wähle in den Optionen von LearnBuddy bzw. des Fachs eine andere Entität. Bis dahin werden Antworten nur lokal bewertet und KI-Funktionen sind ausgeschaltet. Der Hinweis verschwindet, sobald die KI wieder funktioniert."
+    }
+  }
+}

@@ -1,0 +1,104 @@
+submit_answer:
+  fields:
+    device_id: &kind_device
+      selector:
+        device:
+          integration: learnbuddy
+    kind_id: &kind_id
+      advanced: true
+      selector:
+        text:
+    absender:
+      selector:
+        text:
+    text:
+      required: true
+      selector:
+        text:
+          multiline: true
+
+ask_now:
+  fields:
+    device_id: *kind_device
+    kind_id: *kind_id
+
+import_tasks:
+  fields:
+    device_id: *kind_device
+    kind_id: *kind_id
+    fach:
+      selector:
+        text:
+    fach_id:
+      advanced: true
+      selector:
+        text:
+    inhalt:
+      required: true
+      example: |
+        Hund; dog|hound; Nomen
+        gehen; to go
+      selector:
+        text:
+          multiline: true
+    lektion:
+      example: Unit 3
+      selector:
+        text:
+    trennzeichen:
+      example: ";"
+      selector:
+        text:
+    geprueft:
+      default: true
+      selector:
+        boolean:
+
+pause:
+  fields:
+    device_id: *kind_device
+    kind_id: *kind_id
+    bis:
+      selector:
+        datetime:
+
+resume:
+  fields:
+    device_id: *kind_device
+    kind_id: *kind_id
+
+generate_tasks:
+  fields:
+    device_id: *kind_device
+    kind_id: *kind_id
+    fach:
+      example: Mathe
+      selector:
+        text:
+    fach_id:
+      advanced: true
+      selector:
+        text:
+    anzahl:
+      required: true
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 20
+          mode: box
+    lektion:
+      example: Bruchrechnen
+      selector:
+        text:
+    schwierigkeit:
+      selector:
+        number:
+          min: 1
+          max: 5
+          mode: slider
+    beschreibung:
+      example: Brüche mit gleichem Nenner addieren
+      selector:
+        text:
+          multiline: true

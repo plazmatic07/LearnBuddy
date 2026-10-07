@@ -1,0 +1,31 @@
+{
+  "entity": {
+    "sensor": {
+      "naechste_arbeit": { "default": "mdi:calendar-alert" },
+      "trefferquote": { "default": "mdi:bullseye-arrow" },
+      "offene_frage": {
+        "default": "mdi:chat-question",
+        "state": { "keine": "mdi:chat-outline" }
+      }
+    },
+    "switch": {
+      "abfragen_aktiv": {
+        "default": "mdi:school",
+        "state": { "off": "mdi:school-outline" }
+      }
+    },
+    "button": {
+      "jetzt_abfragen": { "default": "mdi:chat-question" }
+    },
+    "calendar": {
+      "arbeiten": { "default": "mdi:calendar-star" }
+    }
+  },
+  "services": {
+    "submit_answer": { "service": "mdi:message-reply-text" },
+    "ask_now": { "service": "mdi:chat-question" },
+    "import_tasks": { "service": "mdi:database-import" },
+    "pause": { "service": "mdi:pause-circle" },
+    "resume": { "service": "mdi:play-circle" }
+  }
+}

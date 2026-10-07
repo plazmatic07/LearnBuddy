@@ -1,0 +1,45 @@
+blueprint:
+  name: LearnBuddy – Antworten aus Telegram
+  description: >-
+    Leitet eingehende Telegram-Textnachrichten an LearnBuddy weiter. Das Kind
+    wird über die Chat-ID erkannt, die als Absenderkennung beim Kind hinterlegt
+    ist. Nachrichten unbekannter Absender werden ignoriert.
+  domain: automation
+  homeassistant:
+    min_version: 2026.9.0
+  input:
+    chat_ids:
+      name: Erlaubte Chat-IDs (optional)
+      description: >-
+        Nur Nachrichten aus diesen Chats werden weitergeleitet. Leer lassen, um
+        alle Chats zuzulassen.
+      default: []
+      selector:
+        text:
+          multiple: true
+
+mode: queued
+max: 20
+
+triggers:
+  - trigger: event
+    event_type: telegram_text
+
+variables:
+  chat_ids: !input chat_ids
+  # Template results are converted back to native types, so numbers stay
+  # numbers here; all comparisons convert explicitly to strings.
+  absender: "{{ trigger.event.data.chat_id }}"
+
+conditions:
+  - condition: template
+    value_template: >-
+      {{ chat_ids | length == 0
+         or (absender | string) in (chat_ids | map('string') | list) }}
+
+actions:
+  - action: learnbuddy.submit_answer
+    continue_on_error: true
+    data:
+      absender: "{{ absender | string }}"
+      text: "{{ trigger.event.data.text | string }}"

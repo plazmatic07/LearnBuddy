@@ -1,0 +1,55 @@
+blueprint:
+  name: LearnBuddy – Antworten aus einem Event
+  description: >-
+    Leitet eingehende Messenger-Nachrichten, die als Home-Assistant-Event
+    ankommen (z. B. von einer WhatsApp-Integration), an LearnBuddy weiter. Das
+    Kind wird über die Absenderkennung erkannt.
+  domain: automation
+  homeassistant:
+    min_version: 2026.9.0
+  input:
+    event_type:
+      name: Event-Typ
+      description: Name des Events, das die Messenger-Integration bei einer eingehenden Nachricht auslöst.
+      selector:
+        text:
+    absender_feld:
+      name: Feld mit dem Absender
+      description: Schlüssel in den Event-Daten, der Telefonnummer oder Chat-ID enthält.
+      default: sender
+      selector:
+        text:
+    text_feld:
+      name: Feld mit dem Text
+      description: Schlüssel in den Event-Daten, der den Nachrichtentext enthält.
+      default: text
+      selector:
+        text:
+
+mode: queued
+max: 20
+
+triggers:
+  - trigger: event
+    event_type: !input event_type
+
+variables:
+  absender_feld: !input absender_feld
+  text_feld: !input text_feld
+  # Template results are converted back to native types (e.g. "42" -> 42),
+  # so every use converts explicitly to a string.
+  absender: "{{ trigger.event.data.get(absender_feld, '') }}"
+  nachricht: "{{ trigger.event.data.get(text_feld, '') }}"
+
+conditions:
+  - condition: template
+    value_template: >-
+      {{ (absender | string | trim) | length > 0
+         and (nachricht | string | trim) | length > 0 }}
+
+actions:
+  - action: learnbuddy.submit_answer
+    continue_on_error: true
+    data:
+      absender: "{{ absender | string }}"
+      text: "{{ nachricht | string }}"

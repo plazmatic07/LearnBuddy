@@ -1,0 +1,71 @@
+[project]
+name = "learnbuddy"
+version = "0.6.0"
+description = "Home Assistant custom integration that quizzes children for upcoming exams via messenger"
+requires-python = ">=3.14.2"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest-homeassistant-custom-component==0.13.367",
+    # The panel depends on the frontend integration
+    "home-assistant-frontend==20260826.7",
+    "mypy>=1.18",
+    "ruff>=0.14",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py314"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "A", "ASYNC", "B", "BLE", "C4", "D", "DTZ", "E", "F", "FLY", "G", "I", "INP",
+    "ISC", "LOG", "N", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "RET", "RSE",
+    "RUF", "S", "SIM", "SLF", "T20", "TC", "TID", "TRY", "UP", "W",
+]
+ignore = [
+    "D203", "D213",    # conflicting docstring styles
+    "E501",            # line length is handled by the formatter
+    "PLR0911", "PLR0912", "PLR0913", "PLR2004",
+    "TRY003", "TRY400",
+    "ISC001",
+    "RUF012",          # Home Assistant entity attributes are class attributes
+    "RUF001", "RUF002", "RUF003",  # German typography is intended
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["TC", "S311", "S101", "S105", "S106", "SLF001", "PLR0915", "D102", "D103"]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+known-first-party = ["custom_components.learnbuddy"]
+combine-as-imports = true
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+warn_unreachable = true
+enable_error_code = ["ignore-without-code", "redundant-self", "truthy-iterable"]
+files = ["custom_components/learnbuddy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "--strict-markers"
+
+[tool.coverage.run]
+source = ["custom_components/learnbuddy"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
