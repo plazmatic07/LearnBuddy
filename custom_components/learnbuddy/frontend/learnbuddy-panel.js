@@ -410,6 +410,9 @@ var ct=Object.defineProperty;var ut=Object.getOwnPropertyDescriptor;var p=(h,s,e
     gap: 12px;
     margin-bottom: 12px;
   }
+  .dialog .raster + .klein {
+    margin-bottom: 14px;
+  }
   .dialog .aktionen {
     display: flex;
     justify-content: flex-end;

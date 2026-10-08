@@ -410,6 +410,9 @@ export const styles = css`
     gap: 12px;
     margin-bottom: 12px;
   }
+  .dialog .raster + .klein {
+    margin-bottom: 14px;
+  }
   .dialog .aktionen {
     display: flex;
     justify-content: flex-end;
