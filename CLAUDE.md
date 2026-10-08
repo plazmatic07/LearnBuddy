@@ -88,6 +88,7 @@ python -m script.hassfest --action validate --integration-path <repo>/custom_com
 ## Offen
 
 - Ferien nur über manuelles Pausieren (`pause` mit `bis`).
+- Warteschlange für Abfragen: Heute gibt es je Kind nur eine Serie; eine zweite über „Jetzt abfragen“ ersetzt die laufende (offene Frage zählt als unbeantwortet). Gewünscht: mehrere Abfragen einreihen (z. B. erst 5 aus Mathe, dann 5 aus Englisch), die nächste startet nach der vorherigen, alle stehen in der Statuszeile untereinander. Vor dem Bau planen (Speicherformat, Verhalten bei Zeitablauf, Abbrechen einzelner Einträge, Wünsche des Kindes dazwischen).
 
 ## Icon
 
