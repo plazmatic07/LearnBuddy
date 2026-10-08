@@ -17,6 +17,8 @@ import type {
   LoeschErgebnis,
   Uebersicht,
   Fachart,
+  Fortschritt,
+  Wochenreport,
 } from "./types";
 
 /** Thin typed wrapper around the admin-only WebSocket API of the integration. */
@@ -48,6 +50,14 @@ export class Api {
 
   setzeAktiv(kindId: string, aktiv: boolean): Promise<void> {
     return this.call("set_active", { kind_id: kindId, aktiv });
+  }
+
+  fortschritt(kindId: string, tage: number): Promise<Fortschritt> {
+    return this.call("progress", { kind_id: kindId, tage });
+  }
+
+  wochenreport(kindId: string, versatz: number): Promise<Wochenreport> {
+    return this.call("weekly_report", { kind_id: kindId, versatz });
   }
 
   async kalenderPruefen(kindId: string): Promise<boolean> {

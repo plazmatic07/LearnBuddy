@@ -1,6 +1,6 @@
 # LearnBuddy – Arbeitsnotizen
 
-Home Assistant Custom Integration (`learnbuddy`). Ursprüngliches Lastenheft: `SPEC.md`. Zielversion: HA 2026.9.x, Python ≥ 3.14.2. Stand: Version 0.7.0, Storage 1.12.
+Home Assistant Custom Integration (`learnbuddy`). Ursprüngliches Lastenheft: `SPEC.md`. Zielversion: HA 2026.9.x, Python ≥ 3.14.2. Stand: Version 0.8.0, Storage 1.12.
 
 Das Projekt hieß früher „Lernhelfer“ und „Lernbuddy“. Im Code gibt es keine Migration von den alten Namen; nur der JSON-Import nimmt noch Exporte mit dem Format `lernbuddy-aufgaben` an.
 
@@ -34,6 +34,7 @@ python -m script.hassfest --action validate --integration-path <repo>/custom_com
 - `eingang.py`: nimmt Antworten direkt von den Ereignissen `telegram_text` und `whatsapp_message_received` (ha-wa-bridge) sowie einem frei einstellbaren Ereignis an; Zuordnung über `manager.kind_per_absender`. `manager.antwort_doppelt` verhindert, dass eine Nachricht doppelt zählt, wenn zusätzlich eine Automation `submit_answer` aufruft (gleicher Text vom anderen Weg binnen 5 s). Unbekannte Absender merkt sich der Manager nur im Speicher (max. 5, 1 h, nur solange ein Kind auf eine Antwort wartet); das Panel bietet sie zum Übernehmen an (`sender/assign`, `sender/dismiss`). `async_setze_absender` ändert den Subentry ohne Reload, indem es `_basis` nachzieht.
 - Prüfungskalender (optional je Kind, Abschnitt im Kind-Formular: `kalender_aktiv`, `kalender_entity`, `kalender_um`): `kalender.py` ist reine Logik (Termin aus Event, Art-Erkennung, Fach-Vorauswahl nur bei eindeutigem Kürzel). `manager.async_kalender_pruefen` liest über die Aktion `calendar.get_events` (liefert keine uid, deshalb Kennung = Datum + Text) täglich zur Uhrzeit des Kindes, 2 min nach dem Start und auf Knopfdruck; Stand nur im Speicher (`KalenderStand`). Vorschlag = Termin, der weder ignoriert (`config_store.kalender_ignoriert`, Storage 1.12) noch über `kalender_uid` an einer Arbeit eingetragen ist. WS `calendar/refresh|ignore|restore`, Dashboard `kalender` + `vorschlaege`. Tests: die gemockte Aktion erst nach dem Setup registrieren, weil die eigene Kalender-Plattform die echte Aktion anlegt.
 - Fach aus dem Panel (`subjects/create`, `manager.async_fach_anlegen`): Subentry wird ohne Reload übernommen (`_ohne_reload`, `_basis` nachziehen), damit das Panel offen bleibt.
+- Verlauf (abschaltbar über die Optionen `verlauf` und `wochenreport`): `verlauf.py` ist reine Logik (Tageszähler je Kind/Fach, Lektionen, falsche Antworten je Aufgaben-ID, Lernstand-Schnappschuss, Simulationsergebnisse; 400 Tage). Eigene Datei `.storage/learnbuddy.verlauf` mit eigener Version (`VerlaufStore`), keine Migration der anderen Dateien. Gebucht wird in `manager`: Frage gesendet, `_feuere_bewertung` (Antwort und Frist), Frage abgebrochen, `_async_sim_ende`, Tageswechsel. Simulationsantworten zählen nicht. WS `progress` und `weekly_report`; Dashboard meldet `verlauf`/`wochenreport`. Panel: `fortschritt.ts` (`lh-fortschritt`, SVG-Diagramme ohne Bibliothek, Farben mit dem dataviz-Validator für hell und dunkel geprüft, Tabellenansicht als Ausweichform).
 - `messaging.py`: Versand über notify-Entität oder klassische Aktion; Bilder über die eigene Aktion des Kindes, sonst automatisch über `telegram_bot.send_photo` mit signierter Loopback-URL.
 - `bilder.py`: `BildAblage` in `<config>/learnbuddy/uploads`, Views `POST /api/learnbuddy/bilder` (nur Admin) und `GET …/{id}` (angemeldet oder signiert). Pillow kodiert neu, EXIF weg, max. 1600 px (`?zweck=seite`: 2400 px). Unbenutzte Uploads werden nach 24 h gelöscht. `media_source.py` löst `media-source://learnbuddy/<id>` für die KI auf.
 - `blatt.py`: Aufgabenblatt mit Pillow (A4, 1240×1754) und der mitgelieferten DejaVu-Schrift in `fonts/`; die eingebaute Pillow-Schrift kennt keine Umlaute.
@@ -84,7 +85,6 @@ python -m script.hassfest --action validate --integration-path <repo>/custom_com
 
 ## Offen
 
-- Fortschrittsansicht und Wochenreport (aus der SPEC).
 - Ferien nur über manuelles Pausieren (`pause` mit `bis`).
 
 ## Icon

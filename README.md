@@ -15,6 +15,7 @@ LearnBuddy bringt weder einen eigenen Messenger noch eine eigene KI-Anbindung mi
 - **Rechenweg auf Nachfrage:** Nach einer falschen Mathe-Antwort kann sich das Kind die Lösung Schritt für Schritt erklären lassen.
 - **Aufgaben beschaffen:** eintippen, als Text importieren, aus Fotos von Buchseiten auslesen oder von der KI erzeugen lassen – erzeugte Aufgaben werden nachgerechnet und warten auf deine Freigabe.
 - **Vorschläge aus dem Schulkalender:** Termine aus einem Prüfungskalender (z. B. WebUntis) erscheinen im Panel und lassen sich mit einem Klick als Arbeit eintragen.
+- **Fortschritt und Wochenreport:** Diagramme zum Verlauf (Antworten je Tag, Trefferquote, Lernstand je Fach), Schwachstellen und eine Zusammenfassung je Woche; beides abschaltbar.
 - **Klassenarbeit simulieren:** als druckbares Aufgabenblatt oder als Durchlauf im Messenger mit Auswertung am Ende, auch zu einem geplanten Zeitpunkt.
 - **Zusatzaufgaben auf Wunsch:** Das Kind fordert mit 👍 oder „noch 5“ selbst weitere Aufgaben an.
 - **Panel** in der Seitenleiste für Übersicht, Aufgaben, Lektionen und Arbeiten.
@@ -34,6 +35,7 @@ LearnBuddy bringt weder einen eigenen Messenger noch eine eigene KI-Anbindung mi
 - [Aufgaben aus Fotos importieren](#aufgaben-aus-fotos-importieren)
 - [Vorschläge aus dem Prüfungskalender](#vorschläge-aus-dem-prüfungskalender)
 - [Wann und was gefragt wird](#wann-und-was-gefragt-wird)
+- [Fortschritt und Wochenreport](#fortschritt-und-wochenreport)
 - [Klassenarbeit oder HÜ simulieren](#klassenarbeit-oder-hü-simulieren)
 - [KI](#ki)
 - [Entitäten](#entitäten)
@@ -75,6 +77,8 @@ Sie werden beim Hinzufügen abgefragt und lassen sich später über das Zahnrad 
 | Sprache der Nachrichten | Deutsch, Englisch oder wie Home Assistant. |
 | KI-Entität für die Bewertung | Optional. Eine `ai_task`-Entität. Je Fach lässt sich eine andere wählen. |
 | Generierte Aufgaben automatisch freigeben | Standard: aus. Von der KI erzeugte Mathe-Aufgaben warten dann im Panel auf deine Freigabe. |
+| Verlauf aufzeichnen und Fortschritt anzeigen | Standard: an. Siehe [Fortschritt und Wochenreport](#fortschritt-und-wochenreport). |
+| Wochenreport anzeigen | Standard: an. Braucht den Verlauf. |
 | Antworten aus Telegram annehmen | Standard: an. Siehe [Antworten entgegennehmen](#antworten-entgegennehmen). |
 | Antworten aus WhatsApp annehmen | Standard: an. Gilt für die Integration [ha-wa-bridge](https://github.com/raulpetruta/ha-wa-bridge). |
 | Eigenes Ereignis für Antworten, Feld mit dem Absender, Feld mit dem Text | Optional, für andere Messenger. |
@@ -270,6 +274,26 @@ Ein Termin verschwindet aus den Vorschlägen, sobald die Arbeit daraus angelegt 
 
 **Pausieren:** über den Schalter „Abfragen aktiv“, das Panel oder die Aktion `learnbuddy.pause`, optional bis zu einem Zeitpunkt (z. B. für Ferien).
 
+## Fortschritt und Wochenreport
+
+LearnBuddy zählt je Tag, wie viele Fragen gestellt und wie sie beantwortet wurden. Daraus entstehen in der Übersicht des Kindes der Bereich „Fortschritt“ und der Wochenreport. Der Verlauf beginnt mit der Version 0.8.0; für die Zeit davor gibt es nur die Gesamtzahlen.
+
+**Fortschritt** (Zeitraum 7, 30 oder 90 Tage):
+
+- **Antworten je Tag:** richtig, teilweise, falsch und unbeantwortet als gestapelte Balken.
+- **Trefferquote:** über die jeweils letzten sieben Tage gerechnet, damit ein Tag mit einer einzigen Antwort nicht auf 0 oder 100 % springt.
+- **Lernstand je Fach:** Anteil der Karten ab Box 3.
+- **Schwachstellen:** die Lektionen mit der höchsten Fehlerquote (ab drei Antworten) und die Aufgaben mit den meisten falschen Antworten.
+- **Simulationen:** Datum, Arbeit, Punkte und Prozent.
+
+Beim Überfahren eines Diagramms erscheinen die Werte des Tages. „Als Tabelle“ zeigt dieselben Zahlen als Tabelle.
+
+**Wochenreport:** Der Knopf „Wochenreport“ öffnet die Zusammenfassung einer Woche (Montag bis Sonntag); mit den Pfeilen blätterst du durch die Wochen. Er enthält die Kennzahlen der Woche, den Vergleich zur Vorwoche samt Lernstand je Fach, die Schwachstellen, die Arbeiten der nächsten 14 Tage mit offenen Vorschlägen aus dem Kalender und die Simulationen der Woche. „Drucken“ und „Als Text kopieren“ geben ihn aus; verschickt wird nichts.
+
+**Abschalten:** In den Optionen der Integration gibt es die Schalter „Verlauf aufzeichnen und Fortschritt anzeigen“ und „Wochenreport anzeigen“. Ist der Verlauf aus, wird nichts mehr gezählt und beide Bereiche verschwinden; schon Aufgezeichnetes bleibt erhalten.
+
+Antworten innerhalb einer Simulation zählen nicht in die Tageszahlen, und eine abgebrochene Frage wird wieder herausgerechnet. Der Verlauf wird 400 Tage aufbewahrt.
+
 ## Klassenarbeit oder HÜ simulieren
 
 Im Bereich „Arbeiten“ hat jede Arbeit den Knopf „Klassenarbeit simulieren“ bzw. „HÜ simulieren“. Du wählst die Anzahl der Aufgaben (bis 30) und den Weg. Die Aufgaben werden zufällig aus den freigegebenen Aufgaben der Arbeit gezogen, möglichst gleichmäßig über ihre Lektionen. Die Lernstatistik bleibt unberührt.
@@ -371,6 +395,7 @@ actions:
 - An die KI gehen zur Bewertung nur die Aufgabe, die Lösung samt Alternativen bzw. Kernpunkten, die Sprachen und die Antwort des Kindes. Name und Absenderkennung werden nie übertragen. Die Antwort ist Freitext des Kindes und geht unverändert an den gewählten KI-Dienst.
 - Beim Erzeugen und Auslesen von Aufgaben gehen zusätzlich Klassenstufe, Schulart und Bundesland an die KI, dazu Thema, deine Beschreibung und bis zu zehn Beispielaufgaben.
 - Bilder von Aufgaben gehen an den Messenger und, wenn die KI beteiligt ist, an den KI-Dienst. Fotos von Buchseiten gehen nur an den KI-Dienst. Metadaten werden vorher entfernt.
+- Der Verlauf (`.storage/learnbuddy.verlauf`) enthält nur Zähler und IDs je Tag, keine Namen, Aufgabentexte oder Antworten, und bleibt lokal.
 - Termine aus dem Prüfungskalender bleiben in Home Assistant. Sie werden nicht protokolliert und nicht an eine KI geschickt.
 - Das Panel und seine Schnittstelle sind nur für Administratoren erreichbar.
 

@@ -509,6 +509,9 @@ class Verwaltung:
             "arbeiten": arbeiten,
             "schwierig": schwierig[:MAX_SCHWIERIG],
             **self._kalender(kind_id),
+            # Optional parts of the overview
+            "verlauf": manager.verlauf_aktiv,
+            "wochenreport": self._wochenreport_an,
         }
 
     # ------------------------------------------------------------------

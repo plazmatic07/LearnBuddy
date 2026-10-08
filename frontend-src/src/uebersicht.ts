@@ -2,6 +2,7 @@ import { LitElement, css, html, nothing, type PropertyValues, type TemplateResul
 import { property, state } from "lit/decorators.js";
 
 import { Api } from "./api";
+import "./fortschritt";
 import { fehlertext, sprachname, uebersetzer, type Uebersetzer } from "./i18n";
 import { styles } from "./styles";
 import type {
@@ -488,6 +489,15 @@ export class LhUebersicht extends LitElement {
               <div class="card">${this._lernstand(daten)}</div>
               <div class="card">${this._schwierig(daten)}</div>
             </div>
+            ${daten.verlauf
+              ? html`<lh-fortschritt
+                  .hass=${this.hass}
+                  .narrow=${this.narrow}
+                  .kindId=${this.kindId}
+                  .wochenreport=${daten.wochenreport ?? false}
+                  .stand=${daten}
+                ></lh-fortschritt>`
+              : nothing}
           `
         : this._fehler
           ? nothing

@@ -341,6 +341,9 @@ export interface Dashboard {
   };
   faecher: DashboardFach[];
   arbeiten: DashboardArbeit[];
+  // Optional parts of the overview; missing on older servers
+  verlauf?: boolean;
+  wochenreport?: boolean;
   // Missing on older servers; null if the child uses no exam calendar
   kalender?: { geprueft_um: string | null; fehler: boolean; ignoriert: number } | null;
   vorschlaege?: Vorschlag[];
@@ -352,4 +355,74 @@ export interface Dashboard {
     fehlerquote: number;
     falsch: number;
   }[];
+}
+
+/** Counters of one day or of a period. */
+export interface Tageszahlen {
+  gefragt: number;
+  richtig: number;
+  teilweise: number;
+  falsch: number;
+  unbeantwortet: number;
+  // Share of right answers; per day smoothed over the last days
+  trefferquote: number | null;
+}
+
+export interface SchwacheLektion {
+  fach: string;
+  lektion: string;
+  richtig: number;
+  falsch: number;
+  fehlerquote: number;
+}
+
+export interface FehlerAufgabe {
+  fach: string;
+  aufgabe: string;
+  loesung: string;
+  falsch: number;
+}
+
+export interface SimulationsEintrag {
+  tag: string;
+  fach: string | null;
+  thema: string | null;
+  punkte: number;
+  moeglich: number;
+  prozent: number | null;
+  vollstaendig: boolean;
+}
+
+export interface Fortschritt {
+  // First day anything was recorded, null if nothing yet
+  seit: string | null;
+  von: string;
+  bis: string;
+  reihe: (Tageszahlen & { tag: string })[];
+  faecher: { id: string; name: string; lernstand: (number | null)[] }[];
+  lektionen: SchwacheLektion[];
+  aufgaben: FehlerAufgabe[];
+  simulationen: SimulationsEintrag[];
+}
+
+export interface Wochenreport {
+  von: string;
+  bis: string;
+  laufend: boolean;
+  seit: string | null;
+  kennzahlen: Tageszahlen & { tage_aktiv: number };
+  vorwoche: Tageszahlen & { tage_aktiv: number };
+  faecher: { name: string; lernstand: number | null; vorher: number | null }[];
+  lektionen: SchwacheLektion[];
+  aufgaben: FehlerAufgabe[];
+  arbeiten: {
+    fach: string;
+    thema: string;
+    art: "arbeit" | "hue";
+    datum: string;
+    tage_bis: number;
+    sicher: number | null;
+  }[];
+  vorschlaege: { datum: string; art: "arbeit" | "hue"; text: string }[];
+  simulationen: SimulationsEintrag[];
 }
