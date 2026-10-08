@@ -40,15 +40,21 @@ const FACH_HELL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#0083
 const FACH_DUNKEL = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300"];
 const ZEITRAEUME = [7, 30, 90];
 
-// Geometry of the charts in viewBox units
-const BREITE = 640;
-const HOEHE = 190;
-const LINKS = 34;
+// Geometry of the charts in CSS pixels; the width follows the card
+const HOEHE_BREIT = 200;
+const HOEHE_SCHMAL = 170;
+const LINKS = 38;
 const RECHTS = 12;
 const OBEN = 10;
 const UNTEN = 24;
 const MAX_BALKEN = 24;
 const LUECKE = 2;
+
+/** Drawing size of one chart. */
+interface Mass {
+  b: number;
+  h: number;
+}
 
 interface Abschnitt {
   titel: string;
@@ -132,7 +138,6 @@ export class LhFortschritt extends LitElement {
       svg {
         display: block;
         width: 100%;
-        height: auto;
       }
       svg text {
         font-size: 11px;
@@ -257,6 +262,11 @@ export class LhFortschritt extends LitElement {
 
   @state() private _reportHinweis = "";
 
+  /** Measured width of every chart, so that text keeps its size. */
+  @state() private _breiten: Record<string, number> = {};
+
+  private _beobachter?: ResizeObserver;
+
   private get _t(): Uebersetzer {
     return uebersetzer(this.hass?.language ?? "en");
   }
@@ -275,6 +285,41 @@ export class LhFortschritt extends LitElement {
     }
     if (geaendert.has("kindId")) {
       this._reportOffen = false;
+    }
+  }
+
+  private _mass(name: string, hoehe: number): Mass {
+    return { b: Math.max(240, this._breiten[name] ?? 600), h: hoehe };
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this._beobachter = new ResizeObserver((eintraege) => {
+      const breiten = { ...this._breiten };
+      let geaendert = false;
+      for (const eintrag of eintraege) {
+        const name = (eintrag.target as HTMLElement).dataset.name ?? "";
+        const breite = Math.round(eintrag.contentRect.width);
+        if (name && breite && breiten[name] !== breite) {
+          breiten[name] = breite;
+          geaendert = true;
+        }
+      }
+      if (geaendert) {
+        this._breiten = breiten;
+      }
+    });
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._beobachter?.disconnect();
+  }
+
+  protected updated(): void {
+    // Charts come and go with the table view and with new data
+    for (const diagramm of this.renderRoot.querySelectorAll(".diagramm")) {
+      this._beobachter?.observe(diagramm);
     }
   }
 
@@ -339,20 +384,20 @@ export class LhFortschritt extends LitElement {
   // ---------------------------------------------------------------- charts
 
   /** Columns that catch the pointer, one per day, plus the crosshair. */
-  private _spalten(diagramm: string, anzahl: number): TemplateResult {
-    const breite = (BREITE - LINKS - RECHTS) / anzahl;
+  private _spalten(m: Mass, diagramm: string, anzahl: number): TemplateResult {
+    const breite = (m.b - LINKS - RECHTS) / anzahl;
     const aktiv = this._zeiger?.diagramm === diagramm ? this._zeiger.index : -1;
     return svg`
       ${
         aktiv >= 0
           ? svg`<line class="fadenkreuz"
               x1=${LINKS + (aktiv + 0.5) * breite} x2=${LINKS + (aktiv + 0.5) * breite}
-              y1=${OBEN} y2=${HOEHE - UNTEN}></line>`
+              y1=${OBEN} y2=${m.h - UNTEN}></line>`
           : nothing
       }
       ${Array.from({ length: anzahl }, (_, index) => svg`<rect
           x=${LINKS + index * breite} y=${OBEN}
-          width=${breite} height=${HOEHE - OBEN - UNTEN}
+          width=${breite} height=${m.h - OBEN - UNTEN}
           fill="transparent"
           @pointerenter=${() => {
             this._zeiger = { diagramm, index };
@@ -361,22 +406,23 @@ export class LhFortschritt extends LitElement {
     `;
   }
 
-  private _achsen(max: number, einheit: string, tage: string[]): TemplateResult {
-    const innen = HOEHE - OBEN - UNTEN;
-    const breite = (BREITE - LINKS - RECHTS) / tage.length;
-    const schritt = Math.max(1, Math.ceil(tage.length / 7));
+  private _achsen(m: Mass, max: number, einheit: string, tage: string[]): TemplateResult {
+    const innen = m.h - OBEN - UNTEN;
+    const breite = (m.b - LINKS - RECHTS) / tage.length;
+    // Roughly one date label per 60 pixels
+    const schritt = Math.max(1, Math.ceil(tage.length / Math.max(2, (m.b - LINKS) / 60)));
     return svg`
       ${[0, 0.5, 1].map((anteil) => {
-        const y = HOEHE - UNTEN - anteil * innen;
+        const y = m.h - UNTEN - anteil * innen;
         return svg`
-          <line class="gitter" x1=${LINKS} x2=${BREITE - RECHTS} y1=${y} y2=${y}></line>
+          <line class="gitter" x1=${LINKS} x2=${m.b - RECHTS} y1=${y} y2=${y}></line>
           <text x=${LINKS - 6} y=${y + 4} text-anchor="end">
             ${Math.round(anteil * max)}${einheit}
           </text>`;
       })}
       ${tage.map((tag, index) =>
         index % schritt === 0
-          ? svg`<text x=${LINKS + (index + 0.5) * breite} y=${HOEHE - 6}
+          ? svg`<text x=${LINKS + (index + 0.5) * breite} y=${m.h - 6}
               text-anchor="middle">${this._datum(tag)}</text>`
           : nothing,
       )}
@@ -384,6 +430,7 @@ export class LhFortschritt extends LitElement {
   }
 
   private _tooltip(
+    m: Mass,
     diagramm: string,
     anzahl: number,
     inhalt: (index: number) => TemplateResult,
@@ -392,7 +439,7 @@ export class LhFortschritt extends LitElement {
     if (!zeiger || zeiger.diagramm !== diagramm) {
       return nothing;
     }
-    const anteil = (LINKS + ((zeiger.index + 0.5) * (BREITE - LINKS - RECHTS)) / anzahl) / BREITE;
+    const anteil = (LINKS + ((zeiger.index + 0.5) * (m.b - LINKS - RECHTS)) / anzahl) / m.b;
     // Flip to the other side of the crosshair in the right half
     const stil =
       anteil > 0.5
@@ -403,17 +450,18 @@ export class LhFortschritt extends LitElement {
 
   private _antworten(daten: Fortschritt): TemplateResult {
     const t = this._t;
+    const m = this._mass("antworten", HOEHE_BREIT);
     const farben = this._dunkel ? ERGEBNIS_DUNKEL : ERGEBNIS_HELL;
     const reihe = daten.reihe;
     const summe = (tag: Tageszahlen): number =>
       tag.richtig + tag.teilweise + tag.falsch + tag.unbeantwortet;
     const max = achsenende(Math.max(...reihe.map(summe)));
-    const innen = HOEHE - OBEN - UNTEN;
-    const slot = (BREITE - LINKS - RECHTS) / reihe.length;
+    const innen = m.h - OBEN - UNTEN;
+    const slot = (m.b - LINKS - RECHTS) / reihe.length;
     const balken = Math.max(2, Math.min(MAX_BALKEN, slot - LUECKE));
     const saeulen = reihe.map((tag, index) => {
       const x = LINKS + index * slot + (slot - balken) / 2;
-      let unten = HOEHE - UNTEN;
+      let unten = m.h - UNTEN;
       const teile = ERGEBNISSE.filter((ergebnis) => tag[ergebnis] > 0);
       return teile.map((ergebnis, nummer) => {
         const hoehe = (tag[ergebnis] / max) * innen;
@@ -433,16 +481,17 @@ export class LhFortschritt extends LitElement {
       <h3>${t("fortschritt_antworten")}</h3>
       <div
         class="diagramm"
+        data-name="antworten"
         @pointerleave=${() => {
           this._zeiger = null;
         }}
       >
-        <svg viewBox="0 0 ${BREITE} ${HOEHE}" role="img" aria-label=${t("fortschritt_antworten")}>
-          ${this._achsen(max, "", reihe.map((tag) => tag.tag))}
+        <svg viewBox="0 0 ${m.b} ${m.h}" height=${m.h} role="img" aria-label=${t("fortschritt_antworten")}>
+          ${this._achsen(m, max, "", reihe.map((tag) => tag.tag))}
           ${saeulen}
-          ${this._spalten("antworten", reihe.length)}
+          ${this._spalten(m, "antworten", reihe.length)}
         </svg>
-        ${this._tooltip("antworten", reihe.length, (index) => {
+        ${this._tooltip(m, "antworten", reihe.length, (index) => {
           const tag = reihe[index];
           if (!tag) {
             return html``;
@@ -473,15 +522,16 @@ export class LhFortschritt extends LitElement {
 
   /** A line with gaps where there is no value. */
   private _linie(
+    m: Mass,
     werte: (number | null)[],
     farbe: string | undefined,
     zeiger: number,
   ): TemplateResult {
-    const innen = HOEHE - OBEN - UNTEN;
-    const slot = (BREITE - LINKS - RECHTS) / werte.length;
+    const innen = m.h - OBEN - UNTEN;
+    const slot = (m.b - LINKS - RECHTS) / werte.length;
     const punkt = (wert: number, index: number): [number, number] => [
       LINKS + (index + 0.5) * slot,
-      HOEHE - UNTEN - (wert / 100) * innen,
+      m.h - UNTEN - (wert / 100) * innen,
     ];
     let pfad = "";
     let offen = false;
@@ -517,6 +567,7 @@ export class LhFortschritt extends LitElement {
 
   private _quote(daten: Fortschritt): TemplateResult {
     const t = this._t;
+    const m = this._mass("quote", HOEHE_SCHMAL);
     const farbe = (this._dunkel ? FACH_DUNKEL : FACH_HELL)[0];
     const reihe = daten.reihe;
     const werte = reihe.map((tag) => tag.trefferquote);
@@ -526,16 +577,17 @@ export class LhFortschritt extends LitElement {
       <div class="klein">${t("fortschritt_quote_hilfe")}</div>
       <div
         class="diagramm"
+        data-name="quote"
         @pointerleave=${() => {
           this._zeiger = null;
         }}
       >
-        <svg viewBox="0 0 ${BREITE} ${HOEHE}" role="img" aria-label=${t("fortschritt_quote")}>
-          ${this._achsen(100, " %", reihe.map((tag) => tag.tag))}
-          ${this._linie(werte, farbe, zeiger)}
-          ${this._spalten("quote", reihe.length)}
+        <svg viewBox="0 0 ${m.b} ${m.h}" height=${m.h} role="img" aria-label=${t("fortschritt_quote")}>
+          ${this._achsen(m, 100, " %", reihe.map((tag) => tag.tag))}
+          ${this._linie(m, werte, farbe, zeiger)}
+          ${this._spalten(m, "quote", reihe.length)}
         </svg>
-        ${this._tooltip("quote", reihe.length, (index) => html`
+        ${this._tooltip(m, "quote", reihe.length, (index) => html`
           <div class="tag">${this._datum(reihe[index]?.tag, true)}</div>
           <div>${t("fortschritt_quote")}: ${this._prozent(reihe[index]?.trefferquote)}</div>
         `)}
@@ -545,6 +597,7 @@ export class LhFortschritt extends LitElement {
 
   private _lernstand(daten: Fortschritt): TemplateResult {
     const t = this._t;
+    const m = this._mass("lernstand", HOEHE_SCHMAL);
     const farben = this._dunkel ? FACH_DUNKEL : FACH_HELL;
     const faecher = daten.faecher.slice(0, farben.length);
     const tage = daten.reihe.map((tag) => tag.tag);
@@ -554,20 +607,22 @@ export class LhFortschritt extends LitElement {
       <div class="klein">${t("fortschritt_lernstand_hilfe")}</div>
       <div
         class="diagramm"
+        data-name="lernstand"
         @pointerleave=${() => {
           this._zeiger = null;
         }}
       >
         <svg
-          viewBox="0 0 ${BREITE} ${HOEHE}"
+          viewBox="0 0 ${m.b} ${m.h}"
+          height=${m.h}
           role="img"
           aria-label=${t("fortschritt_lernstand")}
         >
-          ${this._achsen(100, " %", tage)}
-          ${faecher.map((fach, index) => this._linie(fach.lernstand, farben[index], zeiger))}
-          ${this._spalten("lernstand", tage.length)}
+          ${this._achsen(m, 100, " %", tage)}
+          ${faecher.map((fach, index) => this._linie(m, fach.lernstand, farben[index], zeiger))}
+          ${this._spalten(m, "lernstand", tage.length)}
         </svg>
-        ${this._tooltip("lernstand", tage.length, (index) => html`
+        ${this._tooltip(m, "lernstand", tage.length, (index) => html`
           <div class="tag">${this._datum(tage[index], true)}</div>
           ${faecher.map(
             (fach, nummer) =>
