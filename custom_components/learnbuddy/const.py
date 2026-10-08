@@ -27,6 +27,8 @@ CONF_TIMEOUT_MINUTEN: Final = "timeout_minuten"
 CONF_SPRACHE: Final = "sprache"
 CONF_KI_ENTITY: Final = "ki_entity"
 CONF_AUTO_FREIGABE: Final = "auto_freigabe"
+CONF_VERLAUF: Final = "verlauf"
+CONF_WOCHENREPORT: Final = "wochenreport"
 CONF_EINGANG_TELEGRAM: Final = "eingang_telegram"
 CONF_EINGANG_WHATSAPP: Final = "eingang_whatsapp"
 CONF_EINGANG_EVENT: Final = "eingang_event"
@@ -173,6 +175,11 @@ STORAGE_MINOR_VERSION: Final = 12
 # Most extra questions a child can ask for at once
 MAX_ZUSATZAUFGABEN: Final = 20
 STORAGE_KEY_CONFIG: Final = f"{DOMAIN}.config"
+# The daily log is a file of its own with its own version
+STORAGE_KEY_VERLAUF: Final = f"{DOMAIN}.verlauf"
+VERLAUF_VERSION: Final = 1
+# A card counts as safe from this Leitner box on
+SICHER_AB_BOX: Final = 3
 
 
 def signal_kind_update(kind_id: str) -> str:

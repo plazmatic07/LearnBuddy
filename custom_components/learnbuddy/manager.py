@@ -36,6 +36,7 @@ from .const import (
     CONF_NAME,
     CONF_SPRACHE,
     CONF_TIMEOUT_MINUTEN,
+    CONF_VERLAUF,
     DEFAULT_TIMEOUT_MINUTEN,
     DOMAIN,
     DOPPELT_SEKUNDEN,
@@ -46,6 +47,7 @@ from .const import (
     LOGGER,
     MAX_ZUSATZAUFGABEN,
     SENDE_WIEDERHOLUNGEN,
+    SICHER_AB_BOX,
     SPRACHE_AUTO,
     SUBENTRY_ARBEIT,
     SUBENTRY_FACH,
@@ -89,8 +91,9 @@ from .scheduler import (
     waehle_aufgabe,
 )
 from .simulation import Auswertung, punkte_text, waehle, werte_aus
-from .storage import ConfigStore, TaskStore, async_remove_task_file
+from .storage import ConfigStore, TaskStore, VerlaufStore, async_remove_task_file
 from .texte import sprachname, text, waehle_sprache
+from .verlauf import SimErgebnis
 from .verwaltung import (
     Verwaltung,
     aufgabe_aus_zeile,
@@ -153,6 +156,9 @@ class LearnBuddyManager:
         self.hass = hass
         self.entry = entry
         self.config_store = ConfigStore(hass)
+        self.verlauf_store = VerlaufStore(hass)
+        # Whether answers are logged per day; what was logged stays either way
+        self.verlauf_aktiv: bool = entry.options.get(CONF_VERLAUF, True)
         self.task_stores: dict[str, TaskStore] = {}
         self.bilder = BildAblage(hass)
         self.messenger = Messenger(hass, self.bilder)
@@ -202,6 +208,15 @@ class LearnBuddyManager:
 
         await self.config_store.async_load()
         geaendert = self.config_store.bereinige(self.kinder, self.arbeiten)
+        await self.verlauf_store.async_load()
+        if self.verlauf_store.bereinige(
+            {
+                kind_id: [f.id for f in self.faecher_von(kind_id)]
+                for kind_id in self.kinder
+            },
+            dt_util.now().date(),
+        ):
+            self.verlauf_store.async_schedule_save()
 
         for fach in self.faecher.values():
             store = TaskStore(self.hass, fach.kind_id, fach.id)
@@ -291,11 +306,13 @@ class LearnBuddyManager:
             self.hass, self._neuer_tag, hour=0, minute=0, second=10
         )
         self._starte_kalender()
+        self._verlauf_lernstand()
 
     @callback
     def _neuer_tag(self, _jetzt: datetime) -> None:
         """Refresh date dependent data once a day."""
         self.async_pruefe_ki()
+        self._verlauf_lernstand()
         for kind_id in self.kinder:
             self._benachrichtige(kind_id)
             if kind_id not in self._timer:
@@ -322,6 +339,8 @@ class LearnBuddyManager:
     async def async_flush(self) -> None:
         """Write all stores to disk immediately."""
         await self.config_store.async_save()
+        if self.verlauf_aktiv:
+            await self.verlauf_store.async_save()
         for store in self.task_stores.values():
             await store.async_save()
 
@@ -940,6 +959,9 @@ class LearnBuddyManager:
         self._letztes_fach[kind_id] = fach.id
         self.task_stores[fach.id].async_schedule_save()
         self.config_store.async_schedule_save()
+        if self.verlauf_aktiv:
+            self.verlauf_store.kind(kind_id).frage(dt_util.now().date(), fach.id)
+            self.verlauf_store.async_schedule_save()
         self.hass.bus.async_fire(
             EVENT_QUESTION_SENT,
             self._event_daten(kind_id, zustand.offene_frage),
@@ -1297,6 +1319,12 @@ class LearnBuddyManager:
                 stat = aufgabe.statistik_fuer(frage.richtung)
                 stat.gefragt = max(0, stat.gefragt - 1)
                 self.task_stores[frage.fach_id].async_schedule_save()
+            if self.verlauf_aktiv:
+                # Taken back on the day the question was asked
+                self.verlauf_store.kind(kind_id).frage_zurueck(
+                    dt_util.as_local(frage.gestellt_um).date(), frage.fach_id
+                )
+                self.verlauf_store.async_schedule_save()
             self.config_store.async_schedule_save()
             await self.messenger.async_send(
                 kind, text(self.sprache, "frage_abgebrochen", name=kind.name)
@@ -1657,6 +1685,18 @@ class LearnBuddyManager:
         zustand.simulation = None
         self.config_store.async_schedule_save()
         auswertung, nachricht = self._sim_auswertung(kind, simulation, zeit=zeit)
+        if self.verlauf_aktiv:
+            self.verlauf_store.kind(kind_id).simulation(
+                SimErgebnis(
+                    tag=dt_util.now().date(),
+                    arbeit_id=simulation.arbeit_id,
+                    fach_id=simulation.fach_id,
+                    punkte=auswertung.punkte,
+                    moeglich=auswertung.moeglich,
+                    vollstaendig=not zeit,
+                )
+            )
+            self.verlauf_store.async_schedule_save()
         await self.messenger.async_send(kind, nachricht, wiederholen=True)
         self.hass.bus.async_fire(
             EVENT_SIMULATION_FINISHED,
@@ -1788,6 +1828,7 @@ class LearnBuddyManager:
         ergebnis: Ergebnis,
         bewertet_von: str = "lokal",
     ) -> None:
+        self._verlauf_ergebnis(kind_id, frage, ergebnis)
         self.hass.bus.async_fire(
             EVENT_ANSWER_EVALUATED,
             {
@@ -1796,6 +1837,57 @@ class LearnBuddyManager:
                 "bewertet_von": bewertet_von,
             },
         )
+
+    # ------------------------------------------------------------------
+    # Daily log
+    # ------------------------------------------------------------------
+
+    def lernstand(self, fach: Fach) -> tuple[int, int]:
+        """Return the cards of a subject and how many of them are safe."""
+        karten = sicher = 0
+        for aufgabe in self.task_stores[fach.id].aufgaben.values():
+            if not aufgabe.geprueft:
+                continue
+            for richtung in fach.richtungen:
+                stat = aufgabe.statistik.get(richtung)
+                karten += 1
+                sicher += stat is not None and stat.box >= SICHER_AB_BOX
+        return karten, sicher
+
+    def _verlauf_ergebnis(
+        self, kind_id: str, frage: OffeneFrage, ergebnis: Ergebnis
+    ) -> None:
+        """Log the result of a question and the level of its subject."""
+        if not self.verlauf_aktiv:
+            return
+        heute = dt_util.now().date()
+        verlauf = self.verlauf_store.kind(kind_id)
+        aufgabe = self._aufgabe(frage)
+        verlauf.ergebnis(
+            heute,
+            frage.fach_id,
+            ergebnis.value,
+            lektion=None if aufgabe is None else aufgabe.lektion,
+            aufgabe_id=frage.aufgabe_id,
+        )
+        fach = self.faecher.get(frage.fach_id)
+        if fach is not None:
+            verlauf.lernstand(heute, fach.id, *self.lernstand(fach))
+        self.verlauf_store.async_schedule_save()
+
+    @callback
+    def _verlauf_lernstand(self) -> None:
+        """Note the level of every subject, once a day and at the start."""
+        if not self.verlauf_aktiv:
+            return
+        heute = dt_util.now().date()
+        for fach in self.faecher.values():
+            karten, sicher = self.lernstand(fach)
+            if karten:
+                self.verlauf_store.kind(fach.kind_id).lernstand(
+                    heute, fach.id, karten, sicher
+                )
+        self.verlauf_store.async_schedule_save()
 
     def _benachrichtige(self, kind_id: str) -> None:
         """Tell the entities of a child to update."""

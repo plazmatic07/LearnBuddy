@@ -9,6 +9,8 @@
           "sprache": "Language of the messages",
           "ki_entity": "AI entity for evaluation",
           "auto_freigabe": "Approve generated tasks automatically",
+          "verlauf": "Record history and show progress",
+          "wochenreport": "Show the weekly report",
           "eingang_telegram": "Accept answers from Telegram",
           "eingang_whatsapp": "Accept answers from WhatsApp",
           "eingang_event": "Custom event for answers",
@@ -23,7 +25,9 @@
           "eingang_whatsapp": "Applies to the integration \"WhatsApp\" (ha-wa-bridge, event whatsapp_message_received). Messages are assigned by the phone number set as sender ID of the child; group messages are ignored.",
           "eingang_event": "Optional, for other messengers: name of the event your messenger integration fires for an incoming message.",
           "eingang_absender_feld": "Key in the event data holding the phone number or chat ID. Default: sender.",
-          "eingang_text_feld": "Key in the event data holding the message text. Default: text."
+          "eingang_text_feld": "Key in the event data holding the message text. Default: text.",
+          "verlauf": "LearnBuddy counts per day how many questions were asked and how they were answered, and shows the progress in the overview. Only numbers are stored, locally in Home Assistant. Off: nothing is recorded any more; what was recorded stays and shows again when switched on.",
+          "wochenreport": "Shows the button \"Weekly report\" in the overview with a summary per week. Needs the history. Nothing is sent."
         }
       }
     },
@@ -40,6 +44,8 @@
           "sprache": "Language of the messages",
           "ki_entity": "AI entity for evaluation",
           "auto_freigabe": "Approve generated tasks automatically",
+          "verlauf": "Record history and show progress",
+          "wochenreport": "Show the weekly report",
           "eingang_telegram": "Accept answers from Telegram",
           "eingang_whatsapp": "Accept answers from WhatsApp",
           "eingang_event": "Custom event for answers",
@@ -54,7 +60,9 @@
           "eingang_whatsapp": "Applies to the integration \"WhatsApp\" (ha-wa-bridge, event whatsapp_message_received). Messages are assigned by the phone number set as sender ID of the child; group messages are ignored.",
           "eingang_event": "Optional, for other messengers: name of the event your messenger integration fires for an incoming message.",
           "eingang_absender_feld": "Key in the event data holding the phone number or chat ID. Default: sender.",
-          "eingang_text_feld": "Key in the event data holding the message text. Default: text."
+          "eingang_text_feld": "Key in the event data holding the message text. Default: text.",
+          "verlauf": "LearnBuddy counts per day how many questions were asked and how they were answered, and shows the progress in the overview. Only numbers are stored, locally in Home Assistant. Off: nothing is recorded any more; what was recorded stays and shows again when switched on.",
+          "wochenreport": "Shows the button \"Weekly report\" in the overview with a summary per week. Needs the history. Nothing is sent."
         }
       }
     }

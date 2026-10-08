@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import date
+from datetime import date, timedelta
 import re
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
@@ -31,10 +31,12 @@ from .const import (
     CONF_START_TAGE_VORHER,
     CONF_THEMA,
     CONF_TYP,
+    CONF_WOCHENREPORT,
     DEFAULT_ABFRAGEN_PRO_TAG,
     DEFAULT_SIMULATION_ANZAHL,
     DEFAULT_START_TAGE_VORHER,
     MAX_TIMEOUT_MINUTEN,
+    SICHER_AB_BOX,
     SPRACH_CODES,
     SUBENTRY_ARBEIT,
 )
@@ -62,6 +64,7 @@ from .rechnen import berechne
 from .scheduler import MAX_BOX, abfragen_am_tag, aufgaben_der_arbeit
 from .simulation import MAX_AUFGABEN as MAX_SIM_AUFGABEN
 from .texte import sprachname, waehle_sprache
+from .verlauf import SimErgebnis, woche
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -101,8 +104,11 @@ MAX_BEISPIELE = 10
 PARALLEL_PRUEFEN = 4
 MAX_LEKTION = 100
 MAX_SCHWIERIG = 5
+FORTSCHRITT_ZEITRAEUME = (7, 30, 90)
+REPORT_LEKTIONEN = 3
+REPORT_AUFGABEN = 3
+REPORT_TAGE_VORAUS = 14
 # From this Leitner box on a card counts as mastered in the overview
-SICHER_AB_BOX = 3
 
 
 class VerwaltungError(Exception):
@@ -256,6 +262,9 @@ class Verwaltung:
         manager = self._manager
         return {
             "panel_version": panel_version(manager.hass),
+            # Optional parts of the overview
+            "verlauf": manager.verlauf_aktiv,
+            "wochenreport": self._wochenreport_an,
             # Messages nobody could be assigned to while a child waited
             "unbekannte_absender": manager.unbekannte_absender(),
             "kinder": [
@@ -500,6 +509,163 @@ class Verwaltung:
             "arbeiten": arbeiten,
             "schwierig": schwierig[:MAX_SCHWIERIG],
             **self._kalender(kind_id),
+        }
+
+    # ------------------------------------------------------------------
+    # Progress and weekly report
+    # ------------------------------------------------------------------
+
+    @property
+    def _wochenreport_an(self) -> bool:
+        manager = self._manager
+        return manager.verlauf_aktiv and manager.entry.options.get(
+            CONF_WOCHENREPORT, True
+        )
+
+    def _aufgaben_mit_fehlern(
+        self, eintraege: list[tuple[str, str, int]], anzahl: int
+    ) -> list[dict[str, Any]]:
+        """Describe the tasks with the most wrong answers; deleted ones drop out."""
+        manager = self._manager
+        aufgaben = []
+        for fach_id, aufgabe_id, falsch in eintraege:
+            fach = manager.faecher.get(fach_id)
+            store = manager.task_stores.get(fach_id)
+            aufgabe = None if store is None else store.aufgaben.get(aufgabe_id)
+            if fach is None or aufgabe is None:
+                continue
+            richtung = fach.richtungen[0]
+            aufgaben.append(
+                {
+                    "fach": fach.name,
+                    "aufgabe": aufgabe.frage_text(richtung),
+                    "loesung": aufgabe.loesung_text(richtung),
+                    "falsch": falsch,
+                }
+            )
+            if len(aufgaben) == anzahl:
+                break
+        return aufgaben
+
+    def _lektionen_mit_fach(
+        self, lektionen: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        faecher = self._manager.faecher
+        return [
+            {**eintrag, "fach": faecher[eintrag["fach_id"]].name}
+            for eintrag in lektionen
+            if eintrag["fach_id"] in faecher
+        ]
+
+    def _simulationen(self, ergebnisse: list[SimErgebnis]) -> list[dict[str, Any]]:
+        manager = self._manager
+        liste = []
+        for ergebnis in ergebnisse:
+            fach = manager.faecher.get(ergebnis.fach_id)
+            arbeit = manager.arbeiten.get(ergebnis.arbeit_id)
+            liste.append(
+                {
+                    "tag": ergebnis.tag.isoformat(),
+                    "fach": None if fach is None else fach.name,
+                    # The exam may be gone by now
+                    "thema": None if arbeit is None else arbeit.thema,
+                    "punkte": ergebnis.punkte,
+                    "moeglich": ergebnis.moeglich,
+                    "prozent": ergebnis.prozent,
+                    "vollstaendig": ergebnis.vollstaendig,
+                }
+            )
+        return liste
+
+    def fortschritt(self, kind_id: str, tage: int) -> dict[str, Any]:
+        """Return the progress of a child over the last days."""
+        manager = self._manager
+        if kind_id not in manager.kinder:
+            raise _nicht_gefunden("kind")
+        if not manager.verlauf_aktiv:
+            raise _ungueltig("verlauf_aus")
+        if tage not in FORTSCHRITT_ZEITRAEUME:
+            raise _ungueltig("zeitraum_ungueltig")
+        verlauf = manager.verlauf_store.kind(kind_id)
+        bis = dt_util.now().date()
+        von = bis - timedelta(days=tage - 1)
+        return {
+            "seit": None if verlauf.seit is None else verlauf.seit.isoformat(),
+            "von": von.isoformat(),
+            "bis": bis.isoformat(),
+            "reihe": verlauf.reihe(von, bis),
+            "faecher": [
+                {
+                    "id": fach.id,
+                    "name": fach.name,
+                    # Share of safe cards per day of the period
+                    "lernstand": verlauf.lernstand_reihe(fach.id, von, bis),
+                }
+                for fach in manager.faecher_von(kind_id)
+            ],
+            "lektionen": self._lektionen_mit_fach(verlauf.schwache_lektionen(von, bis)),
+            "aufgaben": self._aufgaben_mit_fehlern(
+                verlauf.schwierige_aufgaben(von, bis), MAX_SCHWIERIG
+            ),
+            "simulationen": self._simulationen(verlauf.simulationen_im(von, bis)),
+        }
+
+    def wochenreport(self, kind_id: str, versatz: int) -> dict[str, Any]:
+        """Return the summary of a week: 0 is the running one, -1 the last."""
+        manager = self._manager
+        if kind_id not in manager.kinder:
+            raise _nicht_gefunden("kind")
+        if not self._wochenreport_an:
+            raise _ungueltig("wochenreport_aus")
+        if versatz > 0:
+            raise _ungueltig("zeitraum_ungueltig")
+        verlauf = manager.verlauf_store.kind(kind_id)
+        heute = dt_util.now().date()
+        montag, sonntag = woche(heute, versatz)
+        vor_montag, vor_sonntag = woche(heute, versatz - 1)
+        stichtag = min(sonntag, heute)
+        uebersicht = self.dashboard(kind_id)
+        return {
+            "von": montag.isoformat(),
+            "bis": sonntag.isoformat(),
+            "laufend": versatz == 0,
+            "seit": None if verlauf.seit is None else verlauf.seit.isoformat(),
+            "kennzahlen": verlauf.summe(montag, sonntag),
+            "vorwoche": verlauf.summe(vor_montag, vor_sonntag),
+            "faecher": [
+                {
+                    "name": fach.name,
+                    "lernstand": verlauf.lernstand_am(fach.id, stichtag),
+                    "vorher": verlauf.lernstand_am(fach.id, vor_sonntag),
+                }
+                for fach in manager.faecher_von(kind_id)
+            ],
+            "lektionen": self._lektionen_mit_fach(
+                verlauf.schwache_lektionen(montag, sonntag, REPORT_LEKTIONEN)
+            ),
+            "aufgaben": self._aufgaben_mit_fehlern(
+                verlauf.schwierige_aufgaben(montag, sonntag), REPORT_AUFGABEN
+            ),
+            # What lies ahead, seen from today
+            "arbeiten": [
+                {
+                    "fach": arbeit["fach"],
+                    "thema": arbeit["thema"],
+                    "art": arbeit["art"],
+                    "datum": arbeit["datum"],
+                    "tage_bis": arbeit["tage_bis"],
+                    "sicher": arbeit["sicher"],
+                }
+                for arbeit in uebersicht["arbeiten"]
+                if arbeit["tage_bis"] <= REPORT_TAGE_VORAUS
+            ],
+            "vorschlaege": [
+                {"datum": v["datum"], "art": v["art"], "text": v["text"]}
+                for v in uebersicht["vorschlaege"]
+            ],
+            "simulationen": self._simulationen(
+                verlauf.simulationen_im(montag, sonntag)
+            ),
         }
 
     def _kalender(self, kind_id: str) -> dict[str, Any]:

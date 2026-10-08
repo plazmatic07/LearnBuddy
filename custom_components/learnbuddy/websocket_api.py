@@ -632,6 +632,34 @@ def ws_exams_delete(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
 
 
 @websocket_command(
+    {
+        vol.Required("type"): "learnbuddy/progress",
+        vol.Required("kind_id"): str,
+        vol.Optional("tage", default=30): int,
+    }
+)
+@require_admin
+@_befehl
+def ws_progress(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
+    """Return the progress of a child over the last days."""
+    return verwaltung.fortschritt(msg["kind_id"], msg["tage"])
+
+
+@websocket_command(
+    {
+        vol.Required("type"): "learnbuddy/weekly_report",
+        vol.Required("kind_id"): str,
+        vol.Optional("versatz", default=-1): int,
+    }
+)
+@require_admin
+@_befehl
+def ws_weekly_report(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
+    """Return the summary of a week of a child."""
+    return verwaltung.wochenreport(msg["kind_id"], msg["versatz"])
+
+
+@websocket_command(
     {vol.Required("type"): "learnbuddy/calendar/refresh", vol.Required("kind_id"): str}
 )
 @require_admin
@@ -763,6 +791,8 @@ def async_setup_websocket_api(hass: HomeAssistant) -> None:
         ws_exams_simulate_stop,
         ws_sender_assign,
         ws_sender_dismiss,
+        ws_progress,
+        ws_weekly_report,
         ws_calendar_refresh,
         ws_calendar_ignore,
         ws_calendar_restore,

@@ -1,9 +1,10 @@
 """Persistence of the LearnBuddy integration.
 
-Two kinds of files live in ``.storage``:
+Three kinds of files live in ``.storage``:
 
 * ``learnbuddy.config`` - runtime state per child and task assignments per exam
 * ``learnbuddy.<kind_id>_<fach_id>`` - the tasks of one subject including statistics
+* ``learnbuddy.verlauf`` - daily log of answers, numbers only
 """
 
 from __future__ import annotations
@@ -15,13 +16,17 @@ from homeassistant.helpers.storage import Store
 from .const import (
     DOMAIN,
     STORAGE_KEY_CONFIG,
+    STORAGE_KEY_VERLAUF,
     STORAGE_MINOR_VERSION,
     STORAGE_VERSION,
+    VERLAUF_VERSION,
 )
 from .models import Aufgabe, KindZustand, aufgabe_from_dict
+from .verlauf import KindVerlauf
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping
+    from datetime import date
 
     from homeassistant.core import HomeAssistant
 
@@ -228,6 +233,56 @@ class ConfigStore:
 
     async def async_save(self) -> None:
         """Save the state immediately."""
+        await self._store.async_save(self._data())
+
+    async def async_remove(self) -> None:
+        """Delete the file."""
+        await self._store.async_remove()
+
+
+class VerlaufStore:
+    """Daily log of answers of all children, see verlauf.py."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the store."""
+        self._store: Store[dict[str, Any]] = Store(
+            hass, VERLAUF_VERSION, STORAGE_KEY_VERLAUF, atomic_writes=True
+        )
+        self.kinder: dict[str, KindVerlauf] = {}
+
+    async def async_load(self) -> None:
+        """Load the log from disk."""
+        data = await self._store.async_load()
+        if data is None:
+            return
+        self.kinder = {
+            kind_id: KindVerlauf.from_dict(wert)
+            for kind_id, wert in data.get("kinder", {}).items()
+        }
+
+    def kind(self, kind_id: str) -> KindVerlauf:
+        """Return (and create if needed) the log of a child."""
+        return self.kinder.setdefault(kind_id, KindVerlauf())
+
+    def bereinige(self, faecher: Mapping[str, Iterable[str]], heute: date) -> bool:
+        """Drop children and subjects that no longer exist, and old days."""
+        geaendert = False
+        for kind_id in self.kinder.keys() - faecher.keys():
+            del self.kinder[kind_id]
+            geaendert = True
+        for kind_id, verlauf in self.kinder.items():
+            geaendert |= verlauf.bereinige(faecher[kind_id], heute)
+        return geaendert
+
+    def _data(self) -> dict[str, Any]:
+        return {"kinder": {k: v.to_dict() for k, v in self.kinder.items()}}
+
+    def async_schedule_save(self) -> None:
+        """Save the log after a short delay."""
+        self._store.async_delay_save(self._data, SAVE_DELAY)
+
+    async def async_save(self) -> None:
+        """Save the log immediately."""
         await self._store.async_save(self._data())
 
     async def async_remove(self) -> None:

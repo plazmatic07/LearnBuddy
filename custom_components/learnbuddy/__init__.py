@@ -19,7 +19,7 @@ from .eingang import Eingang
 from .manager import LearnBuddyManager
 from .panel import async_register_panel, async_unregister_panel
 from .services import async_setup_services
-from .storage import ConfigStore, async_remove_task_file
+from .storage import ConfigStore, VerlaufStore, async_remove_task_file
 from .websocket_api import async_setup_websocket_api
 
 if TYPE_CHECKING:
@@ -103,3 +103,4 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     for key in store.aufgaben_dateien:
         await async_remove_task_file(hass, key)
     await store.async_remove()
+    await VerlaufStore(hass).async_remove()

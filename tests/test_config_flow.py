@@ -96,6 +96,8 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         "timeout_minuten": 45,
         "sprache": "auto",
         "auto_freigabe": False,
+        "verlauf": True,
+        "wochenreport": True,
         "eingang_telegram": True,
         "eingang_whatsapp": True,
     }
@@ -126,6 +128,8 @@ async def test_options_flow(hass: HomeAssistant, setup_entry: MockConfigEntry) -
         "timeout_minuten": 30,
         "sprache": "en",
         "auto_freigabe": False,
+        "verlauf": True,
+        "wochenreport": True,
         "eingang_telegram": True,
         "eingang_whatsapp": True,
     }
