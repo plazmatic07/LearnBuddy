@@ -134,12 +134,39 @@ def ws_set_active(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
     return {}
 
 
+_ABFRAGE_AUSWAHL: dict[str | vol.Marker, Any] = {
+    vol.Optional("lektionen", default=list): [str],
+    vol.Optional("seite_von"): vol.Any(None, vol.All(int, vol.Range(min=1, max=9999))),
+    vol.Optional("seite_bis"): vol.Any(None, vol.All(int, vol.Range(min=1, max=9999))),
+    vol.Optional("fehlerquote_ab"): vol.Any(
+        None, vol.All(int, vol.Range(min=1, max=100))
+    ),
+}
+
+
+@websocket_command(
+    {
+        vol.Required("type"): "learnbuddy/ask_count",
+        vol.Required("kind_id"): str,
+        vol.Optional("fach_id"): vol.Any(str, None),
+        **_ABFRAGE_AUSWAHL,
+    }
+)
+@require_admin
+@_befehl
+def ws_ask_count(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
+    """Return how many tasks a manual request could choose from."""
+    return {
+        "aufgaben": verwaltung.abfrage_umfang(msg["kind_id"], msg.get("fach_id"), msg)
+    }
+
+
 @websocket_command(
     {
         vol.Required("type"): "learnbuddy/ask",
         vol.Required("kind_id"): str,
         vol.Optional("fach_id"): vol.Any(str, None),
-        vol.Optional("lektionen", default=list): [str],
+        **_ABFRAGE_AUSWAHL,
         vol.Optional("anzahl", default=1): vol.All(
             int, vol.Range(min=1, max=MAX_ZUSATZAUFGABEN)
         ),
@@ -157,7 +184,7 @@ async def ws_ask(
         return
     try:
         await verwaltung.frage_stellen(
-            msg["kind_id"], msg.get("fach_id"), msg["lektionen"], msg["anzahl"]
+            msg["kind_id"], msg.get("fach_id"), msg, msg["anzahl"]
         )
     except VerwaltungError as err:
         connection.send_error(msg["id"], err.code, err.schluessel)
@@ -773,6 +800,7 @@ def async_setup_websocket_api(hass: HomeAssistant) -> None:
         ws_dashboard,
         ws_set_active,
         ws_ask,
+        ws_ask_count,
         ws_cancel_question,
         ws_tasks_list,
         ws_tasks_create,

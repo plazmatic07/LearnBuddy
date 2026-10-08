@@ -6,6 +6,7 @@ import "./fortschritt";
 import { fehlertext, sprachname, uebersetzer, type Uebersetzer } from "./i18n";
 import { styles } from "./styles";
 import type {
+  AbfrageAuswahl,
   Dashboard,
   DashboardArbeit,
   DashboardFach,
@@ -30,7 +31,14 @@ const ABFRAGE_STANDARD = 5;
 interface Abfrage {
   fachId: string | null;
   lektionen: Set<string>;
+  // Raw input; empty means no limit
+  seiteVon: string;
+  seiteBis: string;
+  fehlerquote: string;
   anzahl: number;
+  // Tasks the selection contains; null while it is counted
+  umfang: number | null;
+  fehler: string;
 }
 const EVENTS = ["learnbuddy_question_sent", "learnbuddy_answer_evaluated"];
 
@@ -253,6 +261,8 @@ export class LhUebersicht extends LitElement {
   @state() private _erfolg = "";
 
   @state() private _abfrage: Abfrage | null = null;
+  // Number of the latest count request, older answers are dropped
+  private _zaehlung = 0;
 
   @state() private _beschaeftigt = false;
 
@@ -321,14 +331,14 @@ export class LhUebersicht extends LitElement {
 
   private async _frage(
     fachId: string | null,
-    lektionen: string[] = [],
+    auswahl: AbfrageAuswahl = {},
     anzahl = 1,
   ): Promise<void> {
     this._abfrage = null;
     this._beschaeftigt = true;
     this._erfolg = "";
     try {
-      await this._api.frageStellen(this.kindId, fachId, lektionen, anzahl);
+      await this._api.frageStellen(this.kindId, fachId, auswahl, anzahl);
       this._fehler = "";
       this._erfolg = this._t(anzahl > 1 ? "fragen_gesendet" : "frage_gesendet");
     } catch (fehler) {
@@ -344,11 +354,16 @@ export class LhUebersicht extends LitElement {
     const faecher = this._daten?.faecher ?? [];
     const fach =
       faecher.find((f) => f.id === fachId) ?? (faecher.length === 1 ? faecher[0] : undefined);
-    this._abfrage = {
+    this._setzeAbfrage({
       fachId: fach?.id ?? null,
       lektionen: new Set((fach?.lektionsliste ?? []).map((l) => l.name)),
-      anzahl: this._abfrage?.anzahl ?? ABFRAGE_STANDARD,
-    };
+      seiteVon: "",
+      seiteBis: "",
+      fehlerquote: "",
+      anzahl: ABFRAGE_STANDARD,
+      umfang: null,
+      fehler: "",
+    });
   }
 
   private async _brichFrageAb(): Promise<void> {
@@ -566,6 +581,9 @@ export class LhUebersicht extends LitElement {
                 })
               : t("keine_offene_frage"),
           )}
+          ${zustand.abfrage && offen
+            ? fakt(t("abfrage_laeuft"), this._abfrageText(offen.fach, zustand.abfrage))
+            : nothing}
           ${fakt(
             t("naechste_abfrage"),
             offen && !zustand.pausiert
@@ -582,15 +600,6 @@ export class LhUebersicht extends LitElement {
           )}
         </div>
         <div class="knoepfe">
-          <button
-            class="primaer"
-            ?disabled=${this._beschaeftigt ||
-            daten.faecher.length === 0 ||
-            Boolean(zustand.simulation)}
-            @click=${() => this._jetztFragen()}
-          >
-            ${t("jetzt_fragen")}
-          </button>
           <button @click=${() => this._setzeAktiv(!zustand.aktiv || zustand.pausiert)}>
             ${t(zustand.pausiert ? "fortsetzen" : "pausieren")}
           </button>
@@ -871,6 +880,83 @@ export class LhUebersicht extends LitElement {
     `;
   }
 
+  /** Describe the running series: subject, limits and what is still to come. */
+  private _abfrageText(fach: string, abfrage: AbfrageAuswahl & { weitere: number }): string {
+    const t = this._t;
+    const teile: string[] = [];
+    if (abfrage.lektionen?.length) {
+      teile.push(abfrage.lektionen.join(", "));
+    }
+    const von = abfrage.seite_von;
+    const bis = abfrage.seite_bis;
+    if (von != null && bis != null) {
+      teile.push(t("abfrage_seiten", { von, bis }));
+    } else if (von != null) {
+      teile.push(t("abfrage_ab_seite", { n: von }));
+    } else if (bis != null) {
+      teile.push(t("abfrage_bis_seite", { n: bis }));
+    }
+    if (abfrage.fehlerquote_ab != null) {
+      teile.push(t("abfrage_ab_fehlerquote", { n: abfrage.fehlerquote_ab }));
+    }
+    const ort = teile.length ? `${fach} (${teile.join(" · ")})` : fach;
+    return t("abfrage_laeuft_text", { ort, n: abfrage.weitere });
+  }
+
+  /** Build what the request is limited to; null if no lesson is ticked. */
+  private _auswahl(daten: Dashboard, abfrage: Abfrage): AbfrageAuswahl | null {
+    const fach = daten.faecher.find((f) => f.id === abfrage.fachId);
+    if (!fach) {
+      return {};
+    }
+    const lektionen = fach.lektionsliste.map((l) => l.name);
+    const gewaehlt = lektionen.filter((name) => abfrage.lektionen.has(name));
+    if (lektionen.length > 0 && gewaehlt.length === 0) {
+      return null;
+    }
+    const zahl = (wert: string, max: number): number | null => {
+      const n = Math.round(Number(wert));
+      return wert.trim() !== "" && Number.isFinite(n) && n >= 1 ? Math.min(n, max) : null;
+    };
+    return {
+      // All lessons ticked means the whole subject, also tasks without a lesson
+      lektionen: gewaehlt.length === lektionen.length ? [] : gewaehlt,
+      seite_von: zahl(abfrage.seiteVon, 9999),
+      seite_bis: zahl(abfrage.seiteBis, 9999),
+      fehlerquote_ab: zahl(abfrage.fehlerquote, 100),
+    };
+  }
+
+  /** Change the dialog and count the tasks of the new selection. */
+  private _setzeAbfrage(abfrage: Abfrage): void {
+    const daten = this._daten;
+    if (!daten) {
+      return;
+    }
+    const auswahl = this._auswahl(daten, abfrage);
+    const nummer = ++this._zaehlung;
+    this._abfrage = { ...abfrage, umfang: auswahl === null ? 0 : null, fehler: "" };
+    if (auswahl === null) {
+      return;
+    }
+    this._api
+      .abfrageUmfang(this.kindId, abfrage.fachId, auswahl)
+      .then((umfang) => {
+        if (nummer === this._zaehlung && this._abfrage) {
+          this._abfrage = { ...this._abfrage, umfang };
+        }
+      })
+      .catch((fehler: unknown) => {
+        if (nummer === this._zaehlung && this._abfrage) {
+          this._abfrage = {
+            ...this._abfrage,
+            umfang: 0,
+            fehler: fehlertext(this._t, fehler),
+          };
+        }
+      });
+  }
+
   private _abfrageDialog(daten: Dashboard, abfrage: Abfrage): TemplateResult {
     const t = this._t;
     const schliessen = (): void => {
@@ -878,18 +964,9 @@ export class LhUebersicht extends LitElement {
     };
     const fach = daten.faecher.find((f) => f.id === abfrage.fachId) ?? null;
     const lektionen = fach?.lektionsliste ?? [];
-    // All lessons ticked means the whole subject, also tasks without a lesson
-    const alle = lektionen.every((l) => abfrage.lektionen.has(l.name));
-    const umfang =
-      fach === null
-        ? daten.faecher.reduce((summe, f) => summe + f.aufgaben, 0)
-        : alle
-          ? fach.aufgaben
-          : lektionen
-              .filter((l) => abfrage.lektionen.has(l.name))
-              .reduce((summe, l) => summe + l.aufgaben, 0);
+    const umfang = abfrage.umfang;
     const setze = (teil: Partial<Abfrage>): void => {
-      this._abfrage = { ...abfrage, ...teil };
+      this._setzeAbfrage({ ...abfrage, ...teil });
     };
     const waehleFach = (id: string): void => {
       const neu = daten.faecher.find((f) => f.id === id);
@@ -909,12 +986,27 @@ export class LhUebersicht extends LitElement {
     };
     const senden = (): void => {
       const anzahl = Math.min(MAX_ABFRAGE, Math.max(1, Math.round(abfrage.anzahl) || 1));
-      void this._frage(
-        abfrage.fachId,
-        fach === null || alle ? [] : [...abfrage.lektionen],
-        anzahl,
-      );
+      const auswahl = this._auswahl(daten, abfrage);
+      if (auswahl !== null) {
+        void this._frage(abfrage.fachId, auswahl, anzahl);
+      }
     };
+    const eingabe = (
+      feld: "seiteVon" | "seiteBis" | "fehlerquote",
+      name: "abfrage_seite_von" | "abfrage_seite_bis" | "abfrage_fehlerquote",
+      max: number,
+    ): TemplateResult => html`
+      <label class="feld">
+        ${t(name)}
+        <input
+          type="number"
+          min="1"
+          max=${max}
+          .value=${abfrage[feld]}
+          @input=${(e: Event) => setze({ [feld]: (e.target as HTMLInputElement).value })}
+        />
+      </label>
+    `;
     return html`
       <div
         class="overlay"
@@ -976,6 +1068,16 @@ export class LhUebersicht extends LitElement {
                 </fieldset>
               `
             : nothing}
+          ${fach
+            ? html`
+                <div class="raster">
+                  ${eingabe("seiteVon", "abfrage_seite_von", 9999)}
+                  ${eingabe("seiteBis", "abfrage_seite_bis", 9999)}
+                  ${eingabe("fehlerquote", "abfrage_fehlerquote", 100)}
+                </div>
+                <div class="klein">${t("abfrage_filter_hinweis")}</div>
+              `
+            : nothing}
           <label class="feld">
             ${t("abfrage_anzahl")}
             <input
@@ -983,16 +1085,23 @@ export class LhUebersicht extends LitElement {
               min="1"
               max=${MAX_ABFRAGE}
               .value=${String(abfrage.anzahl)}
-              @input=${(e: Event) =>
-                setze({ anzahl: Number((e.target as HTMLInputElement).value) })}
+              @input=${(e: Event) => {
+                this._abfrage = {
+                  ...abfrage,
+                  anzahl: Number((e.target as HTMLInputElement).value),
+                };
+              }}
             />
           </label>
-          <div class="klein">${t("abfrage_umfang", { n: umfang })}</div>
+          ${abfrage.fehler ? html`<div class="fehler">${abfrage.fehler}</div>` : nothing}
+          <div class="klein">
+            ${umfang === null ? t("abfrage_umfang_laedt") : t("abfrage_umfang", { n: umfang })}
+          </div>
           <div class="aktionen">
             <button @click=${schliessen}>${t("abbrechen")}</button>
             <button
               class="primaer"
-              ?disabled=${this._beschaeftigt || umfang === 0}
+              ?disabled=${this._beschaeftigt || !umfang}
               @click=${senden}
             >
               ${t("abfrage_senden")}

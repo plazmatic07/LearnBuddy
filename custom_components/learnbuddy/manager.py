@@ -63,6 +63,7 @@ from .kalender import Termin, lies_termine
 from .mathe import bewerte_mathe
 from .messaging import Messenger
 from .models import (
+    AbfrageFilter,
     Arbeit,
     Aufgabe,
     AufgabenTyp,
@@ -142,6 +143,11 @@ class KalenderStand:
     geprueft_um: datetime | None = None
     # The last attempt to read the calendar failed
     fehler: bool = False
+
+
+def _lektionsfilter(lektion: str | None) -> AbfrageFilter:
+    """Return the filter for one lesson, or for the whole subject."""
+    return AbfrageFilter() if lektion is None else AbfrageFilter(lektionen=(lektion,))
 
 
 class FrageStatus(StrEnum):
@@ -793,24 +799,17 @@ class LearnBuddyManager:
         *,
         manuell: bool,
         fach_id: str | None = None,
-        lektionen: tuple[str, ...] = (),
+        auswahl_filter: AbfrageFilter | None = None,
     ) -> tuple[Fach, Aufgabe, str, Arbeit | None] | None:
         """Pick the subject, task and direction of the next question.
 
-        A manual request may be limited to one subject or to one of its
-        lessons.
+        A manual request may be limited to one subject and to some of its
+        tasks.
         """
-        if fach_id is not None and lektionen:
+        if fach_id is not None and auswahl_filter is not None and auswahl_filter.aktiv:
             fach = self.faecher[fach_id]
             auswahl = waehle_aufgabe(
-                self._zustellbar(
-                    kind_id,
-                    [
-                        a
-                        for a in self.task_stores[fach.id].aufgaben.values()
-                        if a.lektion in lektionen
-                    ],
-                ),
+                self._gefiltert(kind_id, fach_id, auswahl_filter),
                 fach.richtungen,
                 self._rng,
                 jetzt=dt_util.utcnow(),
@@ -865,6 +864,36 @@ class LearnBuddyManager:
                 return fach, auswahl[0], auswahl[1], None
         return None
 
+    def _gefiltert(
+        self, kind_id: str, fach_id: str, auswahl_filter: AbfrageFilter
+    ) -> list[Aufgabe]:
+        """Return the tasks of a subject a filter selects and that can be asked."""
+        return self._zustellbar(
+            kind_id,
+            [
+                aufgabe
+                for aufgabe in self.task_stores[fach_id].aufgaben.values()
+                if auswahl_filter.passt(aufgabe)
+            ],
+        )
+
+    def abfrage_umfang(
+        self, kind_id: str, fach_id: str | None, auswahl_filter: AbfrageFilter
+    ) -> int:
+        """Return how many tasks a manual request could choose from."""
+        faecher = (
+            self.faecher_von(kind_id) if fach_id is None else [self.faecher[fach_id]]
+        )
+        if fach_id is None:
+            auswahl_filter = AbfrageFilter()
+        return sum(
+            1
+            for fach in faecher
+            for aufgabe in self._gefiltert(kind_id, fach.id, auswahl_filter)
+            if aufgabe.geprueft
+            and any(aufgabe.fragbar(richtung) for richtung in fach.richtungen)
+        )
+
     def _zustellbar(self, kind_id: str, aufgaben: Iterable[Aufgabe]) -> list[Aufgabe]:
         """Leave out tasks that cannot be asked or judged right now.
 
@@ -903,12 +932,12 @@ class LearnBuddyManager:
         kind_id: str,
         fach_id: str | None = None,
         *,
-        lektionen: tuple[str, ...] = (),
+        auswahl_filter: AbfrageFilter | None = None,
         anzahl: int = 1,
     ) -> None:
         """Ask several questions in a row right now (manual request).
 
-        They may be limited to one subject and to some of its lessons. An
+        They may be limited to one subject and to some of its tasks. An
         open question is replaced like by a single manual request. Raises a
         translated error if there is no task or sending fails.
         """
@@ -918,18 +947,24 @@ class LearnBuddyManager:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN, translation_key="simulation_laeuft"
                 )
-            if fach_id is None:
-                lektionen = ()
+            if fach_id is None or auswahl_filter is None:
+                auswahl_filter = AbfrageFilter()
             anzahl = max(1, min(anzahl, MAX_ZUSATZAUFGABEN))
             if anzahl == 1:
                 await self._async_frage(
-                    kind_id, manuell=True, fach_id=fach_id, lektionen=lektionen
+                    kind_id,
+                    manuell=True,
+                    fach_id=fach_id,
+                    auswahl_filter=auswahl_filter,
                 )
                 self._plane(kind_id)
                 return
             if (
                 self._waehle(
-                    kind_id, manuell=True, fach_id=fach_id, lektionen=lektionen
+                    kind_id,
+                    manuell=True,
+                    fach_id=fach_id,
+                    auswahl_filter=auswahl_filter,
                 )
                 is None
             ):
@@ -946,8 +981,8 @@ class LearnBuddyManager:
                 )
             else:
                 ort = self.faecher[fach_id].name
-                if lektionen:
-                    ort += f" ({', '.join(lektionen)})"
+                if auswahl_filter.lektionen:
+                    ort += f" ({', '.join(auswahl_filter.lektionen)})"
                 nachricht = text(
                     self.sprache,
                     "abfrage_start",
@@ -957,10 +992,14 @@ class LearnBuddyManager:
                 )
             await self.messenger.async_send_or_raise(kind, nachricht)
             await self._async_frage(
-                kind_id, manuell=True, fach_id=fach_id, lektionen=lektionen, kurz=True
+                kind_id,
+                manuell=True,
+                fach_id=fach_id,
+                auswahl_filter=auswahl_filter,
+                kurz=True,
             )
             zustand.zusatz_offen = anzahl - 1
-            zustand.zusatz_lektionen = lektionen
+            zustand.zusatz_filter = auswahl_filter
             if fach_id is None:
                 self._serie_frei.add(kind_id)
             else:
@@ -1019,13 +1058,13 @@ class LearnBuddyManager:
         *,
         manuell: bool,
         fach_id: str | None = None,
-        lektionen: tuple[str, ...] = (),
+        auswahl_filter: AbfrageFilter | None = None,
         kurz: bool = False,
     ) -> FrageStatus:
         kind = self.kinder[kind_id]
         zustand = self.zustand(kind_id)
         auswahl = self._waehle(
-            kind_id, manuell=manuell, fach_id=fach_id, lektionen=lektionen
+            kind_id, manuell=manuell, fach_id=fach_id, auswahl_filter=auswahl_filter
         )
         if auswahl is None:
             if manuell:
@@ -1075,7 +1114,7 @@ class LearnBuddyManager:
         zustand.wunsch_offen = None
         if not kurz:
             # Only the questions a child asked for stay within a lesson
-            zustand.zusatz_lektionen = ()
+            zustand.zusatz_filter = AbfrageFilter()
         self._letzte_aufgabe[kind_id] = aufgabe.id
         self._letztes_fach[kind_id] = fach.id
         self.task_stores[fach.id].async_schedule_save()
@@ -1469,7 +1508,7 @@ class LearnBuddyManager:
                 kind_id,
                 manuell=True,
                 fach_id=fach_id,
-                lektionen=() if lektion is None else (lektion,),
+                auswahl_filter=_lektionsfilter(lektion),
             )
             is not None
         )
@@ -1539,7 +1578,7 @@ class LearnBuddyManager:
             ),
         )
         zustand.rechenweg_angebot = None
-        zustand.zusatz_lektionen = () if lektion is None else (lektion,)
+        zustand.zusatz_filter = _lektionsfilter(lektion)
         zustand.zusatz_offen = anzahl - 1
         self._serie_frei.discard(kind_id)
         await self._async_zusatzfrage(kind_id, fach_id)
@@ -1556,7 +1595,7 @@ class LearnBuddyManager:
                 kind_id,
                 manuell=True,
                 fach_id=fach_id,
-                lektionen=() if fach_id is None else zustand.zusatz_lektionen,
+                auswahl_filter=None if fach_id is None else zustand.zusatz_filter,
                 kurz=True,
             )
         except ServiceValidationError:

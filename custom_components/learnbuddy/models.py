@@ -719,6 +719,61 @@ class RechenwegAngebot:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class AbfrageFilter:
+    """Which tasks of a subject a series of questions is limited to."""
+
+    lektionen: tuple[str, ...] = ()
+    seite_von: int | None = None
+    seite_bis: int | None = None
+    # Share of wrong answers in percent a task has at least
+    fehlerquote_ab: int | None = None
+
+    @property
+    def aktiv(self) -> bool:
+        """Return whether the filter limits anything."""
+        return self != AbfrageFilter()
+
+    def passt(self, aufgabe: Aufgabe) -> bool:
+        """Return whether a task belongs to the selection."""
+        if self.lektionen and aufgabe.lektion not in self.lektionen:
+            return False
+        if self.seite_von is not None or self.seite_bis is not None:
+            if aufgabe.seite is None:
+                return False
+            if self.seite_von is not None and aufgabe.seite < self.seite_von:
+                return False
+            if self.seite_bis is not None and aufgabe.seite > self.seite_bis:
+                return False
+        if self.fehlerquote_ab is not None:
+            richtig = sum(s.richtig for s in aufgabe.statistik.values())
+            falsch = sum(s.falsch for s in aufgabe.statistik.values())
+            if richtig + falsch == 0:
+                return False
+            if 100 * falsch / (richtig + falsch) < self.fehlerquote_ab:
+                return False
+        return True
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        """Create the filter from stored data."""
+        return cls(
+            lektionen=tuple(data.get("lektionen", ())),
+            seite_von=data.get("seite_von"),
+            seite_bis=data.get("seite_bis"),
+            fehlerquote_ab=data.get("fehlerquote_ab"),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return the storable representation."""
+        return {
+            "lektionen": list(self.lektionen),
+            "seite_von": self.seite_von,
+            "seite_bis": self.seite_bis,
+            "fehlerquote_ab": self.fehlerquote_ab,
+        }
+
+
 @dataclass(slots=True)
 class WunschAngebot:
     """A wish to practise that waits for the amount of questions."""
@@ -829,8 +884,8 @@ class KindZustand:
     simulation: Simulation | None = None
     # Wish to practise that waits for the amount of questions
     wunsch_offen: WunschAngebot | None = None
-    # Lessons the extra questions are limited to
-    zusatz_lektionen: tuple[str, ...] = ()
+    # Tasks the extra questions are limited to
+    zusatz_filter: AbfrageFilter = AbfrageFilter()
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
@@ -852,7 +907,7 @@ class KindZustand:
                 None if simulation is None else Simulation.from_dict(simulation)
             ),
             wunsch_offen=None if wunsch is None else WunschAngebot.from_dict(wunsch),
-            zusatz_lektionen=tuple(data.get("zusatz_lektionen", ())),
+            zusatz_filter=AbfrageFilter.from_dict(data.get("zusatz_filter") or {}),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -876,7 +931,7 @@ class KindZustand:
             "wunsch_offen": (
                 None if self.wunsch_offen is None else self.wunsch_offen.to_dict()
             ),
-            "zusatz_lektionen": list(self.zusatz_lektionen),
+            "zusatz_filter": self.zusatz_filter.to_dict(),
         }
 
     def ist_pausiert(self, jetzt: datetime) -> bool:

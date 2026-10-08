@@ -1,4 +1,5 @@
 import type {
+  AbfrageAuswahl,
   ArbeitEingabe,
   Dashboard,
   GenerierEingabe,
@@ -40,15 +41,29 @@ export class Api {
   frageStellen(
     kindId: string,
     fachId: string | null,
-    lektionen: string[] = [],
+    auswahl: AbfrageAuswahl = {},
     anzahl = 1,
   ): Promise<void> {
     return this.call("ask", {
       kind_id: kindId,
       fach_id: fachId,
-      lektionen,
+      ...auswahl,
       anzahl,
     });
+  }
+
+  /** How many tasks a manual request could choose from. */
+  async abfrageUmfang(
+    kindId: string,
+    fachId: string | null,
+    auswahl: AbfrageAuswahl,
+  ): Promise<number> {
+    const antwort = await this.call<{ aufgaben: number }>("ask_count", {
+      kind_id: kindId,
+      fach_id: fachId,
+      ...auswahl,
+    });
+    return antwort.aufgaben;
   }
 
   async frageAbbrechen(kindId: string): Promise<boolean> {

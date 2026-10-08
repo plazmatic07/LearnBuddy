@@ -694,6 +694,7 @@ async def test_dashboard(
         "pausiert": False,
         "pausiert_bis": None,
         "offene_frage": None,
+        "abfrage": None,
         "simulation": None,
         "letzte_frage_um": None,
         "naechste_abfrage": "2026-10-06T16:00:00+02:00",

@@ -301,6 +301,14 @@ export interface DashboardFach extends Kennzahlen {
   ohne_lektion: number;
 }
 
+/** What a manual request is limited to (only with a subject). */
+export interface AbfrageAuswahl {
+  lektionen?: string[];
+  seite_von?: number | null;
+  seite_bis?: number | null;
+  fehlerquote_ab?: number | null;
+}
+
 export interface DashboardArbeit {
   id: string;
   fach_id: string;
@@ -328,6 +336,8 @@ export interface Dashboard {
       timeout_um: string;
     } | null;
     simulation?: { arbeit_id: string; nummer: number; anzahl: number } | null;
+    // Series of questions that goes on after the open one
+    abfrage?: (AbfrageAuswahl & { weitere: number }) | null;
     letzte_frage_um: string | null;
     naechste_abfrage: string | null;
   };

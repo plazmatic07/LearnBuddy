@@ -47,6 +47,7 @@ from .mathe import bewerte_mathe, zerlege
 from .models import (
     MAX_SCHWIERIGKEIT,
     MIN_SCHWIERIGKEIT,
+    AbfrageFilter,
     ArbeitArt,
     AufgabenTyp,
     Ergebnis,
@@ -67,7 +68,7 @@ from .texte import sprachname, waehle_sprache
 from .verlauf import SimErgebnis, woche
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Iterable, Mapping
     from fractions import Fraction
 
     from .ai import GenerierteAufgabe
@@ -482,6 +483,13 @@ class Verwaltung:
                     "gestellt_um": offen.gestellt_um.isoformat(),
                     "timeout_um": offen.timeout_um.isoformat(),
                 },
+                # Series of questions that goes on after the open one
+                "abfrage": None
+                if offen is None or zustand.zusatz_offen <= 0
+                else {
+                    "weitere": zustand.zusatz_offen,
+                    **zustand.zusatz_filter.to_dict(),
+                },
                 "simulation": None
                 if zustand.simulation is None
                 else {
@@ -790,30 +798,55 @@ class Verwaltung:
         subentry_daten |= {CONF_NAME: name, CONF_ERSTELLT: jetzt, CONF_GEAENDERT: jetzt}
         return await manager.async_fach_anlegen(kind_id, subentry_daten)
 
+    def _abfrage_filter(
+        self, kind_id: str, fach_id: str | None, auswahl: Mapping[str, Any] | None
+    ) -> AbfrageFilter:
+        """Check what a manual request is limited to."""
+        manager = self._manager
+        if kind_id not in manager.kinder:
+            raise _nicht_gefunden("kind")
+        if fach_id is None:
+            return AbfrageFilter()
+        fach = manager.faecher.get(fach_id)
+        if fach is None or fach.kind_id != kind_id:
+            raise _nicht_gefunden("fach")
+        auswahl = auswahl or {}
+        lektionen = tuple(auswahl.get("lektionen") or ())
+        bekannt = set(manager.lektionen(fach_id))
+        if any(lektion not in bekannt for lektion in lektionen):
+            raise _nicht_gefunden("lektion")
+        von, bis = auswahl.get("seite_von"), auswahl.get("seite_bis")
+        if von is not None and bis is not None and von > bis:
+            raise _ungueltig("seiten_verdreht")
+        return AbfrageFilter(
+            lektionen=lektionen,
+            seite_von=von,
+            seite_bis=bis,
+            fehlerquote_ab=auswahl.get("fehlerquote_ab"),
+        )
+
+    def abfrage_umfang(
+        self, kind_id: str, fach_id: str | None, auswahl: Mapping[str, Any] | None
+    ) -> int:
+        """Return how many tasks a manual request could choose from."""
+        auswahl_filter = self._abfrage_filter(kind_id, fach_id, auswahl)
+        return self._manager.abfrage_umfang(kind_id, fach_id, auswahl_filter)
+
     async def frage_stellen(
         self,
         kind_id: str,
         fach_id: str | None,
-        lektionen: Sequence[str] = (),
+        auswahl: Mapping[str, Any] | None = None,
         anzahl: int = 1,
     ) -> None:
         """Ask a child questions right now.
 
-        They may be limited to one subject and to some of its lessons.
+        They may be limited to one subject and to some of its tasks.
         """
-        manager = self._manager
-        if kind_id not in manager.kinder:
-            raise _nicht_gefunden("kind")
-        if fach_id is not None:
-            fach = manager.faecher.get(fach_id)
-            if fach is None or fach.kind_id != kind_id:
-                raise _nicht_gefunden("fach")
-            bekannt = set(manager.lektionen(fach_id))
-            if any(lektion not in bekannt for lektion in lektionen):
-                raise _nicht_gefunden("lektion")
+        auswahl_filter = self._abfrage_filter(kind_id, fach_id, auswahl)
         try:
-            await manager.async_abfrage_starten(
-                kind_id, fach_id, lektionen=tuple(lektionen), anzahl=anzahl
+            await self._manager.async_abfrage_starten(
+                kind_id, fach_id, auswahl_filter=auswahl_filter, anzahl=anzahl
             )
         except ServiceValidationError as err:
             raise _ungueltig(err.translation_key or "keine_aufgaben") from err

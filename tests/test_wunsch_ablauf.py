@@ -13,8 +13,9 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.learnbuddy.ai import baue_wunsch_prompt, lies_wunsch
 from custom_components.learnbuddy.const import DOMAIN
 from custom_components.learnbuddy.manager import LearnBuddyManager
-from custom_components.learnbuddy.models import KindZustand
+from custom_components.learnbuddy.models import AbfrageFilter, KindZustand
 from custom_components.learnbuddy.storage import migrate_config
+from custom_components.learnbuddy.verwaltung import VerwaltungError
 from custom_components.learnbuddy.wunsch import Uebungswunsch, WunschFach
 
 from .conftest import FACH_ID, KIND_ID, subentry
@@ -75,7 +76,7 @@ async def test_wunsch_mit_zahl_startet_serie(
     zustand = manager.zustand(KIND_ID)
     assert zustand.offene_frage is not None
     assert zustand.zusatz_offen == 2
-    assert zustand.zusatz_lektionen == ()
+    assert zustand.zusatz_filter == AbfrageFilter()
 
 
 async def test_wunsch_ohne_zahl_fragt_nach(
@@ -99,7 +100,7 @@ async def test_wunsch_ohne_zahl_fragt_nach(
     ergebnis = await _sende(hass, "4")
     assert ergebnis == {"ergebnis": "zusatzaufgaben", "anzahl": 4}
     assert zustand.wunsch_offen is None
-    assert zustand.zusatz_lektionen == ("Unit 4",)
+    assert zustand.zusatz_filter.lektionen == ("Unit 4",)
 
     # The whole series stays within the lesson
     aufgaben = manager.task_stores[FACH_ID].aufgaben
@@ -299,7 +300,7 @@ async def test_ki_deutet_wunsch(
     with patch(GENERATE, AsyncMock(return_value=antwort)) as ki:
         ergebnis = await _sende(hass, "ich will 2 von den Tieren üben")
     assert ergebnis == {"ergebnis": "zusatzaufgaben", "anzahl": 2}
-    assert manager.zustand(KIND_ID).zusatz_lektionen == ("Unit 4",)
+    assert manager.zustand(KIND_ID).zusatz_filter.lektionen == ("Unit 4",)
     prompt = ki.call_args.kwargs["instructions"]
     assert "Englisch (lessons: Unit 3; Unit 4)" in prompt
     assert "Tieren" in prompt
@@ -372,9 +373,9 @@ def test_migration_1_13() -> None:
     }
     neu = migrate_config(1, 12, alt)
     assert neu["kinder"]["k"]["wunsch_offen"] is None
-    assert neu["kinder"]["k"]["zusatz_lektionen"] == []
+    assert neu["kinder"]["k"]["zusatz_filter"] is None
     zustand = KindZustand.from_dict({"aktiv": True})
-    assert (zustand.wunsch_offen, zustand.zusatz_lektionen) == (None, ())
+    assert (zustand.wunsch_offen, zustand.zusatz_filter) == (None, AbfrageFilter())
 
 
 async def test_wunsch_mit_zweitem_fach(
@@ -435,14 +436,16 @@ async def test_abfrage_mit_lektionen_und_anzahl(
     notify_calls: list[ServiceCall],
 ) -> None:
     manager: LearnBuddyManager = mit_lektionen.runtime_data
-    await manager.verwaltung.frage_stellen(KIND_ID, FACH_ID, ["Unit 4"], 3)
+    await manager.verwaltung.frage_stellen(
+        KIND_ID, FACH_ID, {"lektionen": ["Unit 4"]}, 3
+    )
     assert (
         "Es kommen 3 Aufgaben aus Englisch (Unit 4)"
         in (notify_calls[-2].data["message"])
     )
     zustand = manager.zustand(KIND_ID)
     assert zustand.zusatz_offen == 2
-    assert zustand.zusatz_lektionen == ("Unit 4",)
+    assert zustand.zusatz_filter.lektionen == ("Unit 4",)
     aufgaben = manager.task_stores[FACH_ID].aufgaben
     gesehen = []
     for _ in range(3):
@@ -461,7 +464,9 @@ async def test_abfrage_eine_frage_aus_lektion(
 ) -> None:
     manager: LearnBuddyManager = mit_lektionen.runtime_data
     gesendet = len(notify_calls)
-    await manager.verwaltung.frage_stellen(KIND_ID, FACH_ID, ["Unit 3", "Unit 4"], 1)
+    await manager.verwaltung.frage_stellen(
+        KIND_ID, FACH_ID, {"lektionen": ["Unit 3", "Unit 4"]}, 1
+    )
     # Only the question itself, with its greeting
     assert len(notify_calls) == gesendet + 1
     assert notify_calls[-1].data["message"].startswith("Hallo Max!")
@@ -474,7 +479,7 @@ async def test_abfrage_ohne_fach(
     notify_calls: list[ServiceCall],
 ) -> None:
     manager: LearnBuddyManager = mit_lektionen.runtime_data
-    await manager.verwaltung.frage_stellen(KIND_ID, None, [], 2)
+    await manager.verwaltung.frage_stellen(KIND_ID, None, None, 2)
     assert "Es kommen 2 Aufgaben." in notify_calls[-2].data["message"]
     await _sende(hass, "weiß nicht")
     assert manager.zustand(KIND_ID).offene_frage is not None
@@ -487,22 +492,22 @@ async def test_abfrage_fehler(
     mit_lektionen: MockConfigEntry,
     notify_calls: list[ServiceCall],
 ) -> None:
-    from custom_components.learnbuddy.verwaltung import (  # noqa: PLC0415
-        VerwaltungError,
-    )
-
     manager: LearnBuddyManager = mit_lektionen.runtime_data
     with pytest.raises(VerwaltungError):
-        await manager.verwaltung.frage_stellen(KIND_ID, FACH_ID, ["Unit 99"], 2)
+        await manager.verwaltung.frage_stellen(
+            KIND_ID, FACH_ID, {"lektionen": ["Unit 99"]}, 2
+        )
     manager.task_stores[FACH_ID].lektion_hinzufuegen("Unit 9")
     gesendet = len(notify_calls)
     with pytest.raises(VerwaltungError) as fehler:
-        await manager.verwaltung.frage_stellen(KIND_ID, FACH_ID, ["Unit 9"], 2)
+        await manager.verwaltung.frage_stellen(
+            KIND_ID, FACH_ID, {"lektionen": ["Unit 9"]}, 2
+        )
     assert fehler.value.schluessel == "keine_aufgaben"
     assert len(notify_calls) == gesendet
     manager.zustand(KIND_ID).simulation = object()  # type: ignore[assignment]
     with pytest.raises(VerwaltungError) as fehler:
-        await manager.verwaltung.frage_stellen(KIND_ID, FACH_ID, [], 2)
+        await manager.verwaltung.frage_stellen(KIND_ID, FACH_ID, {}, 2)
     assert fehler.value.schluessel == "simulation_laeuft"
     manager.zustand(KIND_ID).simulation = None
 
@@ -515,8 +520,95 @@ def test_migration_1_14() -> None:
         "kalender_ignoriert": {},
     }
     neu = migrate_config(1, 13, alt)
-    assert neu["kinder"]["a"] == {"zusatz_lektionen": ["Unit 1"]}
-    assert neu["kinder"]["b"] == {"zusatz_lektionen": []}
-    zustand = KindZustand.from_dict({"zusatz_lektionen": ["A", "B"]})
-    assert zustand.zusatz_lektionen == ("A", "B")
-    assert zustand.to_dict()["zusatz_lektionen"] == ["A", "B"]
+    assert neu["kinder"]["a"] == {"zusatz_filter": {"lektionen": ["Unit 1"]}}
+    assert neu["kinder"]["b"] == {"zusatz_filter": None}
+    zustand = KindZustand.from_dict(neu["kinder"]["a"])
+    assert zustand.zusatz_filter == AbfrageFilter(lektionen=("Unit 1",))
+    voll = AbfrageFilter(("A",), 10, 20, 50)
+    assert AbfrageFilter.from_dict(voll.to_dict()) == voll
+    assert KindZustand.from_dict({}).zusatz_filter == AbfrageFilter()
+
+
+async def test_abfrage_nach_seite_und_fehlerquote(
+    hass: HomeAssistant,
+    mit_lektionen: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+) -> None:
+    manager: LearnBuddyManager = mit_lektionen.runtime_data
+    verwaltung = manager.verwaltung
+    aufgaben = list(manager.task_stores[FACH_ID].aufgaben.values())
+    assert len(aufgaben) == 5
+    for seite, aufgabe in zip((10, 11, 12, 13, None), aufgaben, strict=True):
+        aufgabe.seite = seite
+    # One task was answered wrong twice and right once, one only right
+    stat = next(iter(aufgaben[1].statistik.values()), None)
+    if stat is None:
+        stat = aufgaben[1].statistik_fuer(manager.faecher[FACH_ID].richtungen[0])
+    stat.falsch, stat.richtig = 2, 1
+    gut = aufgaben[2].statistik_fuer(manager.faecher[FACH_ID].richtungen[0])
+    gut.richtig = 3
+    aufgaben[3].geprueft = False
+
+    def umfang(**auswahl: Any) -> int:
+        return verwaltung.abfrage_umfang(KIND_ID, FACH_ID, auswahl)
+
+    # The task that waits for its approval never takes part
+    assert umfang() == 4
+    assert verwaltung.abfrage_umfang(KIND_ID, None, {"seite_von": 99}) == 4
+    assert umfang(seite_von=11) == 2
+    assert umfang(seite_bis=11) == 2
+    assert umfang(seite_von=11, seite_bis=11) == 1
+    assert umfang(fehlerquote_ab=50) == 1
+    assert umfang(fehlerquote_ab=70) == 0
+    assert umfang(fehlerquote_ab=1, seite_von=12) == 0
+    assert umfang(lektionen=["Unit 4"], seite_von=12) == 1
+    with pytest.raises(VerwaltungError) as fehler:
+        umfang(seite_von=12, seite_bis=11)
+    assert fehler.value.schluessel == "seiten_verdreht"
+
+    await verwaltung.frage_stellen(KIND_ID, FACH_ID, {"fehlerquote_ab": 50}, 2)
+    zustand = manager.zustand(KIND_ID)
+    # The overview shows the running series and what it is limited to
+    laufend = verwaltung.dashboard(KIND_ID)["zustand"]["abfrage"]
+    assert (laufend["weitere"], laufend["fehlerquote_ab"]) == (1, 50)
+    for _ in range(2):
+        frage = zustand.offene_frage
+        assert frage is not None
+        assert frage.aufgabe_id == aufgaben[1].id
+        await _sende(hass, "weiß nicht")
+    assert zustand.offene_frage is None
+
+    with pytest.raises(VerwaltungError) as fehler:
+        await verwaltung.frage_stellen(KIND_ID, FACH_ID, {"seite_von": 500}, 1)
+    assert fehler.value.schluessel == "keine_aufgaben"
+
+
+async def test_ws_ask_count(
+    hass: HomeAssistant,
+    mit_lektionen: MockConfigEntry,
+    hass_ws_client: Any,
+) -> None:
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "learnbuddy/ask_count",
+            "kind_id": KIND_ID,
+            "fach_id": FACH_ID,
+            "lektionen": ["Unit 4"],
+            "seite_von": None,
+            "fehlerquote_ab": None,
+        }
+    )
+    antwort = await client.receive_json()
+    assert antwort["result"] == {"aufgaben": 3}
+    await client.send_json_auto_id(
+        {
+            "type": "learnbuddy/ask",
+            "kind_id": KIND_ID,
+            "fach_id": FACH_ID,
+            "seite_von": 7,
+            "anzahl": 2,
+        }
+    )
+    antwort = await client.receive_json()
+    assert antwort["error"]["message"] == "keine_aufgaben"
