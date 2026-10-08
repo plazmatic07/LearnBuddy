@@ -719,13 +719,25 @@ class RechenwegAngebot:
         }
 
 
+def _seite_passt(seite: int | None, von: int | None, bis: int | None) -> bool:
+    """Return whether a book page lies in a range; no range fits everything."""
+    if von is None and bis is None:
+        return True
+    if seite is None:
+        return False
+    return (von is None or seite >= von) and (bis is None or seite <= bis)
+
+
 @dataclass(frozen=True, slots=True)
 class AbfrageFilter:
     """Which tasks of a subject a series of questions is limited to."""
 
     lektionen: tuple[str, ...] = ()
+    # Book pages for the whole subject
     seite_von: int | None = None
     seite_bis: int | None = None
+    # Book pages of single lessons: (lesson, from, to)
+    lektion_seiten: tuple[tuple[str, int | None, int | None], ...] = ()
     # Share of wrong answers in percent a task has at least
     fehlerquote_ab: int | None = None
 
@@ -738,12 +750,10 @@ class AbfrageFilter:
         """Return whether a task belongs to the selection."""
         if self.lektionen and aufgabe.lektion not in self.lektionen:
             return False
-        if self.seite_von is not None or self.seite_bis is not None:
-            if aufgabe.seite is None:
-                return False
-            if self.seite_von is not None and aufgabe.seite < self.seite_von:
-                return False
-            if self.seite_bis is not None and aufgabe.seite > self.seite_bis:
+        if not _seite_passt(aufgabe.seite, self.seite_von, self.seite_bis):
+            return False
+        for lektion, von, bis in self.lektion_seiten:
+            if aufgabe.lektion == lektion and not _seite_passt(aufgabe.seite, von, bis):
                 return False
         if self.fehlerquote_ab is not None:
             richtig = sum(s.richtig for s in aufgabe.statistik.values())
@@ -761,6 +771,10 @@ class AbfrageFilter:
             lektionen=tuple(data.get("lektionen", ())),
             seite_von=data.get("seite_von"),
             seite_bis=data.get("seite_bis"),
+            lektion_seiten=tuple(
+                (eintrag[0], eintrag[1], eintrag[2])
+                for eintrag in data.get("lektion_seiten", ())
+            ),
             fehlerquote_ab=data.get("fehlerquote_ab"),
         )
 
@@ -770,6 +784,7 @@ class AbfrageFilter:
             "lektionen": list(self.lektionen),
             "seite_von": self.seite_von,
             "seite_bis": self.seite_bis,
+            "lektion_seiten": [list(eintrag) for eintrag in self.lektion_seiten],
             "fehlerquote_ab": self.fehlerquote_ab,
         }
 

@@ -146,6 +146,23 @@ export const styles = css`
     color: var(--lh-muted);
     padding: 0 4px;
   }
+  .lektionszeile {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 12px;
+  }
+  .lektionszeile .seiten {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--lh-muted);
+  }
+  .lektionszeile .seiten input {
+    width: 72px;
+  }
   .lektionswahl label {
     display: flex;
     align-items: center;

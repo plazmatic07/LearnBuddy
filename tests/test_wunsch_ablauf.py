@@ -524,7 +524,7 @@ def test_migration_1_14() -> None:
     assert neu["kinder"]["b"] == {"zusatz_filter": None}
     zustand = KindZustand.from_dict(neu["kinder"]["a"])
     assert zustand.zusatz_filter == AbfrageFilter(lektionen=("Unit 1",))
-    voll = AbfrageFilter(("A",), 10, 20, 50)
+    voll = AbfrageFilter(("A",), 10, 20, (("A", 3, None),), 50)
     assert AbfrageFilter.from_dict(voll.to_dict()) == voll
     assert KindZustand.from_dict({}).zusatz_filter == AbfrageFilter()
 
@@ -562,6 +562,16 @@ async def test_abfrage_nach_seite_und_fehlerquote(
     assert umfang(fehlerquote_ab=70) == 0
     assert umfang(fehlerquote_ab=1, seite_von=12) == 0
     assert umfang(lektionen=["Unit 4"], seite_von=12) == 1
+    # Pages per lesson: the other lesson stays complete
+    je_lektion = [{"lektion": "Unit 3", "von": 11, "bis": 11}]
+    assert umfang(lektion_seiten=je_lektion) == 3
+    assert umfang(lektionen=["Unit 3"], lektion_seiten=je_lektion) == 1
+    assert umfang(lektion_seiten=[{"lektion": "Unit 4", "von": 13}]) == 2
+    assert umfang(lektion_seiten=[{"lektion": "Unit 4", "von": None}]) == 4
+    with pytest.raises(VerwaltungError):
+        umfang(lektion_seiten=[{"lektion": "Unit 3", "von": 5, "bis": 4}])
+    with pytest.raises(VerwaltungError):
+        umfang(lektion_seiten=[{"lektion": "Unit 77", "von": 5}])
     with pytest.raises(VerwaltungError) as fehler:
         umfang(seite_von=12, seite_bis=11)
     assert fehler.value.schluessel == "seiten_verdreht"

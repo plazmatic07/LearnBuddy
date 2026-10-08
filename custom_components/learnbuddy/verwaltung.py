@@ -816,12 +816,21 @@ class Verwaltung:
         if any(lektion not in bekannt for lektion in lektionen):
             raise _nicht_gefunden("lektion")
         von, bis = auswahl.get("seite_von"), auswahl.get("seite_bis")
-        if von is not None and bis is not None and von > bis:
-            raise _ungueltig("seiten_verdreht")
+        lektion_seiten = tuple(
+            (eintrag["lektion"], eintrag.get("von"), eintrag.get("bis"))
+            for eintrag in auswahl.get("lektion_seiten") or ()
+            if eintrag.get("von") is not None or eintrag.get("bis") is not None
+        )
+        if any(lektion not in bekannt for lektion, _, _ in lektion_seiten):
+            raise _nicht_gefunden("lektion")
+        for anfang, ende in ((von, bis), *((v, b) for _, v, b in lektion_seiten)):
+            if anfang is not None and ende is not None and anfang > ende:
+                raise _ungueltig("seiten_verdreht")
         return AbfrageFilter(
             lektionen=lektionen,
             seite_von=von,
             seite_bis=bis,
+            lektion_seiten=lektion_seiten,
             fehlerquote_ab=auswahl.get("fehlerquote_ab"),
         )
 

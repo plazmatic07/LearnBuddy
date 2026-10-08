@@ -32,6 +32,7 @@ interface Abfrage {
   fachId: string | null;
   lektionen: Set<string>;
   // Raw input; empty means no limit
+  seiten: Record<string, { von: string; bis: string }>;
   seiteVon: string;
   seiteBis: string;
   fehlerquote: string;
@@ -357,6 +358,7 @@ export class LhUebersicht extends LitElement {
     this._setzeAbfrage({
       fachId: fach?.id ?? null,
       lektionen: new Set((fach?.lektionsliste ?? []).map((l) => l.name)),
+      seiten: {},
       seiteVon: "",
       seiteBis: "",
       fehlerquote: "",
@@ -884,17 +886,30 @@ export class LhUebersicht extends LitElement {
   private _abfrageText(fach: string, abfrage: AbfrageAuswahl & { weitere: number }): string {
     const t = this._t;
     const teile: string[] = [];
-    if (abfrage.lektionen?.length) {
-      teile.push(abfrage.lektionen.join(", "));
+    const seiten = (von?: number | null, bis?: number | null): string =>
+      von != null && bis != null
+        ? t("abfrage_seiten", { von, bis })
+        : von != null
+          ? t("abfrage_ab_seite", { n: von })
+          : bis != null
+            ? t("abfrage_bis_seite", { n: bis })
+            : "";
+    const jeLektion = new Map(
+      (abfrage.lektion_seiten ?? []).map((e) => [e.lektion, seiten(e.von, e.bis)]),
+    );
+    // Lessons with their pages; a range may also belong to a lesson of a
+    // subject that is asked as a whole
+    const namen = abfrage.lektionen?.length ? abfrage.lektionen : [...jeLektion.keys()];
+    if (namen.length) {
+      teile.push(
+        namen
+          .map((name) => (jeLektion.get(name) ? `${name} ${jeLektion.get(name)}` : name))
+          .join(", "),
+      );
     }
-    const von = abfrage.seite_von;
-    const bis = abfrage.seite_bis;
-    if (von != null && bis != null) {
-      teile.push(t("abfrage_seiten", { von, bis }));
-    } else if (von != null) {
-      teile.push(t("abfrage_ab_seite", { n: von }));
-    } else if (bis != null) {
-      teile.push(t("abfrage_bis_seite", { n: bis }));
+    const gesamt = seiten(abfrage.seite_von, abfrage.seite_bis);
+    if (gesamt) {
+      teile.push(gesamt);
     }
     if (abfrage.fehlerquote_ab != null) {
       teile.push(t("abfrage_ab_fehlerquote", { n: abfrage.fehlerquote_ab }));
@@ -918,11 +933,20 @@ export class LhUebersicht extends LitElement {
       const n = Math.round(Number(wert));
       return wert.trim() !== "" && Number.isFinite(n) && n >= 1 ? Math.min(n, max) : null;
     };
+    // Pages are set per lesson; a subject without lessons has one range
+    const ohneLektionen = lektionen.length === 0;
     return {
       // All lessons ticked means the whole subject, also tasks without a lesson
       lektionen: gewaehlt.length === lektionen.length ? [] : gewaehlt,
-      seite_von: zahl(abfrage.seiteVon, 9999),
-      seite_bis: zahl(abfrage.seiteBis, 9999),
+      seite_von: ohneLektionen ? zahl(abfrage.seiteVon, 9999) : null,
+      seite_bis: ohneLektionen ? zahl(abfrage.seiteBis, 9999) : null,
+      lektion_seiten: gewaehlt
+        .map((lektion) => ({
+          lektion,
+          von: zahl(abfrage.seiten[lektion]?.von ?? "", 9999),
+          bis: zahl(abfrage.seiten[lektion]?.bis ?? "", 9999),
+        }))
+        .filter((eintrag) => eintrag.von !== null || eintrag.bis !== null),
       fehlerquote_ab: zahl(abfrage.fehlerquote, 100),
     };
   }
@@ -973,6 +997,9 @@ export class LhUebersicht extends LitElement {
       setze({
         fachId: neu ? neu.id : null,
         lektionen: new Set((neu?.lektionsliste ?? []).map((l) => l.name)),
+        seiten: {},
+        seiteVon: "",
+        seiteBis: "",
       });
     };
     const schalte = (name: string, an: boolean): void => {
@@ -991,6 +1018,25 @@ export class LhUebersicht extends LitElement {
         void this._frage(abfrage.fachId, auswahl, anzahl);
       }
     };
+    const seite = (lektion: string, rand: "von" | "bis"): TemplateResult => html`
+      <input
+        type="number"
+        min="1"
+        max="9999"
+        aria-label=${t(rand === "von" ? "abfrage_seite_von" : "abfrage_seite_bis")}
+        ?disabled=${!abfrage.lektionen.has(lektion)}
+        .value=${abfrage.seiten[lektion]?.[rand] ?? ""}
+        @input=${(e: Event) => {
+          const bisher = abfrage.seiten[lektion] ?? { von: "", bis: "" };
+          setze({
+            seiten: {
+              ...abfrage.seiten,
+              [lektion]: { ...bisher, [rand]: (e.target as HTMLInputElement).value },
+            },
+          });
+        }}
+      />
+    `;
     const eingabe = (
       feld: "seiteVon" | "seiteBis" | "fehlerquote",
       name: "abfrage_seite_von" | "abfrage_seite_bis" | "abfrage_fehlerquote",
@@ -1048,16 +1094,21 @@ export class LhUebersicht extends LitElement {
                   <legend>${t("abfrage_lektionen")}</legend>
                   ${lektionen.map(
                     (l) => html`
-                      <label>
-                        <input
-                          type="checkbox"
-                          .checked=${abfrage.lektionen.has(l.name)}
-                          @change=${(e: Event) =>
-                            schalte(l.name, (e.target as HTMLInputElement).checked)}
-                        />
-                        ${l.name}
-                        <span class="klein">${t("arbeit_umfang", { n: l.aufgaben })}</span>
-                      </label>
+                      <div class="lektionszeile">
+                        <label>
+                          <input
+                            type="checkbox"
+                            .checked=${abfrage.lektionen.has(l.name)}
+                            @change=${(e: Event) =>
+                              schalte(l.name, (e.target as HTMLInputElement).checked)}
+                          />
+                          ${l.name}
+                          <span class="klein">${t("arbeit_umfang", { n: l.aufgaben })}</span>
+                        </label>
+                        <span class="seiten">
+                          ${t("abfrage_seite_kurz")} ${seite(l.name, "von")} – ${seite(l.name, "bis")}
+                        </span>
+                      </div>
                     `,
                   )}
                   ${fach && fach.ohne_lektion > 0
@@ -1071,8 +1122,10 @@ export class LhUebersicht extends LitElement {
           ${fach
             ? html`
                 <div class="raster">
-                  ${eingabe("seiteVon", "abfrage_seite_von", 9999)}
-                  ${eingabe("seiteBis", "abfrage_seite_bis", 9999)}
+                  ${lektionen.length === 0
+                    ? html`${eingabe("seiteVon", "abfrage_seite_von", 9999)}
+                      ${eingabe("seiteBis", "abfrage_seite_bis", 9999)}`
+                    : nothing}
                   ${eingabe("fehlerquote", "abfrage_fehlerquote", 100)}
                 </div>
                 <div class="klein">${t("abfrage_filter_hinweis")}</div>

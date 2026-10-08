@@ -306,6 +306,8 @@ export interface AbfrageAuswahl {
   lektionen?: string[];
   seite_von?: number | null;
   seite_bis?: number | null;
+  // Book pages of single lessons
+  lektion_seiten?: { lektion: string; von: number | null; bis: number | null }[];
   fehlerquote_ab?: number | null;
 }
 

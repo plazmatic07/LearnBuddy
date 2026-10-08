@@ -134,10 +134,18 @@ def ws_set_active(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
     return {}
 
 
+_SEITE = vol.Any(None, vol.All(int, vol.Range(min=1, max=9999)))
 _ABFRAGE_AUSWAHL: dict[str | vol.Marker, Any] = {
     vol.Optional("lektionen", default=list): [str],
-    vol.Optional("seite_von"): vol.Any(None, vol.All(int, vol.Range(min=1, max=9999))),
-    vol.Optional("seite_bis"): vol.Any(None, vol.All(int, vol.Range(min=1, max=9999))),
+    vol.Optional("seite_von"): _SEITE,
+    vol.Optional("seite_bis"): _SEITE,
+    vol.Optional("lektion_seiten", default=list): [
+        {
+            vol.Required("lektion"): str,
+            vol.Optional("von"): _SEITE,
+            vol.Optional("bis"): _SEITE,
+        }
+    ],
     vol.Optional("fehlerquote_ab"): vol.Any(
         None, vol.All(int, vol.Range(min=1, max=100))
     ),
