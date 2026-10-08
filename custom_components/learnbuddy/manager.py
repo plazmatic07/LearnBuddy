@@ -37,6 +37,7 @@ from .const import (
     CONF_SPRACHE,
     CONF_TIMEOUT_MINUTEN,
     CONF_VERLAUF,
+    CONF_WUNSCH_KI,
     DEFAULT_TIMEOUT_MINUTEN,
     DOMAIN,
     DOPPELT_SEKUNDEN,
@@ -54,6 +55,7 @@ from .const import (
     SUBENTRY_KIND,
     UNBEKANNTE_ABSENDER_MAX,
     UNBEKANNTE_ABSENDER_STUNDEN,
+    WUNSCH_FRIST,
     signal_kind_update,
 )
 from .evaluation import bewerte_vokabel
@@ -76,6 +78,7 @@ from .models import (
     SimAufgabe,
     Simulation,
     Vokabel,
+    WunschAngebot,
     richtung_teile,
 )
 from .sach import bewerte_auswahl, formatiere, gleiche_antwort, mische
@@ -100,7 +103,15 @@ from .verwaltung import (
     aufgabe_schluessel,
     parse_import,
 )
-from .wunsch import erkenne_ja, erkenne_nein, erkenne_zusatzwunsch
+from .wunsch import (
+    Uebungswunsch,
+    WunschFach,
+    erkenne_anzahl,
+    erkenne_ja,
+    erkenne_nein,
+    erkenne_uebungswunsch,
+    erkenne_zusatzwunsch,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -111,6 +122,9 @@ if TYPE_CHECKING:
 KEINE_OFFENE_FRAGE = "keine_offene_frage"
 ZUSATZAUFGABEN = "zusatzaufgaben"
 RECHENWEG = "rechenweg"
+WUNSCH_NACHFRAGE = "wunsch_nachfrage"
+WUNSCH_UNKLAR = "wunsch_unklar"
+KEINE_AUFGABEN = "keine_aufgaben"
 SIMULATION = "simulation"
 # A planned simulation that was missed is still sent within this time
 SIMULATION_NACHHOLEN = timedelta(hours=6)
@@ -402,6 +416,11 @@ class LearnBuddyManager:
     def ki_entity(self, fach: Fach) -> str | None:
         """Return the AI task entity for a subject, if the user selected one."""
         return fach.ki_entity or self.entry.options.get(CONF_KI_ENTITY) or None
+
+    @property
+    def wunsch_ki(self) -> bool:
+        """Return whether the AI may interpret what a child asks to practise."""
+        return bool(self.entry.options.get(CONF_WUNSCH_KI, True))
 
     @property
     def auto_freigabe(self) -> bool:
@@ -767,12 +786,35 @@ class LearnBuddyManager:
     # ------------------------------------------------------------------
 
     def _waehle(
-        self, kind_id: str, *, manuell: bool, fach_id: str | None = None
+        self,
+        kind_id: str,
+        *,
+        manuell: bool,
+        fach_id: str | None = None,
+        lektion: str | None = None,
     ) -> tuple[Fach, Aufgabe, str, Arbeit | None] | None:
         """Pick the subject, task and direction of the next question.
 
-        A manual request may be limited to one subject.
+        A manual request may be limited to one subject or to one of its
+        lessons.
         """
+        if fach_id is not None and lektion is not None:
+            fach = self.faecher[fach_id]
+            auswahl = waehle_aufgabe(
+                self._zustellbar(
+                    kind_id,
+                    [
+                        a
+                        for a in self.task_stores[fach.id].aufgaben.values()
+                        if a.lektion == lektion
+                    ],
+                ),
+                fach.richtungen,
+                self._rng,
+                jetzt=dt_util.utcnow(),
+                vermeide=self._letzte_aufgabe.get(kind_id),
+            )
+            return None if auswahl is None else (fach, auswahl[0], auswahl[1], None)
         heute = dt_util.now().date()
         arbeiten = [
             a
@@ -905,11 +947,14 @@ class LearnBuddyManager:
         *,
         manuell: bool,
         fach_id: str | None = None,
+        lektion: str | None = None,
         kurz: bool = False,
     ) -> FrageStatus:
         kind = self.kinder[kind_id]
         zustand = self.zustand(kind_id)
-        auswahl = self._waehle(kind_id, manuell=manuell, fach_id=fach_id)
+        auswahl = self._waehle(
+            kind_id, manuell=manuell, fach_id=fach_id, lektion=lektion
+        )
         if auswahl is None:
             if manuell:
                 raise ServiceValidationError(
@@ -955,6 +1000,10 @@ class LearnBuddyManager:
         zustand.letzte_frage_um = jetzt
         # A new question ends the offer to explain the previous one
         zustand.rechenweg_angebot = None
+        zustand.wunsch_offen = None
+        if not kurz:
+            # Only the questions a child asked for stay within a lesson
+            zustand.zusatz_lektion = None
         self._letzte_aufgabe[kind_id] = aufgabe.id
         self._letztes_fach[kind_id] = fach.id
         self.task_stores[fach.id].async_schedule_save()
@@ -984,6 +1033,10 @@ class LearnBuddyManager:
             aufgabe = None if frage is None else self._aufgabe(frage)
             if frage is None or aufgabe is None:
                 return await self._async_ohne_frage(kind_id, antwort)
+
+            gewuenscht = await self._async_wunsch_statt_antwort(kind_id, antwort)
+            if gewuenscht is not None:
+                return gewuenscht
 
             fach = self.faecher[frage.fach_id]
             loesung = aufgabe.loesung_text(frage.richtung)
@@ -1169,6 +1222,21 @@ class LearnBuddyManager:
             self._benachrichtige(kind_id)
             self._plane(kind_id)
 
+        offen = zustand.wunsch_offen
+        if offen is not None:
+            zustand.wunsch_offen = None
+            self.config_store.async_schedule_save()
+            anzahl = erkenne_anzahl(antwort)
+            if (
+                anzahl is not None
+                and offen.bis >= dt_util.utcnow()
+                and offen.fach_id in self.faecher
+                and zustand.aktiv
+            ):
+                return await self._async_wunsch_starten(
+                    kind_id, offen.fach_id, offen.lektion, anzahl
+                )
+
         angebot = zustand.rechenweg_angebot
         if angebot is not None:
             zustand.rechenweg_angebot = None
@@ -1186,6 +1254,11 @@ class LearnBuddyManager:
         wunsch = erkenne_zusatzwunsch(antwort) if zustand.aktiv else None
         if wunsch is not None:
             return await self._async_zusatz_starten(kind_id, wunsch)
+        uebung = self._uebungswunsch(kind_id, antwort)
+        if uebung is not None and not uebung.eindeutig:
+            uebung = await self._async_ki_wunsch(kind_id, antwort, uebung)
+        if uebung is not None:
+            return await self._async_wunsch(kind_id, uebung)
         if angebot is not None:
             # Anything else declines the offer; a waiting series goes on
             if await self._async_serie_fortsetzen(kind_id, angebot.fach_id):
@@ -1256,13 +1329,147 @@ class LearnBuddyManager:
         self._plane(kind_id)
         return {"ergebnis": ZUSATZAUFGABEN, "anzahl": anzahl}
 
+    def _wunsch_faecher(self, kind_id: str) -> list[WunschFach]:
+        """Return what is needed to find the subjects of a child in a message."""
+        return [
+            WunschFach(
+                id=fach.id,
+                name=fach.name,
+                vokabeln=fach.typ is AufgabenTyp.VOKABEL,
+                lektionen=tuple(self.task_stores[fach.id].lektionen),
+            )
+            for fach in self.faecher_von(kind_id)
+        ]
+
+    def _uebungswunsch(self, kind_id: str, nachricht: str) -> Uebungswunsch | None:
+        """Return what the child asks to practise, if it does."""
+        if not self.zustand(kind_id).aktiv:
+            return None
+        return erkenne_uebungswunsch(nachricht, self._wunsch_faecher(kind_id))
+
+    async def _async_ki_wunsch(
+        self, kind_id: str, nachricht: str, wunsch: Uebungswunsch
+    ) -> Uebungswunsch:
+        """Let the AI assign a wish the rules could not assign."""
+        ki_entity = self.entry.options.get(CONF_KI_ENTITY)
+        faecher = self._wunsch_faecher(kind_id)
+        if not ki_entity or not faecher or not self.wunsch_ki:
+            return wunsch
+        gedeutet = await self.ki.async_deute_wunsch(
+            ki_entity, nachricht=nachricht, faecher=faecher
+        )
+        if gedeutet is None or not gedeutet.eindeutig:
+            return wunsch
+        if gedeutet.anzahl is None and wunsch.anzahl is not None:
+            gedeutet = replace(gedeutet, anzahl=wunsch.anzahl)
+        return gedeutet
+
+    async def _async_wunsch_statt_antwort(
+        self, kind_id: str, nachricht: str
+    ) -> dict[str, Any] | None:
+        """React to a clear wish that arrives while a question is open.
+
+        The wish wins: the open question is taken back and does not count.
+        Only the rules decide here, so that an answer never costs an AI call.
+        """
+        wunsch = self._uebungswunsch(kind_id, nachricht)
+        if wunsch is None or not wunsch.eindeutig:
+            return None
+        self._frage_zuruecknehmen(kind_id)
+        self._benachrichtige(kind_id)
+        ergebnis = await self._async_wunsch(kind_id, wunsch)
+        self._plane(kind_id)
+        return ergebnis
+
+    def _wunsch_ort(self, fach_id: str, lektion: str | None) -> str:
+        name = self.faecher[fach_id].name
+        return name if lektion is None else f"{name}, {lektion}"
+
+    async def _async_wunsch(
+        self, kind_id: str, wunsch: Uebungswunsch
+    ) -> dict[str, Any]:
+        """React to the wish of a child to practise something."""
+        kind = self.kinder[kind_id]
+        zustand = self.zustand(kind_id)
+        zustand.zusatz_offen = 0
+        if wunsch.fach_id is None:
+            faecher = ", ".join(sorted(f.name for f in self.faecher_von(kind_id)))
+            await self.messenger.async_send(
+                kind,
+                text(
+                    self.sprache,
+                    "wunsch_unklar" if faecher else "zusatz_keine",
+                    name=kind.name,
+                    faecher=faecher,
+                ),
+            )
+            self.config_store.async_schedule_save()
+            return {"ergebnis": WUNSCH_UNKLAR}
+        ort = self._wunsch_ort(wunsch.fach_id, wunsch.lektion)
+        if (
+            self._waehle(
+                kind_id, manuell=True, fach_id=wunsch.fach_id, lektion=wunsch.lektion
+            )
+            is None
+        ):
+            await self.messenger.async_send(
+                kind, text(self.sprache, "wunsch_keine", name=kind.name, ort=ort)
+            )
+            self.config_store.async_schedule_save()
+            return {"ergebnis": KEINE_AUFGABEN}
+        if wunsch.anzahl is None:
+            zustand.wunsch_offen = WunschAngebot(
+                fach_id=wunsch.fach_id,
+                lektion=wunsch.lektion,
+                bis=dt_util.utcnow() + WUNSCH_FRIST,
+            )
+            zustand.rechenweg_angebot = None
+            self.config_store.async_schedule_save()
+            await self.messenger.async_send(
+                kind, text(self.sprache, "wunsch_anzahl", name=kind.name, ort=ort)
+            )
+            return {"ergebnis": WUNSCH_NACHFRAGE}
+        return await self._async_wunsch_starten(
+            kind_id, wunsch.fach_id, wunsch.lektion, wunsch.anzahl
+        )
+
+    async def _async_wunsch_starten(
+        self, kind_id: str, fach_id: str, lektion: str | None, wunsch: int
+    ) -> dict[str, Any]:
+        """Start the questions of a subject or a lesson a child asked for."""
+        kind = self.kinder[kind_id]
+        zustand = self.zustand(kind_id)
+        anzahl = min(wunsch, MAX_ZUSATZAUFGABEN)
+        await self.messenger.async_send(
+            kind,
+            text(
+                self.sprache,
+                "wunsch_gekuerzt" if wunsch > anzahl else "wunsch_start",
+                name=kind.name,
+                anzahl=str(anzahl),
+                ort=self._wunsch_ort(fach_id, lektion),
+            ),
+        )
+        zustand.rechenweg_angebot = None
+        zustand.zusatz_lektion = lektion
+        zustand.zusatz_offen = anzahl - 1
+        await self._async_zusatzfrage(kind_id, fach_id)
+        self._plane(kind_id)
+        return {"ergebnis": ZUSATZAUFGABEN, "anzahl": anzahl}
+
     async def _async_zusatzfrage(self, kind_id: str, fach_id: str | None) -> None:
         """Ask one extra question; end the series if that is not possible."""
         zustand = self.zustand(kind_id)
         if fach_id not in self.faecher:
             fach_id = None
         try:
-            await self._async_frage(kind_id, manuell=True, fach_id=fach_id, kurz=True)
+            await self._async_frage(
+                kind_id,
+                manuell=True,
+                fach_id=fach_id,
+                lektion=None if fach_id is None else zustand.zusatz_lektion,
+                kurz=True,
+            )
         except ServiceValidationError:
             # Nothing to ask
             zustand.zusatz_offen = 0
@@ -1298,6 +1505,28 @@ class LearnBuddyManager:
             self._benachrichtige(kind_id)
             self._plane(kind_id)
 
+    def _frage_zuruecknehmen(self, kind_id: str) -> None:
+        """Take the open question of a child back as if it was never asked."""
+        zustand = self.zustand(kind_id)
+        frage = zustand.offene_frage
+        if frage is None:
+            return
+        zustand.offene_frage = None
+        # The extra questions the child asked for end as well
+        zustand.zusatz_offen = 0
+        aufgabe = self._aufgabe(frage)
+        if aufgabe is not None:
+            stat = aufgabe.statistik_fuer(frage.richtung)
+            stat.gefragt = max(0, stat.gefragt - 1)
+            self.task_stores[frage.fach_id].async_schedule_save()
+        if self.verlauf_aktiv:
+            # Taken back on the day the question was asked
+            self.verlauf_store.kind(kind_id).frage_zurueck(
+                dt_util.as_local(frage.gestellt_um).date(), frage.fach_id
+            )
+            self.verlauf_store.async_schedule_save()
+        self.config_store.async_schedule_save()
+
     async def async_frage_abbrechen(self, kind_id: str) -> bool:
         """Withdraw the open question of a child.
 
@@ -1308,24 +1537,9 @@ class LearnBuddyManager:
         async with self._sperren[kind_id]:
             kind = self.kinder[kind_id]
             zustand = self.zustand(kind_id)
-            frage = zustand.offene_frage
-            if frage is None or zustand.simulation is not None:
+            if zustand.offene_frage is None or zustand.simulation is not None:
                 return False
-            zustand.offene_frage = None
-            # The extra questions the child asked for end as well
-            zustand.zusatz_offen = 0
-            aufgabe = self._aufgabe(frage)
-            if aufgabe is not None:
-                stat = aufgabe.statistik_fuer(frage.richtung)
-                stat.gefragt = max(0, stat.gefragt - 1)
-                self.task_stores[frage.fach_id].async_schedule_save()
-            if self.verlauf_aktiv:
-                # Taken back on the day the question was asked
-                self.verlauf_store.kind(kind_id).frage_zurueck(
-                    dt_util.as_local(frage.gestellt_um).date(), frage.fach_id
-                )
-                self.verlauf_store.async_schedule_save()
-            self.config_store.async_schedule_save()
+            self._frage_zuruecknehmen(kind_id)
             await self.messenger.async_send(
                 kind, text(self.sprache, "frage_abgebrochen", name=kind.name)
             )

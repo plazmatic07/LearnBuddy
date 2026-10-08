@@ -11,6 +11,7 @@
           "auto_freigabe": "Generierte Aufgaben automatisch freigeben",
           "verlauf": "Verlauf aufzeichnen und Fortschritt anzeigen",
           "wochenreport": "Wochenreport anzeigen",
+          "wunsch_ki": "Wünsche des Kindes mit der KI deuten",
           "eingang_telegram": "Antworten aus Telegram annehmen",
           "eingang_whatsapp": "Antworten aus WhatsApp annehmen",
           "eingang_event": "Eigenes Ereignis für Antworten",
@@ -27,6 +28,7 @@
           "eingang_absender_feld": "Schlüssel in den Ereignisdaten mit Telefonnummer oder Chat-ID. Vorgabe: sender.",
           "eingang_text_feld": "Schlüssel in den Ereignisdaten mit dem Nachrichtentext. Vorgabe: text.",
           "verlauf": "LearnBuddy zählt je Tag, wie viele Fragen gestellt und wie sie beantwortet wurden, und zeigt daraus in der Übersicht den Fortschritt. Gespeichert werden nur Zahlen, lokal in Home Assistant. Aus: Es wird nichts mehr aufgezeichnet; schon Aufgezeichnetes bleibt erhalten und erscheint nach dem Einschalten wieder.",
+          "wunsch_ki": "Das Kind kann schreiben, was es üben möchte, zum Beispiel „Ich möchte Mathe üben“. Wird Fach oder Lektion nicht erkannt, wird die allgemeine KI gefragt. Sie bekommt die Nachricht sowie die Namen der Fächer und Lektionen, nicht den Namen des Kindes.",
           "wochenreport": "Zeigt in der Übersicht den Knopf „Wochenreport“ mit einer Zusammenfassung je Woche. Braucht den Verlauf. Es wird nichts verschickt."
         }
       }
@@ -46,6 +48,7 @@
           "auto_freigabe": "Generierte Aufgaben automatisch freigeben",
           "verlauf": "Verlauf aufzeichnen und Fortschritt anzeigen",
           "wochenreport": "Wochenreport anzeigen",
+          "wunsch_ki": "Wünsche des Kindes mit der KI deuten",
           "eingang_telegram": "Antworten aus Telegram annehmen",
           "eingang_whatsapp": "Antworten aus WhatsApp annehmen",
           "eingang_event": "Eigenes Ereignis für Antworten",
@@ -62,6 +65,7 @@
           "eingang_absender_feld": "Schlüssel in den Ereignisdaten mit Telefonnummer oder Chat-ID. Vorgabe: sender.",
           "eingang_text_feld": "Schlüssel in den Ereignisdaten mit dem Nachrichtentext. Vorgabe: text.",
           "verlauf": "LearnBuddy zählt je Tag, wie viele Fragen gestellt und wie sie beantwortet wurden, und zeigt daraus in der Übersicht den Fortschritt. Gespeichert werden nur Zahlen, lokal in Home Assistant. Aus: Es wird nichts mehr aufgezeichnet; schon Aufgezeichnetes bleibt erhalten und erscheint nach dem Einschalten wieder.",
+          "wunsch_ki": "Das Kind kann schreiben, was es üben möchte, zum Beispiel „Ich möchte Mathe üben“. Wird Fach oder Lektion nicht erkannt, wird die allgemeine KI gefragt. Sie bekommt die Nachricht sowie die Namen der Fächer und Lektionen, nicht den Namen des Kindes.",
           "wochenreport": "Zeigt in der Übersicht den Knopf „Wochenreport“ mit einer Zusammenfassung je Woche. Braucht den Verlauf. Es wird nichts verschickt."
         }
       }

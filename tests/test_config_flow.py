@@ -98,6 +98,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         "auto_freigabe": False,
         "verlauf": True,
         "wochenreport": True,
+        "wunsch_ki": True,
         "eingang_telegram": True,
         "eingang_whatsapp": True,
     }
@@ -130,6 +131,7 @@ async def test_options_flow(hass: HomeAssistant, setup_entry: MockConfigEntry) -
         "auto_freigabe": False,
         "verlauf": True,
         "wochenreport": True,
+        "wunsch_ki": True,
         "eingang_telegram": True,
         "eingang_whatsapp": True,
     }

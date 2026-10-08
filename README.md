@@ -17,7 +17,7 @@ LearnBuddy bringt weder einen eigenen Messenger noch eine eigene KI-Anbindung mi
 - **Vorschläge aus dem Schulkalender:** Termine aus einem Prüfungskalender (z. B. WebUntis) erscheinen im Panel und lassen sich mit einem Klick als Arbeit eintragen.
 - **Fortschritt und Wochenreport:** Diagramme zum Verlauf (Antworten je Tag, Trefferquote, Lernstand je Fach), Schwachstellen und eine Zusammenfassung je Woche; beides abschaltbar.
 - **Klassenarbeit simulieren:** als druckbares Aufgabenblatt oder als Durchlauf im Messenger mit Auswertung am Ende, auch zu einem geplanten Zeitpunkt.
-- **Zusatzaufgaben auf Wunsch:** Das Kind fordert mit 👍 oder „noch 5“ selbst weitere Aufgaben an.
+- **Üben auf Wunsch:** Das Kind schreibt, was es üben möchte („Ich möchte Mathe üben“, „Frag mich die Vokabeln aus Unit 1 ab“), oder fordert mit 👍 oder „noch 5“ weitere Aufgaben an.
 - **Panel** in der Seitenleiste für Übersicht, Aufgaben, Lektionen und Arbeiten.
 - **Entitäten, Aktionen und Events** für eigene Automationen, zum Beispiel Bildschirmzeit als Belohnung.
 - **Datensparsam:** Alles liegt lokal in Home Assistant; der Name des Kindes geht nie an die KI.
@@ -77,6 +77,7 @@ Sie werden beim Hinzufügen abgefragt und lassen sich später über das Zahnrad 
 | Sprache der Nachrichten | Deutsch, Englisch oder wie Home Assistant. |
 | KI-Entität für die Bewertung | Optional. Eine `ai_task`-Entität. Je Fach lässt sich eine andere wählen. |
 | Generierte Aufgaben automatisch freigeben | Standard: aus. Von der KI erzeugte Mathe-Aufgaben warten dann im Panel auf deine Freigabe. |
+| Wünsche des Kindes mit der KI deuten | Standard: an. Siehe [Wann und was gefragt wird](#wann-und-was-gefragt-wird). |
 | Verlauf aufzeichnen und Fortschritt anzeigen | Standard: an. Siehe [Fortschritt und Wochenreport](#fortschritt-und-wochenreport). |
 | Wochenreport anzeigen | Standard: an. Braucht den Verlauf. |
 | Antworten aus Telegram annehmen | Standard: an. Siehe [Antworten entgegennehmen](#antworten-entgegennehmen). |
@@ -270,6 +271,15 @@ Ein Termin verschwindet aus den Vorschlägen, sobald die Arbeit daraus angelegt 
 
 **Zusatzaufgaben auf Wunsch:** Ist gerade keine Frage offen, kann das Kind selbst weitere Aufgaben anfordern: mit 👍 als Nachricht (eine Aufgabe) oder mit einem Text wie „noch eine“, „mehr“, „noch 10 mehr“ oder „5 more“. Die Aufgaben kommen nacheinander, höchstens 20 auf einmal, auch außerhalb der Zeitfenster. Die Serie endet, wenn eine Frage unbeantwortet bleibt oder die Abfragen pausiert werden. Eine Reaktion auf die Nachricht (z. B. der Daumen als Telegram-Reaktion) funktioniert nicht, weil Home Assistant Reaktionen nicht als Ereignis meldet.
 
+**Üben auf Wunsch:** Das Kind kann schreiben, was es üben möchte, zum Beispiel „Ich würde gerne Mathe üben“, „Frag mich die Vokabeln aus Unit 1 ab“ oder „Gib mir 5 Aufgaben in Bio“.
+
+- LearnBuddy sucht in der Nachricht nach einem Wort wie üben, lernen, abfragen, „frag mich“, „möchte“ oder „gib mir“, nach dem Namen eines Fachs (auch Kurzformen wie „Mathe“ oder „Bio“) und nach dem Namen einer Lektion. „Vokabeln“ steht für das Vokabelfach, wenn das Kind genau eines hat.
+- Nennt das Kind keine Zahl, fragt LearnBuddy nach, wie viele Aufgaben es möchte, und wartet 10 Minuten auf die Antwort. Höchstens 20 auf einmal.
+- Die Aufgaben kommen nacheinander aus dem gewünschten Fach bzw. nur aus der gewünschten Lektion. Ein 👍 oder „noch 3“ danach bleibt dabei.
+- **Der Wunsch geht vor:** Ist gerade eine Frage offen, wird sie zurückgenommen und zählt nicht. Das gilt nur für eindeutige Wünsche; ein einzelnes Wort wie „Mathe“ bleibt eine Antwort.
+- Findet LearnBuddy kein Fach und keine Lektion („ich will das mit den Brüchen üben“), deutet die allgemeine KI aus den Optionen den Wunsch, sofern eine eingerichtet und der Schalter „Wünsche des Kindes mit der KI deuten“ an ist. Das geschieht nur, wenn keine Frage offen ist. Ohne Ergebnis nennt LearnBuddy dem Kind seine Fächer.
+- Wünsche gelten auch außerhalb der Zeitfenster und während einer Pause, aber nicht, wenn die Abfragen des Kindes ausgeschaltet sind, und nicht während einer Simulation.
+
 **Frage abbrechen:** Eine offene Frage lässt sich in der Übersicht des Panels oder mit der Aktion `learnbuddy.cancel_question` zurückziehen. Sie zählt dann nicht in der Statistik, die Lernstufe der Aufgabe bleibt unverändert, und das Kind bekommt eine kurze Nachricht. Eine laufende Serie von Zusatzaufgaben endet damit.
 
 **Pausieren:** über den Schalter „Abfragen aktiv“, das Panel oder die Aktion `learnbuddy.pause`, optional bis zu einem Zeitpunkt (z. B. für Ferien).
@@ -393,6 +403,7 @@ actions:
 - Der Name des Kindes wird erst lokal in die fertige Nachricht eingesetzt. Events, Logs und Diagnosedaten enthalten keine Namen, Absenderkennungen oder Aufgabeninhalte.
 - Nachrichten laufen über den von dir gewählten Messenger; dessen Bedingungen gelten zusätzlich.
 - An die KI gehen zur Bewertung nur die Aufgabe, die Lösung samt Alternativen bzw. Kernpunkten, die Sprachen und die Antwort des Kindes. Name und Absenderkennung werden nie übertragen. Die Antwort ist Freitext des Kindes und geht unverändert an den gewählten KI-Dienst.
+- Zum Deuten eines Wunsches gehen die Nachricht des Kindes und die Namen seiner Fächer und Lektionen an die KI, nicht sein Name. Die Nachricht ist Freitext des Kindes.
 - Beim Erzeugen und Auslesen von Aufgaben gehen zusätzlich Klassenstufe, Schulart und Bundesland an die KI, dazu Thema, deine Beschreibung und bis zu zehn Beispielaufgaben.
 - Bilder von Aufgaben gehen an den Messenger und, wenn die KI beteiligt ist, an den KI-Dienst. Fotos von Buchseiten gehen nur an den KI-Dienst. Metadaten werden vorher entfernt.
 - Der Verlauf (`.storage/learnbuddy.verlauf`) enthält nur Zähler und IDs je Tag, keine Namen, Aufgabentexte oder Antworten, und bleibt lokal.

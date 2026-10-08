@@ -69,6 +69,11 @@ def migrate_config(
     if old_major == 1 and old_minor < 12:
         # 1.11 -> 1.12: exam dates from a calendar can be ignored
         data.setdefault("kalender_ignoriert", {})
+    if old_major == 1 and old_minor < 13:
+        # 1.12 -> 1.13: children can ask to practise a subject or a lesson
+        for zustand in data["kinder"].values():
+            zustand.setdefault("wunsch_offen", None)
+            zustand.setdefault("zusatz_lektion", None)
     return data
 
 

@@ -90,7 +90,20 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
         ),
         "keine_frage": (
             "Hallo {name}, im Moment ist keine Frage offen. "
-            "Schick 👍 für eine weitere Aufgabe oder zum Beispiel „noch 5“."
+            "Schick 👍 für eine weitere Aufgabe, zum Beispiel „noch 5“ "
+            "oder schreib, was du üben möchtest."
+        ),
+        "wunsch_anzahl": "Gern, {name}! Wie viele Aufgaben aus {ort} möchtest du?",
+        "wunsch_start": "Alles klar, {name}! 💪 Es kommen {anzahl} Aufgaben aus {ort}.",
+        "wunsch_gekuerzt": (
+            "Alles klar, {name}! 💪 Mehr als {anzahl} auf einmal gehen nicht, "
+            "es kommen {anzahl} Aufgaben aus {ort}."
+        ),
+        "wunsch_keine": "{name}, in {ort} gibt es gerade keine Aufgaben.",
+        "wunsch_unklar": (
+            "{name}, ich habe nicht verstanden, was du üben möchtest. "
+            "Du kannst üben: {faecher}. Schreib zum Beispiel „Ich möchte "
+            "… üben“ und setz ein Fach ein."
         ),
         "zusatz_tipp": (
             "\n\nLust auf mehr? Schick 👍 für eine weitere Aufgabe "
@@ -174,7 +187,20 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
         ),
         "keine_frage": (
             "Hi {name}, there is no open question right now. "
-            "Send 👍 for one more question or for example “5 more”."
+            "Send 👍 for one more question, for example “5 more”, "
+            "or write what you would like to practise."
+        ),
+        "wunsch_anzahl": "Sure, {name}! How many questions from {ort} would you like?",
+        "wunsch_start": "All right, {name}! 💪 {anzahl} questions from {ort} are coming.",
+        "wunsch_gekuerzt": (
+            "All right, {name}! 💪 {anzahl} at once is the limit, "
+            "{anzahl} questions from {ort} are coming."
+        ),
+        "wunsch_keine": "{name}, there are no tasks in {ort} right now.",
+        "wunsch_unklar": (
+            "{name}, I did not understand what you would like to practise. "
+            "You can practise: {faecher}. Write for example “I want to "
+            "practise …” and name a subject."
         ),
         "zusatz_tipp": (
             "\n\nWant more? Send 👍 for one more question or for example “5 more”."

@@ -1,6 +1,6 @@
 # LearnBuddy – Arbeitsnotizen
 
-Home Assistant Custom Integration (`learnbuddy`). Ursprüngliches Lastenheft: `SPEC.md`. Zielversion: HA 2026.9.x, Python ≥ 3.14.2. Stand: Version 0.8.0, Storage 1.12.
+Home Assistant Custom Integration (`learnbuddy`). Ursprüngliches Lastenheft: `SPEC.md`. Zielversion: HA 2026.9.x, Python ≥ 3.14.2. Stand: Version 0.9.0, Storage 1.13.
 
 Das Projekt hieß früher „Lernhelfer“ und „Lernbuddy“. Im Code gibt es keine Migration von den alten Namen; nur der JSON-Import nimmt noch Exporte mit dem Format `lernbuddy-aufgaben` an.
 
@@ -26,7 +26,7 @@ python -m script.hassfest --action validate --integration-path <repo>/custom_com
 
 - Ein Config Entry (`single_config_entry`). Optionen: Timeout, Sprache der Nachrichten, KI-Entität, automatische Freigabe.
 - Stammdaten als Config Subentries: `kind` (ein Gerät + Entitäten), `fach`, `arbeit`. Die `subentry_id` ist die ID des Objekts.
-- `.storage/learnbuddy.config`: Laufzeitdaten je Kind (aktiv, pausiert_bis, offene Frage, Zusatzaufgaben, Simulation), explizite Aufgaben-Zuordnung je Arbeit, Marke für gesendete geplante Simulationen.
+- `.storage/learnbuddy.config`: Laufzeitdaten je Kind (aktiv, pausiert_bis, offene Frage, Zusatzaufgaben samt Lektion, gemerkter Übungswunsch, Simulation), explizite Aufgaben-Zuordnung je Arbeit, Marke für gesendete geplante Simulationen.
 - `.storage/learnbuddy.<kind_id>_<fach_id>`: Aufgaben inkl. Statistik je Richtung und die verwaltete Liste der Lektionen.
 - `manager.py` orchestriert (Fragen stellen, Antworten, Fristen, Timer, Simulation). Reine Logik ohne HA-Abhängigkeit: `scheduler.py` (Leitner, Auswahl), `evaluation.py` (Vokabeln), `mathe.py`, `rechnen.py` (sicherer Auswerter mit `ast` + `Fraction`), `sach.py`, `simulation.py`, `wunsch.py`, `importer.py`.
 - `verwaltung.py` enthält die Datenpflege fürs Panel; `websocket_api.py` ist nur die dünne, admin-geschützte Hülle (`learnbuddy/…`). Fehler: `VerwaltungError(code, schluessel)`; den Schlüssel übersetzt das Panel (`err_<schluessel>` in `frontend-src/src/i18n.ts`).
@@ -52,6 +52,7 @@ python -m script.hassfest --action validate --integration-path <repo>/custom_com
 - KI-erzeugte Mathe-Aufgaben, die sich nicht verifizieren lassen, werden verworfen. Fragen aus Buchseiten sind immer ungeprüft.
 - Simulation: keine Statistik, kein `answer_evaluated`, am Ende `learnbuddy_simulation_finished`; teilweise = ½ Punkt, unbewertbar zählt nicht. Geplante Simulation: ein Timer je Arbeit, einmaliger Versuch, Nachholen bis 6 h.
 - Frage abbrechen (`manager.async_frage_abbrechen`, WS `cancel_question`, Aktion `cancel_question`): zählt nicht (`gefragt` wird zurückgenommen, Box bleibt, kein `answer_evaluated`), das Kind bekommt eine Nachricht, Zusatzaufgaben enden. Nicht während einer Simulation.
+- Üben auf Wunsch: `wunsch.erkenne_uebungswunsch` (reine Logik: Auslöserwort + Fach/Lektion; ohne Zuordnung `fach_id=None`). Ohne offene Frage: Regeln, dann KI-Rückfall (`ai.async_deute_wunsch`, nur allgemeine KI, Option `wunsch_ki`), sonst Hinweis mit Fächern. Mit offener Frage nur eindeutige Regel-Treffer; die Frage wird über `_frage_zuruecknehmen` zurückgenommen (wie Abbrechen, ohne Nachricht). Ohne Zahl: Nachfrage, `KindZustand.wunsch_offen` 10 Minuten. Serie läuft über die Zusatzaufgaben; `zusatz_lektion` gilt, bis eine normale (nicht kurze) Frage gestellt wird. Nicht bei ausgeschaltetem Kind oder Simulation.
 - `hinweis` an einer Aufgabe ist eine Notiz für die Eltern und wird nicht verschickt.
 
 ## Konventionen

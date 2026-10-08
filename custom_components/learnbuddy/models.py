@@ -720,6 +720,32 @@ class RechenwegAngebot:
 
 
 @dataclass(slots=True)
+class WunschAngebot:
+    """A wish to practise that waits for the amount of questions."""
+
+    fach_id: str
+    lektion: str | None
+    bis: datetime
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        """Create the wish from stored data."""
+        return cls(
+            fach_id=data["fach_id"],
+            lektion=data.get("lektion"),
+            bis=dt_util.parse_datetime(data["bis"], raise_on_error=True),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return the storable representation."""
+        return {
+            "fach_id": self.fach_id,
+            "lektion": self.lektion,
+            "bis": self.bis.isoformat(),
+        }
+
+
+@dataclass(slots=True)
 class SimAufgabe:
     """A task of a simulated exam and how it was answered."""
 
@@ -801,6 +827,10 @@ class KindZustand:
     rechenweg_angebot: RechenwegAngebot | None = None
     # Simulated exam that is running in the messenger
     simulation: Simulation | None = None
+    # Wish to practise that waits for the amount of questions
+    wunsch_offen: WunschAngebot | None = None
+    # Lesson the extra questions are limited to
+    zusatz_lektion: str | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
@@ -808,6 +838,7 @@ class KindZustand:
         offene = data.get("offene_frage")
         angebot = data.get("rechenweg_angebot")
         simulation = data.get("simulation")
+        wunsch = data.get("wunsch_offen")
         return cls(
             aktiv=data.get("aktiv", True),
             pausiert_bis=_parse_dt(data.get("pausiert_bis")),
@@ -820,6 +851,8 @@ class KindZustand:
             simulation=(
                 None if simulation is None else Simulation.from_dict(simulation)
             ),
+            wunsch_offen=None if wunsch is None else WunschAngebot.from_dict(wunsch),
+            zusatz_lektion=data.get("zusatz_lektion"),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -840,6 +873,10 @@ class KindZustand:
             "simulation": (
                 None if self.simulation is None else self.simulation.to_dict()
             ),
+            "wunsch_offen": (
+                None if self.wunsch_offen is None else self.wunsch_offen.to_dict()
+            ),
+            "zusatz_lektion": self.zusatz_lektion,
         }
 
     def ist_pausiert(self, jetzt: datetime) -> bool:
