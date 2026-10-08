@@ -276,7 +276,7 @@ Ein Termin verschwindet aus den Vorschlägen, sobald die Arbeit daraus angelegt 
 - LearnBuddy sucht in der Nachricht nach einem Wort wie üben, lernen, abfragen, „frag mich“, „möchte“ oder „gib mir“, nach dem Namen eines Fachs (auch Kurzformen wie „Mathe“ oder „Bio“) und nach dem Namen einer Lektion. „Vokabeln“ steht für das Vokabelfach, wenn das Kind genau eines hat.
 - Nennt das Kind keine Zahl, fragt LearnBuddy nach, wie viele Aufgaben es möchte, und wartet 10 Minuten auf die Antwort. Höchstens 20 auf einmal.
 - Die Aufgaben kommen nacheinander aus dem gewünschten Fach bzw. nur aus der gewünschten Lektion. Ein 👍 oder „noch 3“ danach bleibt dabei.
-- **Der Wunsch geht vor:** Ist gerade eine Frage offen, wird sie zurückgenommen und zählt nicht. Das gilt nur für eindeutige Wünsche; ein einzelnes Wort wie „Mathe“ bleibt eine Antwort.
+- **Der Wunsch geht vor:** Ist gerade eine Frage offen, wird sie zurückgenommen und zählt nicht. Das gilt nur für eindeutige Wünsche; ein einzelnes Wort wie „Mathe“ bleibt eine Antwort. Gibt es im gewünschten Fach keine Aufgaben, bleibt die offene Frage bestehen.
 - Findet LearnBuddy kein Fach und keine Lektion („ich will das mit den Brüchen üben“), deutet die allgemeine KI aus den Optionen den Wunsch, sofern eine eingerichtet und der Schalter „Wünsche des Kindes mit der KI deuten“ an ist. Das geschieht nur, wenn keine Frage offen ist. Ohne Ergebnis nennt LearnBuddy dem Kind seine Fächer.
 - Wünsche gelten auch außerhalb der Zeitfenster und während einer Pause, aber nicht, wenn die Abfragen des Kindes ausgeschaltet sind, und nicht während einer Simulation.
 

@@ -219,6 +219,25 @@ async def test_keine_aufgaben_in_der_lektion(
     assert manager.zustand(KIND_ID).wunsch_offen is None
 
 
+async def test_offene_frage_bleibt_ohne_aufgaben(
+    hass: HomeAssistant,
+    mit_lektionen: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+) -> None:
+    """A wish that cannot be fulfilled does not take the open question back."""
+    manager: LearnBuddyManager = mit_lektionen.runtime_data
+    manager.task_stores[FACH_ID].lektion_hinzufuegen("Unit 9")
+    await hass.services.async_call(
+        DOMAIN, "ask_now", {"kind_id": KIND_ID}, blocking=True
+    )
+    frage = manager.zustand(KIND_ID).offene_frage
+    ergebnis = await _sende(hass, "Unit 9 üben")
+    assert ergebnis == {"ergebnis": "keine_aufgaben"}
+    assert "Unit 9 gibt es gerade keine" in notify_calls[-1].data["message"]
+    assert manager.zustand(KIND_ID).offene_frage is frage
+    assert _gefragt(manager) == 1
+
+
 async def test_unklarer_wunsch_ohne_ki(
     hass: HomeAssistant,
     mit_lektionen: MockConfigEntry,

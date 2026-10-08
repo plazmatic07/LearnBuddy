@@ -1373,13 +1373,28 @@ class LearnBuddyManager:
         Only the rules decide here, so that an answer never costs an AI call.
         """
         wunsch = self._uebungswunsch(kind_id, nachricht)
-        if wunsch is None or not wunsch.eindeutig:
+        if wunsch is None or wunsch.fach_id is None:
             return None
+        if not self._wunsch_moeglich(kind_id, wunsch.fach_id, wunsch.lektion):
+            # Nothing to practise there: the open question stays
+            kind = self.kinder[kind_id]
+            ort = self._wunsch_ort(wunsch.fach_id, wunsch.lektion)
+            await self.messenger.async_send(
+                kind, text(self.sprache, "wunsch_keine", name=kind.name, ort=ort)
+            )
+            return {"ergebnis": KEINE_AUFGABEN}
         self._frage_zuruecknehmen(kind_id)
         self._benachrichtige(kind_id)
         ergebnis = await self._async_wunsch(kind_id, wunsch)
         self._plane(kind_id)
         return ergebnis
+
+    def _wunsch_moeglich(self, kind_id: str, fach_id: str, lektion: str | None) -> bool:
+        """Return whether there is a task to ask in a subject or a lesson."""
+        return (
+            self._waehle(kind_id, manuell=True, fach_id=fach_id, lektion=lektion)
+            is not None
+        )
 
     def _wunsch_ort(self, fach_id: str, lektion: str | None) -> str:
         name = self.faecher[fach_id].name
@@ -1406,12 +1421,7 @@ class LearnBuddyManager:
             self.config_store.async_schedule_save()
             return {"ergebnis": WUNSCH_UNKLAR}
         ort = self._wunsch_ort(wunsch.fach_id, wunsch.lektion)
-        if (
-            self._waehle(
-                kind_id, manuell=True, fach_id=wunsch.fach_id, lektion=wunsch.lektion
-            )
-            is None
-        ):
+        if not self._wunsch_moeglich(kind_id, wunsch.fach_id, wunsch.lektion):
             await self.messenger.async_send(
                 kind, text(self.sprache, "wunsch_keine", name=kind.name, ort=ort)
             )
