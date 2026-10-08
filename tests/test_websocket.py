@@ -719,6 +719,8 @@ async def test_dashboard(
             "aufgaben": 2,
             "ungeprueft": 0,
             "lektionen": 1,
+            "lektionsliste": [{"name": "Unit 3", "aufgaben": 2}],
+            "ohne_lektion": 0,
             "gefragt": 0,
             "richtig": 0,
             "falsch": 0,

@@ -37,8 +37,18 @@ export class Api {
     return this.call("dashboard", { kind_id: kindId });
   }
 
-  frageStellen(kindId: string, fachId: string | null): Promise<void> {
-    return this.call("ask", { kind_id: kindId, fach_id: fachId });
+  frageStellen(
+    kindId: string,
+    fachId: string | null,
+    lektionen: string[] = [],
+    anzahl = 1,
+  ): Promise<void> {
+    return this.call("ask", {
+      kind_id: kindId,
+      fach_id: fachId,
+      lektionen,
+      anzahl,
+    });
   }
 
   async frageAbbrechen(kindId: string): Promise<boolean> {

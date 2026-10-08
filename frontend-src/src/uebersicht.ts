@@ -22,6 +22,16 @@ const BOX_FARBEN_HELL = ["#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#104281"];
 const BOX_FARBEN_DUNKEL = ["#184f95", "#256abf", "#3987e5", "#6da7ec", "#b7d3f6"];
 
 const AKTUALISIEREN_MS = 60_000;
+// Most questions that can be asked in a row (as in the integration)
+const MAX_ABFRAGE = 20;
+const ABFRAGE_STANDARD = 5;
+
+/** What the dialog "Ask now" is about to send. */
+interface Abfrage {
+  fachId: string | null;
+  lektionen: Set<string>;
+  anzahl: number;
+}
 const EVENTS = ["learnbuddy_question_sent", "learnbuddy_answer_evaluated"];
 
 /** Overview of one child: state, statistics, subjects and upcoming exams. */
@@ -242,7 +252,7 @@ export class LhUebersicht extends LitElement {
 
   @state() private _erfolg = "";
 
-  @state() private _waehleFach = false;
+  @state() private _abfrage: Abfrage | null = null;
 
   @state() private _beschaeftigt = false;
 
@@ -309,14 +319,18 @@ export class LhUebersicht extends LitElement {
     }
   }
 
-  private async _frage(fachId: string | null): Promise<void> {
-    this._waehleFach = false;
+  private async _frage(
+    fachId: string | null,
+    lektionen: string[] = [],
+    anzahl = 1,
+  ): Promise<void> {
+    this._abfrage = null;
     this._beschaeftigt = true;
     this._erfolg = "";
     try {
-      await this._api.frageStellen(this.kindId, fachId);
+      await this._api.frageStellen(this.kindId, fachId, lektionen, anzahl);
       this._fehler = "";
-      this._erfolg = this._t("frage_gesendet");
+      this._erfolg = this._t(anzahl > 1 ? "fragen_gesendet" : "frage_gesendet");
     } catch (fehler) {
       this._fehler = fehlertext(this._t, fehler);
     } finally {
@@ -325,13 +339,16 @@ export class LhUebersicht extends LitElement {
     }
   }
 
-  private _jetztFragen(): void {
+  /** Open the dialog that asks what and how much to ask. */
+  private _jetztFragen(fachId: string | null = null): void {
     const faecher = this._daten?.faecher ?? [];
-    if (faecher.length === 1) {
-      void this._frage(faecher[0]?.id ?? null);
-    } else {
-      this._waehleFach = true;
-    }
+    const fach =
+      faecher.find((f) => f.id === fachId) ?? (faecher.length === 1 ? faecher[0] : undefined);
+    this._abfrage = {
+      fachId: fach?.id ?? null,
+      lektionen: new Set((fach?.lektionsliste ?? []).map((l) => l.name)),
+      anzahl: this._abfrage?.anzahl ?? ABFRAGE_STANDARD,
+    };
   }
 
   private async _brichFrageAb(): Promise<void> {
@@ -502,7 +519,7 @@ export class LhUebersicht extends LitElement {
         : this._fehler
           ? nothing
           : html`<div class="leer">${t("laden")}</div>`}
-      ${this._waehleFach && daten ? this._fachDialog(daten) : nothing}
+      ${this._abfrage && daten ? this._abfrageDialog(daten, this._abfrage) : nothing}
     `;
   }
 
@@ -570,7 +587,7 @@ export class LhUebersicht extends LitElement {
             ?disabled=${this._beschaeftigt ||
             daten.faecher.length === 0 ||
             Boolean(zustand.simulation)}
-            @click=${this._jetztFragen}
+            @click=${() => this._jetztFragen()}
           >
             ${t("jetzt_fragen")}
           </button>
@@ -793,7 +810,7 @@ export class LhUebersicht extends LitElement {
         <div class="fachknoepfe">
           <button
             ?disabled=${this._beschaeftigt || fach.aufgaben === 0}
-            @click=${() => this._frage(fach.id)}
+            @click=${() => this._jetztFragen(fach.id)}
           >
             ${t("jetzt_fragen_kurz")}
           </button>
@@ -854,10 +871,49 @@ export class LhUebersicht extends LitElement {
     `;
   }
 
-  private _fachDialog(daten: Dashboard): TemplateResult {
+  private _abfrageDialog(daten: Dashboard, abfrage: Abfrage): TemplateResult {
     const t = this._t;
     const schliessen = (): void => {
-      this._waehleFach = false;
+      this._abfrage = null;
+    };
+    const fach = daten.faecher.find((f) => f.id === abfrage.fachId) ?? null;
+    const lektionen = fach?.lektionsliste ?? [];
+    // All lessons ticked means the whole subject, also tasks without a lesson
+    const alle = lektionen.every((l) => abfrage.lektionen.has(l.name));
+    const umfang =
+      fach === null
+        ? daten.faecher.reduce((summe, f) => summe + f.aufgaben, 0)
+        : alle
+          ? fach.aufgaben
+          : lektionen
+              .filter((l) => abfrage.lektionen.has(l.name))
+              .reduce((summe, l) => summe + l.aufgaben, 0);
+    const setze = (teil: Partial<Abfrage>): void => {
+      this._abfrage = { ...abfrage, ...teil };
+    };
+    const waehleFach = (id: string): void => {
+      const neu = daten.faecher.find((f) => f.id === id);
+      setze({
+        fachId: neu ? neu.id : null,
+        lektionen: new Set((neu?.lektionsliste ?? []).map((l) => l.name)),
+      });
+    };
+    const schalte = (name: string, an: boolean): void => {
+      const auswahl = new Set(abfrage.lektionen);
+      if (an) {
+        auswahl.add(name);
+      } else {
+        auswahl.delete(name);
+      }
+      setze({ lektionen: auswahl });
+    };
+    const senden = (): void => {
+      const anzahl = Math.min(MAX_ABFRAGE, Math.max(1, Math.round(abfrage.anzahl) || 1));
+      void this._frage(
+        abfrage.fachId,
+        fach === null || alle ? [] : [...abfrage.lektionen],
+        anzahl,
+      );
     };
     return html`
       <div
@@ -868,36 +924,82 @@ export class LhUebersicht extends LitElement {
           }
         }}
       >
-        <div class="dialog" role="dialog" aria-modal="true" style="width: min(420px, 100%)">
-          <h2>${t("fach_waehlen")}</h2>
-          <div class="auswahl">
-            ${daten.faecher.map(
-              (fach) => html`
-                <button ?disabled=${fach.aufgaben === 0} @click=${() => this._frage(fach.id)}>
-                  ${fach.name}
-                  <div class="klein">${t("arbeit_umfang", { n: fach.aufgaben })}</div>
-                </button>
-              `,
-            )}
-            <button @click=${() => this._frage(null)}>${t("egal_welches")}</button>
-          </div>
+        <div class="dialog" role="dialog" aria-modal="true" style="width: min(440px, 100%)">
+          <h2>${t("abfrage_titel")}</h2>
+          <label class="feld">
+            ${t("abfrage_fach")}
+            <select
+              .value=${abfrage.fachId ?? ""}
+              @change=${(e: Event) => waehleFach((e.target as HTMLSelectElement).value)}
+            >
+              ${daten.faecher.length > 1
+                ? html`<option value="" ?selected=${abfrage.fachId === null}>
+                    ${t("egal_welches")}
+                  </option>`
+                : nothing}
+              ${daten.faecher.map(
+                (f) => html`
+                  <option
+                    value=${f.id}
+                    ?selected=${f.id === abfrage.fachId}
+                    ?disabled=${f.aufgaben === 0}
+                  >
+                    ${f.name} (${f.aufgaben})
+                  </option>
+                `,
+              )}
+            </select>
+          </label>
+          ${lektionen.length > 0
+            ? html`
+                <fieldset class="lektionswahl">
+                  <legend>${t("abfrage_lektionen")}</legend>
+                  ${lektionen.map(
+                    (l) => html`
+                      <label>
+                        <input
+                          type="checkbox"
+                          .checked=${abfrage.lektionen.has(l.name)}
+                          @change=${(e: Event) =>
+                            schalte(l.name, (e.target as HTMLInputElement).checked)}
+                        />
+                        ${l.name}
+                        <span class="klein">${t("arbeit_umfang", { n: l.aufgaben })}</span>
+                      </label>
+                    `,
+                  )}
+                  ${fach && fach.ohne_lektion > 0
+                    ? html`<div class="klein">
+                        ${t("abfrage_ohne_lektion", { n: fach.ohne_lektion })}
+                      </div>`
+                    : nothing}
+                </fieldset>
+              `
+            : nothing}
+          <label class="feld">
+            ${t("abfrage_anzahl")}
+            <input
+              type="number"
+              min="1"
+              max=${MAX_ABFRAGE}
+              .value=${String(abfrage.anzahl)}
+              @input=${(e: Event) =>
+                setze({ anzahl: Number((e.target as HTMLInputElement).value) })}
+            />
+          </label>
+          <div class="klein">${t("abfrage_umfang", { n: umfang })}</div>
           <div class="aktionen">
             <button @click=${schliessen}>${t("abbrechen")}</button>
+            <button
+              class="primaer"
+              ?disabled=${this._beschaeftigt || umfang === 0}
+              @click=${senden}
+            >
+              ${t("abfrage_senden")}
+            </button>
           </div>
         </div>
       </div>
     `;
-  }
-}
-
-// A tab that stays open across an update loads the new bundle as well; the
-// elements of the first one stay in use until the page is reloaded.
-if (!customElements.get("lh-uebersicht")) {
-  customElements.define("lh-uebersicht", LhUebersicht);
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    "lh-uebersicht": LhUebersicht;
   }
 }

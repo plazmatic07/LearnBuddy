@@ -130,6 +130,28 @@ export const styles = css`
     color: var(--lh-muted);
     min-width: 0;
   }
+  .lektionswahl {
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    margin: 12px 0;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .lektionswahl legend {
+    font-size: 12px;
+    color: var(--lh-muted);
+    padding: 0 4px;
+  }
+  .lektionswahl label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
   .feld.zeile {
     flex-direction: row;
     align-items: center;

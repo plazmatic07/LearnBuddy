@@ -74,6 +74,11 @@ def migrate_config(
         for zustand in data["kinder"].values():
             zustand.setdefault("wunsch_offen", None)
             zustand.setdefault("zusatz_lektion", None)
+    if old_major == 1 and old_minor < 14:
+        # 1.13 -> 1.14: extra questions can be limited to several lessons
+        for zustand in data["kinder"].values():
+            lektion = zustand.pop("zusatz_lektion", None)
+            zustand.setdefault("zusatz_lektionen", [lektion] if lektion else [])
     return data
 
 

@@ -1,6 +1,6 @@
 # LearnBuddy – Arbeitsnotizen
 
-Home Assistant Custom Integration (`learnbuddy`). Ursprüngliches Lastenheft: `SPEC.md`. Zielversion: HA 2026.9.x, Python ≥ 3.14.2. Stand: Version 0.8.0, Storage 1.13.
+Home Assistant Custom Integration (`learnbuddy`). Ursprüngliches Lastenheft: `SPEC.md`. Zielversion: HA 2026.9.x, Python ≥ 3.14.2. Stand: Version 0.8.1, Storage 1.14.
 
 Das Projekt hieß früher „Lernhelfer“ und „Lernbuddy“. Im Code gibt es keine Migration von den alten Namen; nur der JSON-Import nimmt noch Exporte mit dem Format `lernbuddy-aufgaben` an.
 
@@ -52,7 +52,8 @@ python -m script.hassfest --action validate --integration-path <repo>/custom_com
 - KI-erzeugte Mathe-Aufgaben, die sich nicht verifizieren lassen, werden verworfen. Fragen aus Buchseiten sind immer ungeprüft.
 - Simulation: keine Statistik, kein `answer_evaluated`, am Ende `learnbuddy_simulation_finished`; teilweise = ½ Punkt, unbewertbar zählt nicht. Geplante Simulation: ein Timer je Arbeit, einmaliger Versuch, Nachholen bis 6 h.
 - Frage abbrechen (`manager.async_frage_abbrechen`, WS `cancel_question`, Aktion `cancel_question`): zählt nicht (`gefragt` wird zurückgenommen, Box bleibt, kein `answer_evaluated`), das Kind bekommt eine Nachricht, Zusatzaufgaben enden. Nicht während einer Simulation.
-- Üben auf Wunsch: `wunsch.erkenne_uebungswunsch` (reine Logik: Auslöserwort + Fach/Lektion; ohne Zuordnung `fach_id=None`). Ohne offene Frage: Regeln, dann KI-Rückfall (`ai.async_deute_wunsch`, nur allgemeine KI, Option `wunsch_ki`), sonst Hinweis mit Fächern. Mit offener Frage nur eindeutige Regel-Treffer; die Frage wird über `_frage_zuruecknehmen` zurückgenommen (wie Abbrechen, ohne Nachricht). Ohne Zahl: Nachfrage, `KindZustand.wunsch_offen` 10 Minuten. Serie läuft über die Zusatzaufgaben; `zusatz_lektion` gilt, bis eine normale (nicht kurze) Frage gestellt wird. Nicht bei ausgeschaltetem Kind oder Simulation.
+- Üben auf Wunsch: `wunsch.erkenne_uebungswunsch` (reine Logik: Auslöserwort + Fach/Lektion; ohne Zuordnung `fach_id=None`). Ohne offene Frage: Regeln, dann KI-Rückfall (`ai.async_deute_wunsch`, nur allgemeine KI, Option `wunsch_ki`), sonst Hinweis mit Fächern. Mit offener Frage nur eindeutige Regel-Treffer; die Frage wird über `_frage_zuruecknehmen` zurückgenommen (wie Abbrechen, ohne Nachricht). Ohne Zahl: Nachfrage, `KindZustand.wunsch_offen` 10 Minuten. Serie läuft über die Zusatzaufgaben; `zusatz_lektionen` gilt, bis eine normale (nicht kurze) Frage gestellt wird. Nicht bei ausgeschaltetem Kind oder Simulation.
+- „Jetzt abfragen“ im Panel (`manager.async_abfrage_starten`, WS `ask` mit `lektionen`, `anzahl`): Dialog mit Fach, Lektionen und Anzahl (1–20). Mehrere Aufgaben laufen als Serie über die Zusatzaufgaben; alle Lektionen gewählt = ganzes Fach (dann gilt die normale Auswahl mit Arbeiten). Ohne Fach merkt sich `_serie_frei` (nur im Speicher), dass die Serie jedes Fach fragen darf. Taste und Aktion `ask_now` stellen weiter genau eine Frage.
 - `hinweis` an einer Aufgabe ist eine Notiz für die Eltern und wird nicht verschickt.
 
 ## Konventionen

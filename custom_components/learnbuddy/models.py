@@ -829,8 +829,8 @@ class KindZustand:
     simulation: Simulation | None = None
     # Wish to practise that waits for the amount of questions
     wunsch_offen: WunschAngebot | None = None
-    # Lesson the extra questions are limited to
-    zusatz_lektion: str | None = None
+    # Lessons the extra questions are limited to
+    zusatz_lektionen: tuple[str, ...] = ()
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
@@ -852,7 +852,7 @@ class KindZustand:
                 None if simulation is None else Simulation.from_dict(simulation)
             ),
             wunsch_offen=None if wunsch is None else WunschAngebot.from_dict(wunsch),
-            zusatz_lektion=data.get("zusatz_lektion"),
+            zusatz_lektionen=tuple(data.get("zusatz_lektionen", ())),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -876,7 +876,7 @@ class KindZustand:
             "wunsch_offen": (
                 None if self.wunsch_offen is None else self.wunsch_offen.to_dict()
             ),
-            "zusatz_lektion": self.zusatz_lektion,
+            "zusatz_lektionen": list(self.zusatz_lektionen),
         }
 
     def ist_pausiert(self, jetzt: datetime) -> bool:

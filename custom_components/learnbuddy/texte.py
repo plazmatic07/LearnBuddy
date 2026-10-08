@@ -93,6 +93,8 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
             "Schick 👍 für eine weitere Aufgabe, zum Beispiel „noch 5“ "
             "oder schreib, was du üben möchtest."
         ),
+        "abfrage_start": "Hallo {name}! 📚 Es kommen {anzahl} Aufgaben aus {ort}.",
+        "abfrage_start_alle": "Hallo {name}! 📚 Es kommen {anzahl} Aufgaben.",
         "wunsch_anzahl": "Gern, {name}! Wie viele Aufgaben aus {ort} möchtest du?",
         "wunsch_start": "Alles klar, {name}! 💪 Es kommen {anzahl} Aufgaben aus {ort}.",
         "wunsch_gekuerzt": (
@@ -190,6 +192,8 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
             "Send 👍 for one more question, for example “5 more”, "
             "or write what you would like to practise."
         ),
+        "abfrage_start": "Hi {name}! 📚 {anzahl} questions from {ort} are coming.",
+        "abfrage_start_alle": "Hi {name}! 📚 {anzahl} questions are coming.",
         "wunsch_anzahl": "Sure, {name}! How many questions from {ort} would you like?",
         "wunsch_start": "All right, {name}! 💪 {anzahl} questions from {ort} are coming.",
         "wunsch_gekuerzt": (

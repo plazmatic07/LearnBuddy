@@ -297,6 +297,8 @@ export interface DashboardFach extends Kennzahlen {
   aufgaben: number;
   ungeprueft: number;
   lektionen: number;
+  lektionsliste: { name: string; aufgaben: number }[];
+  ohne_lektion: number;
 }
 
 export interface DashboardArbeit {

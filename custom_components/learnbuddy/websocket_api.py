@@ -16,7 +16,7 @@ from homeassistant.components.websocket_api.decorators import (
 from homeassistant.core import HomeAssistant, callback
 import voluptuous as vol
 
-from .const import DOMAIN
+from .const import DOMAIN, MAX_ZUSATZAUFGABEN
 from .verwaltung import Verwaltung, VerwaltungError
 
 if TYPE_CHECKING:
@@ -139,6 +139,10 @@ def ws_set_active(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
         vol.Required("type"): "learnbuddy/ask",
         vol.Required("kind_id"): str,
         vol.Optional("fach_id"): vol.Any(str, None),
+        vol.Optional("lektionen", default=list): [str],
+        vol.Optional("anzahl", default=1): vol.All(
+            int, vol.Range(min=1, max=MAX_ZUSATZAUFGABEN)
+        ),
     }
 )
 @require_admin
@@ -152,7 +156,9 @@ async def ws_ask(
         connection.send_error(msg["id"], "not_loaded", "nicht_geladen")
         return
     try:
-        await verwaltung.frage_stellen(msg["kind_id"], msg.get("fach_id"))
+        await verwaltung.frage_stellen(
+            msg["kind_id"], msg.get("fach_id"), msg["lektionen"], msg["anzahl"]
+        )
     except VerwaltungError as err:
         connection.send_error(msg["id"], err.code, err.schluessel)
         return

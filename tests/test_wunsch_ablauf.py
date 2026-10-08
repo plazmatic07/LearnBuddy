@@ -75,7 +75,7 @@ async def test_wunsch_mit_zahl_startet_serie(
     zustand = manager.zustand(KIND_ID)
     assert zustand.offene_frage is not None
     assert zustand.zusatz_offen == 2
-    assert zustand.zusatz_lektion is None
+    assert zustand.zusatz_lektionen == ()
 
 
 async def test_wunsch_ohne_zahl_fragt_nach(
@@ -99,7 +99,7 @@ async def test_wunsch_ohne_zahl_fragt_nach(
     ergebnis = await _sende(hass, "4")
     assert ergebnis == {"ergebnis": "zusatzaufgaben", "anzahl": 4}
     assert zustand.wunsch_offen is None
-    assert zustand.zusatz_lektion == "Unit 4"
+    assert zustand.zusatz_lektionen == ("Unit 4",)
 
     # The whole series stays within the lesson
     aufgaben = manager.task_stores[FACH_ID].aufgaben
@@ -299,7 +299,7 @@ async def test_ki_deutet_wunsch(
     with patch(GENERATE, AsyncMock(return_value=antwort)) as ki:
         ergebnis = await _sende(hass, "ich will 2 von den Tieren üben")
     assert ergebnis == {"ergebnis": "zusatzaufgaben", "anzahl": 2}
-    assert manager.zustand(KIND_ID).zusatz_lektion == "Unit 4"
+    assert manager.zustand(KIND_ID).zusatz_lektionen == ("Unit 4",)
     prompt = ki.call_args.kwargs["instructions"]
     assert "Englisch (lessons: Unit 3; Unit 4)" in prompt
     assert "Tieren" in prompt
@@ -372,9 +372,9 @@ def test_migration_1_13() -> None:
     }
     neu = migrate_config(1, 12, alt)
     assert neu["kinder"]["k"]["wunsch_offen"] is None
-    assert neu["kinder"]["k"]["zusatz_lektion"] is None
+    assert neu["kinder"]["k"]["zusatz_lektionen"] == []
     zustand = KindZustand.from_dict({"aktiv": True})
-    assert (zustand.wunsch_offen, zustand.zusatz_lektion) == (None, None)
+    assert (zustand.wunsch_offen, zustand.zusatz_lektionen) == (None, ())
 
 
 async def test_wunsch_mit_zweitem_fach(
@@ -422,3 +422,101 @@ async def test_wunsch_mit_zweitem_fach(
         assert frage is not None
         assert frage.fach_id == MATHE_ID
         await _sende(hass, "canis")
+
+
+# ----------------------------------------------------------------------
+# Asking several questions from the panel
+# ----------------------------------------------------------------------
+
+
+async def test_abfrage_mit_lektionen_und_anzahl(
+    hass: HomeAssistant,
+    mit_lektionen: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+) -> None:
+    manager: LearnBuddyManager = mit_lektionen.runtime_data
+    await manager.verwaltung.frage_stellen(KIND_ID, FACH_ID, ["Unit 4"], 3)
+    assert (
+        "Es kommen 3 Aufgaben aus Englisch (Unit 4)"
+        in (notify_calls[-2].data["message"])
+    )
+    zustand = manager.zustand(KIND_ID)
+    assert zustand.zusatz_offen == 2
+    assert zustand.zusatz_lektionen == ("Unit 4",)
+    aufgaben = manager.task_stores[FACH_ID].aufgaben
+    gesehen = []
+    for _ in range(3):
+        frage = zustand.offene_frage
+        assert frage is not None
+        gesehen.append(aufgaben[frage.aufgabe_id].lektion)
+        await _sende(hass, "weiß nicht")
+    assert gesehen == ["Unit 4"] * 3
+    assert zustand.offene_frage is None
+
+
+async def test_abfrage_eine_frage_aus_lektion(
+    hass: HomeAssistant,
+    mit_lektionen: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+) -> None:
+    manager: LearnBuddyManager = mit_lektionen.runtime_data
+    gesendet = len(notify_calls)
+    await manager.verwaltung.frage_stellen(KIND_ID, FACH_ID, ["Unit 3", "Unit 4"], 1)
+    # Only the question itself, with its greeting
+    assert len(notify_calls) == gesendet + 1
+    assert notify_calls[-1].data["message"].startswith("Hallo Max!")
+    assert manager.zustand(KIND_ID).zusatz_offen == 0
+
+
+async def test_abfrage_ohne_fach(
+    hass: HomeAssistant,
+    mit_lektionen: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+) -> None:
+    manager: LearnBuddyManager = mit_lektionen.runtime_data
+    await manager.verwaltung.frage_stellen(KIND_ID, None, [], 2)
+    assert "Es kommen 2 Aufgaben." in notify_calls[-2].data["message"]
+    await _sende(hass, "weiß nicht")
+    assert manager.zustand(KIND_ID).offene_frage is not None
+    await _sende(hass, "weiß nicht")
+    assert manager.zustand(KIND_ID).offene_frage is None
+
+
+async def test_abfrage_fehler(
+    hass: HomeAssistant,
+    mit_lektionen: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+) -> None:
+    from custom_components.learnbuddy.verwaltung import (  # noqa: PLC0415
+        VerwaltungError,
+    )
+
+    manager: LearnBuddyManager = mit_lektionen.runtime_data
+    with pytest.raises(VerwaltungError):
+        await manager.verwaltung.frage_stellen(KIND_ID, FACH_ID, ["Unit 99"], 2)
+    manager.task_stores[FACH_ID].lektion_hinzufuegen("Unit 9")
+    gesendet = len(notify_calls)
+    with pytest.raises(VerwaltungError) as fehler:
+        await manager.verwaltung.frage_stellen(KIND_ID, FACH_ID, ["Unit 9"], 2)
+    assert fehler.value.schluessel == "keine_aufgaben"
+    assert len(notify_calls) == gesendet
+    manager.zustand(KIND_ID).simulation = object()  # type: ignore[assignment]
+    with pytest.raises(VerwaltungError) as fehler:
+        await manager.verwaltung.frage_stellen(KIND_ID, FACH_ID, [], 2)
+    assert fehler.value.schluessel == "simulation_laeuft"
+    manager.zustand(KIND_ID).simulation = None
+
+
+def test_migration_1_14() -> None:
+    alt = {
+        "kinder": {"a": {"zusatz_lektion": "Unit 1"}, "b": {"zusatz_lektion": None}},
+        "arbeiten": {},
+        "aufgaben_dateien": [],
+        "kalender_ignoriert": {},
+    }
+    neu = migrate_config(1, 13, alt)
+    assert neu["kinder"]["a"] == {"zusatz_lektionen": ["Unit 1"]}
+    assert neu["kinder"]["b"] == {"zusatz_lektionen": []}
+    zustand = KindZustand.from_dict({"zusatz_lektionen": ["A", "B"]})
+    assert zustand.zusatz_lektionen == ("A", "B")
+    assert zustand.to_dict()["zusatz_lektionen"] == ["A", "B"]

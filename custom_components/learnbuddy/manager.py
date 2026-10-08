@@ -187,6 +187,8 @@ class LearnBuddyManager:
         self._wiederholung_um: dict[str, datetime] = {}
         self._letzte_aufgabe: dict[str, str] = {}
         self._letztes_fach: dict[str, str] = {}
+        # Children whose running series may ask any subject
+        self._serie_frei: set[str] = set()
         self._tagesuhr: CALLBACK_TYPE | None = None
         self._ki_pruefung: CALLBACK_TYPE | None = None
         self._basis: tuple[dict[str, Any], dict[str, Any]] = ({}, {})
@@ -791,14 +793,14 @@ class LearnBuddyManager:
         *,
         manuell: bool,
         fach_id: str | None = None,
-        lektion: str | None = None,
+        lektionen: tuple[str, ...] = (),
     ) -> tuple[Fach, Aufgabe, str, Arbeit | None] | None:
         """Pick the subject, task and direction of the next question.
 
         A manual request may be limited to one subject or to one of its
         lessons.
         """
-        if fach_id is not None and lektion is not None:
+        if fach_id is not None and lektionen:
             fach = self.faecher[fach_id]
             auswahl = waehle_aufgabe(
                 self._zustellbar(
@@ -806,7 +808,7 @@ class LearnBuddyManager:
                     [
                         a
                         for a in self.task_stores[fach.id].aufgaben.values()
-                        if a.lektion == lektion
+                        if a.lektion in lektionen
                     ],
                 ),
                 fach.richtungen,
@@ -896,6 +898,76 @@ class LearnBuddyManager:
             await self._async_frage(kind_id, manuell=True, fach_id=fach_id)
             self._plane(kind_id)
 
+    async def async_abfrage_starten(
+        self,
+        kind_id: str,
+        fach_id: str | None = None,
+        *,
+        lektionen: tuple[str, ...] = (),
+        anzahl: int = 1,
+    ) -> None:
+        """Ask several questions in a row right now (manual request).
+
+        They may be limited to one subject and to some of its lessons. An
+        open question is replaced like by a single manual request. Raises a
+        translated error if there is no task or sending fails.
+        """
+        async with self._sperren[kind_id]:
+            zustand = self.zustand(kind_id)
+            if zustand.simulation is not None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="simulation_laeuft"
+                )
+            if fach_id is None:
+                lektionen = ()
+            anzahl = max(1, min(anzahl, MAX_ZUSATZAUFGABEN))
+            if anzahl == 1:
+                await self._async_frage(
+                    kind_id, manuell=True, fach_id=fach_id, lektionen=lektionen
+                )
+                self._plane(kind_id)
+                return
+            if (
+                self._waehle(
+                    kind_id, manuell=True, fach_id=fach_id, lektionen=lektionen
+                )
+                is None
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="keine_aufgaben"
+                )
+            kind = self.kinder[kind_id]
+            if fach_id is None:
+                nachricht = text(
+                    self.sprache,
+                    "abfrage_start_alle",
+                    name=kind.name,
+                    anzahl=str(anzahl),
+                )
+            else:
+                ort = self.faecher[fach_id].name
+                if lektionen:
+                    ort += f" ({', '.join(lektionen)})"
+                nachricht = text(
+                    self.sprache,
+                    "abfrage_start",
+                    name=kind.name,
+                    anzahl=str(anzahl),
+                    ort=ort,
+                )
+            await self.messenger.async_send_or_raise(kind, nachricht)
+            await self._async_frage(
+                kind_id, manuell=True, fach_id=fach_id, lektionen=lektionen, kurz=True
+            )
+            zustand.zusatz_offen = anzahl - 1
+            zustand.zusatz_lektionen = lektionen
+            if fach_id is None:
+                self._serie_frei.add(kind_id)
+            else:
+                self._serie_frei.discard(kind_id)
+            self.config_store.async_schedule_save()
+            self._plane(kind_id)
+
     def _frage_text(
         self,
         kind: Kind,
@@ -947,13 +1019,13 @@ class LearnBuddyManager:
         *,
         manuell: bool,
         fach_id: str | None = None,
-        lektion: str | None = None,
+        lektionen: tuple[str, ...] = (),
         kurz: bool = False,
     ) -> FrageStatus:
         kind = self.kinder[kind_id]
         zustand = self.zustand(kind_id)
         auswahl = self._waehle(
-            kind_id, manuell=manuell, fach_id=fach_id, lektion=lektion
+            kind_id, manuell=manuell, fach_id=fach_id, lektionen=lektionen
         )
         if auswahl is None:
             if manuell:
@@ -1003,7 +1075,7 @@ class LearnBuddyManager:
         zustand.wunsch_offen = None
         if not kurz:
             # Only the questions a child asked for stay within a lesson
-            zustand.zusatz_lektion = None
+            zustand.zusatz_lektionen = ()
         self._letzte_aufgabe[kind_id] = aufgabe.id
         self._letztes_fach[kind_id] = fach.id
         self.task_stores[fach.id].async_schedule_save()
@@ -1325,6 +1397,7 @@ class LearnBuddyManager:
                 ),
             )
         zustand.zusatz_offen = anzahl - 1
+        self._serie_frei.discard(kind_id)
         await self._async_zusatzfrage(kind_id, self._letztes_fach.get(kind_id))
         self._plane(kind_id)
         return {"ergebnis": ZUSATZAUFGABEN, "anzahl": anzahl}
@@ -1392,7 +1465,12 @@ class LearnBuddyManager:
     def _wunsch_moeglich(self, kind_id: str, fach_id: str, lektion: str | None) -> bool:
         """Return whether there is a task to ask in a subject or a lesson."""
         return (
-            self._waehle(kind_id, manuell=True, fach_id=fach_id, lektion=lektion)
+            self._waehle(
+                kind_id,
+                manuell=True,
+                fach_id=fach_id,
+                lektionen=() if lektion is None else (lektion,),
+            )
             is not None
         )
 
@@ -1461,8 +1539,9 @@ class LearnBuddyManager:
             ),
         )
         zustand.rechenweg_angebot = None
-        zustand.zusatz_lektion = lektion
+        zustand.zusatz_lektionen = () if lektion is None else (lektion,)
         zustand.zusatz_offen = anzahl - 1
+        self._serie_frei.discard(kind_id)
         await self._async_zusatzfrage(kind_id, fach_id)
         self._plane(kind_id)
         return {"ergebnis": ZUSATZAUFGABEN, "anzahl": anzahl}
@@ -1470,14 +1549,14 @@ class LearnBuddyManager:
     async def _async_zusatzfrage(self, kind_id: str, fach_id: str | None) -> None:
         """Ask one extra question; end the series if that is not possible."""
         zustand = self.zustand(kind_id)
-        if fach_id not in self.faecher:
+        if fach_id not in self.faecher or kind_id in self._serie_frei:
             fach_id = None
         try:
             await self._async_frage(
                 kind_id,
                 manuell=True,
                 fach_id=fach_id,
-                lektion=None if fach_id is None else zustand.zusatz_lektion,
+                lektionen=() if fach_id is None else zustand.zusatz_lektionen,
                 kurz=True,
             )
         except ServiceValidationError:

@@ -67,7 +67,7 @@ from .texte import sprachname, waehle_sprache
 from .verlauf import SimErgebnis, woche
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
     from fractions import Fraction
 
     from .ai import GenerierteAufgabe
@@ -399,6 +399,14 @@ class Verwaltung:
                     "aufgaben": len(aufgaben),
                     "ungeprueft": sum(1 for a in aufgaben if not a.geprueft),
                     "lektionen": len(store.lektionen),
+                    "lektionsliste": [
+                        {
+                            "name": name,
+                            "aufgaben": sum(1 for a in aufgaben if a.lektion == name),
+                        }
+                        for name in store.lektionen
+                    ],
+                    "ohne_lektion": sum(1 for a in aufgaben if not a.lektion),
                     **kennzahlen,
                 }
             )
@@ -782,8 +790,17 @@ class Verwaltung:
         subentry_daten |= {CONF_NAME: name, CONF_ERSTELLT: jetzt, CONF_GEAENDERT: jetzt}
         return await manager.async_fach_anlegen(kind_id, subentry_daten)
 
-    async def frage_stellen(self, kind_id: str, fach_id: str | None) -> None:
-        """Ask a child a question right now, optionally of one subject."""
+    async def frage_stellen(
+        self,
+        kind_id: str,
+        fach_id: str | None,
+        lektionen: Sequence[str] = (),
+        anzahl: int = 1,
+    ) -> None:
+        """Ask a child questions right now.
+
+        They may be limited to one subject and to some of its lessons.
+        """
         manager = self._manager
         if kind_id not in manager.kinder:
             raise _nicht_gefunden("kind")
@@ -791,8 +808,13 @@ class Verwaltung:
             fach = manager.faecher.get(fach_id)
             if fach is None or fach.kind_id != kind_id:
                 raise _nicht_gefunden("fach")
+            bekannt = set(manager.lektionen(fach_id))
+            if any(lektion not in bekannt for lektion in lektionen):
+                raise _nicht_gefunden("lektion")
         try:
-            await manager.async_frage_stellen(kind_id, fach_id)
+            await manager.async_abfrage_starten(
+                kind_id, fach_id, lektionen=tuple(lektionen), anzahl=anzahl
+            )
         except ServiceValidationError as err:
             raise _ungueltig(err.translation_key or "keine_aufgaben") from err
         except HomeAssistantError as err:
