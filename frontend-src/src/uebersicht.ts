@@ -1003,3 +1003,15 @@ export class LhUebersicht extends LitElement {
     `;
   }
 }
+
+// A tab that stays open across an update loads the new bundle as well; the
+// elements of the first one stay in use until the page is reloaded.
+if (!customElements.get("lh-uebersicht")) {
+  customElements.define("lh-uebersicht", LhUebersicht);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "lh-uebersicht": LhUebersicht;
+  }
+}

@@ -47,3 +47,15 @@ async def test_panel_datei_wird_ausgeliefert(
     antwort = await client.get("/learnbuddy_static/learnbuddy-panel.js")
     assert antwort.status == 200
     assert "javascript" in antwort.headers["Content-Type"]
+
+
+def test_bundle_registriert_alle_elemente() -> None:
+    """The built panel defines all of its custom elements."""
+    from pathlib import Path  # noqa: PLC0415
+
+    bundle = (
+        Path(__file__).parent.parent
+        / "custom_components/learnbuddy/frontend/learnbuddy-panel.js"
+    ).read_text(encoding="utf-8")
+    for element in ("learnbuddy-panel", "lh-uebersicht", "lh-fortschritt"):
+        assert f'customElements.define("{element}"' in bundle
