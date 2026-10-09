@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 NOTIFY_DOMAIN = "notify"
 SERVICE_SEND_MESSAGE = "send_message"
 TELEGRAM_DOMAIN = "telegram_bot"
+WHATSAPP_DOMAIN = "whatsapp"
 TELEGRAM_SEND_PHOTO = "send_photo"
 # Telegram cuts captions of photos at this length
 TELEGRAM_MAX_UNTERSCHRIFT = 1024
@@ -63,6 +64,28 @@ class Messenger:
             return False
         eintrag = er.async_get(self._hass).async_get(kind.notify_entity)
         return eintrag is not None and eintrag.platform == TELEGRAM_DOMAIN
+
+    def _whatsapp_nummer(self, kind: Kind) -> str | None:
+        """Return the number to write to if the child is reached via WhatsApp.
+
+        A WhatsApp notify entity has a fixed recipient. The sender ID of the
+        child is the number the answers come from, so questions go to the same
+        number and cannot end up at a different chat.
+        """
+        if not kind.notify_entity or not kind.absender_kennung:
+            return None
+        eintrag = er.async_get(self._hass).async_get(kind.notify_entity)
+        if eintrag is None or eintrag.platform != WHATSAPP_DOMAIN:
+            return None
+        roh = "".join(kind.absender_kennung.split())
+        if not all(z.isdigit() or z in "+-()/." for z in roh):
+            return None
+        nummer = "".join(z for z in roh if z.isdigit()).removeprefix("00")
+        if not nummer or not self._hass.services.has_service(
+            WHATSAPP_DOMAIN, SERVICE_SEND_MESSAGE
+        ):
+            return None
+        return nummer
 
     def kann_bilder(self, kind: Kind) -> bool:
         """Return whether images can be sent to a child."""
@@ -129,6 +152,15 @@ class Messenger:
         """Call the notify action of a child."""
         if bild:
             await self._async_bild(kind, nachricht, bild)
+            return
+        nummer = self._whatsapp_nummer(kind)
+        if nummer:
+            await self._hass.services.async_call(
+                WHATSAPP_DOMAIN,
+                SERVICE_SEND_MESSAGE,
+                {"number": nummer, "message": nachricht},
+                blocking=True,
+            )
             return
         if kind.notify_entity:
             await self._hass.services.async_call(
