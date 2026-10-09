@@ -7,11 +7,11 @@ from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import async_mock_service
 
 from custom_components.learnbuddy.const import DOMAIN
+from custom_components.learnbuddy.models import MatheAufgabe
 
 from .conftest import KIND_ID
 from .test_bildversand import _setup
 from .test_mathe_ablauf import MATHE_ID
-from custom_components.learnbuddy.models import MatheAufgabe
 
 
 async def _whatsapp(hass: HomeAssistant, kennung: str | None) -> None:
