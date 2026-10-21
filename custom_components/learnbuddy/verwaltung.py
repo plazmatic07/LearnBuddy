@@ -481,7 +481,14 @@ class Verwaltung:
                     "fach_id": offen.fach_id,
                     "fach": manager.faecher[offen.fach_id].name,
                     "gestellt_um": offen.gestellt_um.isoformat(),
-                    "timeout_um": offen.timeout_um.isoformat(),
+                    "timeout_um": None
+                    if offen.timeout_um is None
+                    else offen.timeout_um.isoformat(),
+                    "erinnerung_um": None
+                    if offen.erinnerung_um is None
+                    else offen.erinnerung_um.isoformat(),
+                    # The clock stands still while asking is paused
+                    "angehalten": offen.angehalten_seit is not None,
                 },
                 # Series of questions that goes on after the open one
                 "abfrage": None

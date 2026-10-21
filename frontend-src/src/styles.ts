@@ -466,6 +466,31 @@ export const styles = css`
   .liste .eintrag:last-child {
     border-bottom: none;
   }
+  .liste .kopf {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--lh-card);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--secondary-text-color);
+  }
+  .liste .kopf .haken {
+    width: 13px;
+    flex: none;
+  }
+  .liste .seite {
+    width: 64px;
+    flex: none;
+    text-align: right;
+  }
+  .liste .lektion {
+    width: 130px;
+    flex: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .chips {
     display: flex;
     flex-wrap: wrap;

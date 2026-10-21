@@ -335,7 +335,11 @@ export interface Dashboard {
       fach_id: string;
       fach: string;
       gestellt_um: string;
-      timeout_um: string;
+      // null: the question never expires
+      timeout_um: string | null;
+      erinnerung_um?: string | null;
+      // The clock stands still while asking is paused
+      angehalten?: boolean;
     } | null;
     simulation?: { arbeit_id: string; nummer: number; anzahl: number } | null;
     // Series of questions that goes on after the open one

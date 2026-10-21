@@ -6,6 +6,7 @@
         "description": "Children, subjects and exams are added afterwards on the integration page.",
         "data": {
           "timeout_minuten": "Timeout for open questions",
+          "erinnerung_minuten": "Reminder for open questions",
           "sprache": "Language of the messages",
           "ki_entity": "AI entity for evaluation",
           "auto_freigabe": "Approve generated tasks automatically",
@@ -19,7 +20,8 @@
           "eingang_text_feld": "Field with the text"
         },
         "data_description": {
-          "timeout_minuten": "After this time a question counts as unanswered (not as wrong).",
+          "timeout_minuten": "After this time a question counts as unanswered (not as wrong). 0 = the question never expires.",
+          "erinnerung_minuten": "After this time without an answer LearnBuddy sends a reminder with the question (\"Hey …, you still have an open task\"). 0 = no reminder. The time stands still while questions are paused. If it is not shorter than the timeout there is no reminder.",
           "ki_entity": "Optional. This AI task entity checks vocabulary answers that are wrong locally for synonyms and typos, evaluates math answers that are no plain numbers, explains solutions and creates math tasks. No name or other personal data is sent.",
           "auto_freigabe": "Off: tasks created by the AI wait in the panel until you approve them. On: they are asked right away if their solution could be verified.",
           "eingang_telegram": "LearnBuddy takes text messages of the Telegram bot integration itself (bot set to polling or webhooks). No automation is needed. Messages are assigned by the sender ID of the child (chat ID).",
@@ -43,6 +45,7 @@
         "title": "LearnBuddy options",
         "data": {
           "timeout_minuten": "Timeout for open questions",
+          "erinnerung_minuten": "Reminder for open questions",
           "sprache": "Language of the messages",
           "ki_entity": "AI entity for evaluation",
           "auto_freigabe": "Approve generated tasks automatically",
@@ -56,7 +59,8 @@
           "eingang_text_feld": "Field with the text"
         },
         "data_description": {
-          "timeout_minuten": "After this time a question counts as unanswered (not as wrong).",
+          "timeout_minuten": "After this time a question counts as unanswered (not as wrong). 0 = the question never expires.",
+          "erinnerung_minuten": "After this time without an answer LearnBuddy sends a reminder with the question (\"Hey …, you still have an open task\"). 0 = no reminder. The time stands still while questions are paused. If it is not shorter than the timeout there is no reminder.",
           "ki_entity": "Optional. This AI task entity checks vocabulary answers that are wrong locally for synonyms and typos, evaluates math answers that are no plain numbers, explains solutions and creates math tasks. No name or other personal data is sent.",
           "auto_freigabe": "Off: tasks created by the AI wait in the panel until you approve them. On: they are asked right away if their solution could be verified.",
           "eingang_telegram": "LearnBuddy takes text messages of the Telegram bot integration itself (bot set to polling or webhooks). No automation is needed. Messages are assigned by the sender ID of the child (chat ID).",

@@ -30,6 +30,7 @@ from .blatt import Art, BlattAufgabe, BlattTexte, zeichne
 from .const import (
     CONF_ABSENDER_KENNUNG,
     CONF_AUTO_FREIGABE,
+    CONF_ERINNERUNG_MINUTEN,
     CONF_FACH_ID,
     CONF_GEAENDERT,
     CONF_KI_ENTITY,
@@ -38,6 +39,7 @@ from .const import (
     CONF_TIMEOUT_MINUTEN,
     CONF_VERLAUF,
     CONF_WUNSCH_KI,
+    DEFAULT_ERINNERUNG_MINUTEN,
     DEFAULT_TIMEOUT_MINUTEN,
     DOMAIN,
     DOPPELT_SEKUNDEN,
@@ -387,13 +389,22 @@ class LearnBuddyManager:
             )
         )
 
+    @property
+    def erinnerung(self) -> timedelta | None:
+        """Return the time after which a reminder is sent, None for no reminder."""
+        minuten = int(
+            self.entry.options.get(CONF_ERINNERUNG_MINUTEN, DEFAULT_ERINNERUNG_MINUTEN)
+        )
+        return timedelta(minutes=minuten) if minuten > 0 else None
+
     def _frist(
         self, kind_id: str, aufgabe: Aufgabe, gewaehlt: Arbeit | None = None
-    ) -> timedelta:
-        """Return the time to answer a task.
+    ) -> timedelta | None:
+        """Return the time to answer a task, None if it never expires.
 
         Exams that are running today and contain the task may shorten or
         extend the general setting, as may the exam the task was picked for.
+        A general timeout of 0 means no time limit unless an exam sets one.
         """
         heute = dt_util.now().date()
         arbeiten = [
@@ -407,7 +418,7 @@ class LearnBuddyManager:
             )
         ]
         minuten = antwortfrist(arbeiten, int(self.timeout.total_seconds() // 60))
-        return timedelta(minutes=minuten)
+        return timedelta(minutes=minuten) if minuten > 0 else None
 
     def _ki_bereit(self, fach: Fach) -> bool:
         """Return whether the AI of a subject could judge an answer right now."""
@@ -731,14 +742,42 @@ class LearnBuddyManager:
                 )
             return
 
-        if zustand.offene_frage is not None:
+        if (frage := zustand.offene_frage) is not None:
+            jetzt_utc = dt_util.utcnow()
+            if zustand.ist_pausiert(jetzt_utc):
+                # The clock of the question stands still while asking is paused
+                if frage.angehalten_seit is None:
+                    frage.angehalten_seit = jetzt_utc
+                    self.config_store.async_schedule_save()
+                if zustand.aktiv and zustand.pausiert_bis is not None:
 
-            async def _timeout(_jetzt: datetime) -> None:
+                    async def _fortsetzen(_jetzt: datetime) -> None:
+                        self._timer.pop(kind_id, None)
+                        self._plane(kind_id)
+                        self._benachrichtige(kind_id)
+
+                    self._timer[kind_id] = async_track_point_in_time(
+                        self.hass, _fortsetzen, zustand.pausiert_bis
+                    )
+                return
+            if frage.angehalten_seit is not None:
+                pause = jetzt_utc - frage.angehalten_seit
+                frage.angehalten_seit = None
+                if frage.timeout_um is not None:
+                    frage.timeout_um += pause
+                if frage.erinnerung_um is not None:
+                    frage.erinnerung_um += pause
+                self.config_store.async_schedule_save()
+            faellig = [zeit for zeit in (frage.erinnerung_um, frage.timeout_um) if zeit]
+            if not faellig:
+                return
+
+            async def _faellig(_jetzt: datetime) -> None:
                 self._timer.pop(kind_id, None)
-                await self.async_timeout(kind_id)
+                await self.async_frage_faellig(kind_id)
 
             self._timer[kind_id] = async_track_point_in_time(
-                self.hass, _timeout, zustand.offene_frage.timeout_um
+                self.hass, _faellig, min(faellig)
             )
             return
 
@@ -1099,14 +1138,21 @@ class LearnBuddyManager:
         stat = aufgabe.statistik_fuer(richtung_key)
         stat.zuletzt_gefragt = jetzt
         stat.gefragt += 1
+        frist = self._frist(kind_id, aufgabe, arbeit)
+        erinnerung = self.erinnerung
         zustand.offene_frage = OffeneFrage(
             fach_id=fach.id,
             aufgabe_id=aufgabe.id,
             richtung=richtung_key,
             gestellt_um=jetzt,
-            timeout_um=jetzt + self._frist(kind_id, aufgabe, arbeit),
+            timeout_um=None if frist is None else jetzt + frist,
             arbeit_id=None if arbeit is None else arbeit.id,
             optionen=optionen,
+            erinnerung_um=(
+                jetzt + erinnerung
+                if erinnerung is not None and (frist is None or erinnerung < frist)
+                else None
+            ),
         )
         zustand.letzte_frage_um = jetzt
         # A new question ends the offer to explain the previous one
@@ -1186,10 +1232,11 @@ class LearnBuddyManager:
             if angebot:
                 # The child may ask how the task is solved; a running series
                 # of extra questions waits for that reply
+                angebot_frist = self._frist(kind_id, aufgabe)
                 zustand.rechenweg_angebot = RechenwegAngebot(
                     fach_id=fach.id,
                     aufgabe_id=aufgabe.id,
-                    bis=jetzt + self._frist(kind_id, aufgabe),
+                    bis=None if angebot_frist is None else jetzt + angebot_frist,
                 )
                 nachricht += text(self.sprache, "rechenweg_angebot")
             elif zustand.zusatz_offen == 0 and zustand.aktiv:
@@ -1352,7 +1399,7 @@ class LearnBuddyManager:
         if angebot is not None:
             zustand.rechenweg_angebot = None
             self.config_store.async_schedule_save()
-            if angebot.bis < dt_util.utcnow():
+            if angebot.bis is not None and angebot.bis < dt_util.utcnow():
                 # Too late, a waiting series ended with it
                 zustand.zusatz_offen = 0
                 angebot = None
@@ -1608,6 +1655,52 @@ class LearnBuddyManager:
         except HomeAssistantError:
             zustand.zusatz_offen = 0
         self.config_store.async_schedule_save()
+
+    async def async_frage_faellig(self, kind_id: str) -> None:
+        """Remind of the open question if that is due, otherwise let it expire."""
+        frage = self.zustand(kind_id).offene_frage
+        if (
+            frage is not None
+            and frage.erinnerung_um is not None
+            and (frage.timeout_um is None or frage.erinnerung_um < frage.timeout_um)
+        ):
+            await self.async_erinnere(kind_id)
+        else:
+            await self.async_timeout(kind_id)
+
+    async def async_erinnere(self, kind_id: str) -> None:
+        """Send the reminder of the open question once."""
+        async with self._sperren[kind_id]:
+            kind = self.kinder[kind_id]
+            zustand = self.zustand(kind_id)
+            frage = zustand.offene_frage
+            if frage is None or frage.erinnerung_um is None:
+                return
+            frage.erinnerung_um = None
+            self.config_store.async_schedule_save()
+            aufgabe = self._aufgabe(frage)
+            fach = self.faecher.get(frage.fach_id)
+            if aufgabe is not None and fach is not None:
+                await self.messenger.async_send(
+                    kind,
+                    text(
+                        self.sprache,
+                        "erinnerung",
+                        name=kind.name,
+                        frage=self._frage_text(
+                            kind,
+                            fach,
+                            aufgabe,
+                            frage.richtung,
+                            kurz=True,
+                            optionen=frage.optionen,
+                        ),
+                    ),
+                    bild=aufgabe.bild if isinstance(aufgabe, MatheAufgabe) else None,
+                    wiederholen=True,
+                )
+            self._benachrichtige(kind_id)
+            self._plane(kind_id)
 
     async def async_timeout(self, kind_id: str) -> None:
         """Close the open question of a child as unanswered."""
@@ -1941,8 +2034,11 @@ class LearnBuddyManager:
                 bild=aufgabe.bild if isinstance(aufgabe, MatheAufgabe) else None,
                 wiederholen=True,
             )
-            simulation.timeout_um = dt_util.utcnow() + self._frist(
+            sim_frist = self._frist(
                 kind_id, aufgabe, self.arbeiten.get(simulation.arbeit_id)
+            )
+            simulation.timeout_um = (
+                None if sim_frist is None else dt_util.utcnow() + sim_frist
             )
             return
         await self._async_sim_ende(kind_id)

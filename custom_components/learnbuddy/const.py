@@ -24,6 +24,7 @@ SUBENTRY_ARBEIT: Final = "arbeit"
 
 # Options of the main config entry
 CONF_TIMEOUT_MINUTEN: Final = "timeout_minuten"
+CONF_ERINNERUNG_MINUTEN: Final = "erinnerung_minuten"
 CONF_SPRACHE: Final = "sprache"
 CONF_KI_ENTITY: Final = "ki_entity"
 CONF_AUTO_FREIGABE: Final = "auto_freigabe"
@@ -83,6 +84,7 @@ CONF_ERSTELLT: Final = "erstellt"
 CONF_GEAENDERT: Final = "geaendert"
 
 DEFAULT_TIMEOUT_MINUTEN: Final = 60
+DEFAULT_ERINNERUNG_MINUTEN: Final = 0
 DEFAULT_KALENDER_UM: Final = "20:00:00"
 # How far ahead exam dates are read from a calendar
 KALENDER_TAGE_VORAUS: Final = 120

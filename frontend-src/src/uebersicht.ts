@@ -426,7 +426,10 @@ export class LhUebersicht extends LitElement {
     });
   }
 
-  private _uhr(iso: string): string {
+  private _uhr(iso: string | null): string {
+    if (!iso) {
+      return "";
+    }
     return new Date(iso).toLocaleTimeString(this.hass?.language ?? "en", {
       hour: "2-digit",
       minute: "2-digit",
@@ -548,7 +551,11 @@ export class LhUebersicht extends LitElement {
       ? zustand.pausiert_bis
         ? t("status_pausiert_bis", { zeit: this._zeit(zustand.pausiert_bis) })
         : t("status_pausiert")
-      : t("status_aktiv");
+      : offen || zustand.naechste_abfrage || zustand.simulation
+        ? t("status_aktiv")
+        : t("status_nichts_geplant");
+    // Enabled, but nothing is asked: no exam is coming up
+    const leerlauf = !zustand.pausiert && !offen && !zustand.naechste_abfrage && !zustand.simulation;
     const fakt = (name: string, wert: string): TemplateResult => html`
       <div class="fakt">
         <div class="klein">${name}</div>
@@ -557,9 +564,13 @@ export class LhUebersicht extends LitElement {
     `;
     return html`
       <div class="status">
-        <div class="zustand ${zustand.pausiert ? "aus" : "gut"}">
+        <div class="zustand ${zustand.pausiert || leerlauf ? "aus" : "gut"}">
           <ha-icon
-            icon=${zustand.pausiert ? "mdi:pause-circle" : "mdi:check-circle"}
+            icon=${zustand.pausiert
+              ? "mdi:pause-circle"
+              : leerlauf
+                ? "mdi:calendar-blank"
+                : "mdi:check-circle"}
           ></ha-icon>
           ${titel}
         </div>
@@ -576,11 +587,18 @@ export class LhUebersicht extends LitElement {
           ${fakt(
             t("offene_frage"),
             offen
-              ? t("offene_frage_text", {
-                  fach: offen.fach,
-                  von: this._uhr(offen.gestellt_um),
-                  bis: this._uhr(offen.timeout_um),
-                })
+              ? t(
+                  offen.angehalten
+                    ? "offene_frage_angehalten"
+                    : offen.timeout_um
+                      ? "offene_frage_text"
+                      : "offene_frage_ohne_frist",
+                  {
+                    fach: offen.fach,
+                    von: this._uhr(offen.gestellt_um),
+                    bis: this._uhr(offen.timeout_um),
+                  },
+                )
               : t("keine_offene_frage"),
           )}
           ${zustand.abfrage && offen
@@ -602,9 +620,13 @@ export class LhUebersicht extends LitElement {
           )}
         </div>
         <div class="knoepfe">
-          <button @click=${() => this._setzeAktiv(!zustand.aktiv || zustand.pausiert)}>
-            ${t(zustand.pausiert ? "fortsetzen" : "pausieren")}
-          </button>
+          ${leerlauf
+            ? nothing
+            : html`<button
+                @click=${() => this._setzeAktiv(!zustand.aktiv || zustand.pausiert)}
+              >
+                ${t(zustand.pausiert ? "fortsetzen" : "pausieren")}
+              </button>`}
           ${offen && !zustand.simulation
             ? html`<button class="gefahr" @click=${this._brichFrageAb}>
                 ${t("frage_abbrechen")}

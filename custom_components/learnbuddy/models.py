@@ -660,10 +660,15 @@ class OffeneFrage:
     aufgabe_id: str
     richtung: str
     gestellt_um: datetime
-    timeout_um: datetime
+    # None: the question never expires
+    timeout_um: datetime | None
     arbeit_id: str | None = None
     # Options of a choice question in the order they were shown
     optionen: list[str] | None = None
+    # When the reminder is due, None once it was sent or if there is none
+    erinnerung_um: datetime | None = None
+    # Since when the clock of the question stands still (asking is paused)
+    angehalten_seit: datetime | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
@@ -675,9 +680,11 @@ class OffeneFrage:
             gestellt_um=dt_util.parse_datetime(
                 data["gestellt_um"], raise_on_error=True
             ),
-            timeout_um=dt_util.parse_datetime(data["timeout_um"], raise_on_error=True),
+            timeout_um=_parse_dt(data.get("timeout_um")),
             arbeit_id=data.get("arbeit_id"),
             optionen=(None if data.get("optionen") is None else list(data["optionen"])),
+            erinnerung_um=_parse_dt(data.get("erinnerung_um")),
+            angehalten_seit=_parse_dt(data.get("angehalten_seit")),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -687,9 +694,11 @@ class OffeneFrage:
             "aufgabe_id": self.aufgabe_id,
             "richtung": self.richtung,
             "gestellt_um": self.gestellt_um.isoformat(),
-            "timeout_um": self.timeout_um.isoformat(),
+            "timeout_um": _format_dt(self.timeout_um),
             "arbeit_id": self.arbeit_id,
             "optionen": None if self.optionen is None else list(self.optionen),
+            "erinnerung_um": _format_dt(self.erinnerung_um),
+            "angehalten_seit": _format_dt(self.angehalten_seit),
         }
 
 
@@ -699,7 +708,8 @@ class RechenwegAngebot:
 
     fach_id: str
     aufgabe_id: str
-    bis: datetime
+    # None: the offer does not expire
+    bis: datetime | None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
@@ -707,7 +717,7 @@ class RechenwegAngebot:
         return cls(
             fach_id=data["fach_id"],
             aufgabe_id=data["aufgabe_id"],
-            bis=dt_util.parse_datetime(data["bis"], raise_on_error=True),
+            bis=_parse_dt(data.get("bis")),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -715,7 +725,7 @@ class RechenwegAngebot:
         return {
             "fach_id": self.fach_id,
             "aufgabe_id": self.aufgabe_id,
-            "bis": self.bis.isoformat(),
+            "bis": _format_dt(self.bis),
         }
 
 

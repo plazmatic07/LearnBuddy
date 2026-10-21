@@ -6,6 +6,7 @@
         "description": "Kinder, Fächer und Arbeiten werden anschließend auf der Seite der Integration angelegt.",
         "data": {
           "timeout_minuten": "Timeout für offene Fragen",
+          "erinnerung_minuten": "Erinnerung an offene Fragen",
           "sprache": "Sprache der Nachrichten",
           "ki_entity": "KI-Entität für die Bewertung",
           "auto_freigabe": "Generierte Aufgaben automatisch freigeben",
@@ -19,7 +20,8 @@
           "eingang_text_feld": "Feld mit dem Text"
         },
         "data_description": {
-          "timeout_minuten": "Nach dieser Zeit gilt eine Frage als unbeantwortet (nicht als falsch).",
+          "timeout_minuten": "Nach dieser Zeit gilt eine Frage als unbeantwortet (nicht als falsch). 0 = die Frage läuft nie ab.",
+          "erinnerung_minuten": "Nach dieser Zeit ohne Antwort schickt LearnBuddy eine Erinnerung mit der Frage („Hey …, du hast noch eine offene Aufgabe“). 0 = keine Erinnerung. Die Zeit steht, solange die Abfragen pausiert sind. Ist sie nicht kürzer als der Timeout, entfällt die Erinnerung.",
           "ki_entity": "Optional. Diese AI-Task-Entität prüft lokal falsche Vokabel-Antworten auf Synonyme und Tippfehler, bewertet Mathe-Antworten, die keine reinen Zahlen sind, erklärt Rechenwege und erzeugt Mathe-Aufgaben. Es werden kein Name und keine anderen personenbezogenen Daten übertragen.",
           "auto_freigabe": "Aus: Von der KI erzeugte Aufgaben warten im Panel, bis du sie freigibst. An: Sie werden sofort abgefragt, wenn ihre Lösung verifiziert werden konnte.",
           "eingang_telegram": "LearnBuddy nimmt Textnachrichten der Telegram-Bot-Integration selbst an (Bot auf Polling oder Webhooks). Eine Automation ist dafür nicht nötig. Zugeordnet wird über die Absenderkennung des Kindes (Chat-ID).",
@@ -43,6 +45,7 @@
         "title": "LearnBuddy-Optionen",
         "data": {
           "timeout_minuten": "Timeout für offene Fragen",
+          "erinnerung_minuten": "Erinnerung an offene Fragen",
           "sprache": "Sprache der Nachrichten",
           "ki_entity": "KI-Entität für die Bewertung",
           "auto_freigabe": "Generierte Aufgaben automatisch freigeben",
@@ -56,7 +59,8 @@
           "eingang_text_feld": "Feld mit dem Text"
         },
         "data_description": {
-          "timeout_minuten": "Nach dieser Zeit gilt eine Frage als unbeantwortet (nicht als falsch).",
+          "timeout_minuten": "Nach dieser Zeit gilt eine Frage als unbeantwortet (nicht als falsch). 0 = die Frage läuft nie ab.",
+          "erinnerung_minuten": "Nach dieser Zeit ohne Antwort schickt LearnBuddy eine Erinnerung mit der Frage („Hey …, du hast noch eine offene Aufgabe“). 0 = keine Erinnerung. Die Zeit steht, solange die Abfragen pausiert sind. Ist sie nicht kürzer als der Timeout, entfällt die Erinnerung.",
           "ki_entity": "Optional. Diese AI-Task-Entität prüft lokal falsche Vokabel-Antworten auf Synonyme und Tippfehler, bewertet Mathe-Antworten, die keine reinen Zahlen sind, erklärt Rechenwege und erzeugt Mathe-Aufgaben. Es werden kein Name und keine anderen personenbezogenen Daten übertragen.",
           "auto_freigabe": "Aus: Von der KI erzeugte Aufgaben warten im Panel, bis du sie freigibst. An: Sie werden sofort abgefragt, wenn ihre Lösung verifiziert werden konnte.",
           "eingang_telegram": "LearnBuddy nimmt Textnachrichten der Telegram-Bot-Integration selbst an (Bot auf Polling oder Webhooks). Eine Automation ist dafür nicht nötig. Zugeordnet wird über die Absenderkennung des Kindes (Chat-ID).",

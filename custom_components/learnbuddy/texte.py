@@ -84,6 +84,7 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
         ),
         "falsch": "Leider nicht richtig, {name}. „{wort}“ heißt „{loesung}“. 💪",
         "unbeantwortet": "Die Zeit ist um, {name}. „{wort}“ heißt „{loesung}“.",
+        "erinnerung": "Hey {name}, du hast noch eine offene Aufgabe:\n\n{frage}",
         "frage_abgebrochen": (
             "{name}, die letzte Frage wurde zurückgezogen. "
             "Du musst sie nicht mehr beantworten."
@@ -183,6 +184,7 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
         "fast_richtig": "Almost, {name}! 👍 Mind the spelling: “{loesung}”.",
         "falsch": "Not quite, {name}. “{wort}” means “{loesung}”. 💪",
         "unbeantwortet": "Time is up, {name}. “{wort}” means “{loesung}”.",
+        "erinnerung": "Hey {name}, you still have an open task:\n\n{frage}",
         "frage_abgebrochen": (
             "{name}, the last question was withdrawn. "
             "You do not need to answer it any more."

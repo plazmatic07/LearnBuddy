@@ -4176,6 +4176,12 @@ export class LearnBuddyPanel extends LitElement {
               </div>
               <div class="klein">${t("einzelne_aufgaben")} (${arbeit.ids.size})</div>
               <div class="liste" style="margin-top: 6px">
+                <div class="eintrag kopf">
+                  <span class="haken"></span>
+                  <span style="flex: 1">${t("spalte_aufgabe")}</span>
+                  <span class="seite">${t("spalte_seite")}</span>
+                  <span class="lektion">${t("spalte_lektion")}</span>
+                </div>
                 ${this._aufgaben.map((aufgabe) => {
                   const perLektion =
                     aufgabe.lektion !== null && arbeit.lektionen.has(aufgabe.lektion);
@@ -4191,7 +4197,8 @@ export class LearnBuddyPanel extends LitElement {
                       <span style="flex: 1">
                         ${kurztext(aufgabe, a, b)}
                       </span>
-                      <span class="klein">${aufgabe.lektion ?? ""}</span>
+                      <span class="klein seite">${aufgabe.seite ?? ""}</span>
+                      <span class="klein lektion">${aufgabe.lektion ?? ""}</span>
                     </label>
                   `;
                 })}

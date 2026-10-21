@@ -116,6 +116,8 @@ class OffeneFrageSensor(LearnBuddyEntity, SensorEntity):
             return None
         return {
             "gestellt_um": frage.gestellt_um.isoformat(),
-            "timeout_um": frage.timeout_um.isoformat(),
+            "timeout_um": None
+            if frage.timeout_um is None
+            else frage.timeout_um.isoformat(),
             "fach": self._manager.faecher[frage.fach_id].name,
         }
