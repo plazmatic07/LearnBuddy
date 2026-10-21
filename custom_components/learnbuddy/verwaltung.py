@@ -862,7 +862,11 @@ class Verwaltung:
         auswahl_filter = self._abfrage_filter(kind_id, fach_id, auswahl)
         try:
             await self._manager.async_abfrage_starten(
-                kind_id, fach_id, auswahl_filter=auswahl_filter, anzahl=anzahl
+                kind_id,
+                fach_id,
+                auswahl_filter=auswahl_filter,
+                anzahl=anzahl,
+                frist_minuten=(auswahl or {}).get("frist_minuten"),
             )
         except ServiceValidationError as err:
             raise _ungueltig(err.translation_key or "keine_aufgaben") from err

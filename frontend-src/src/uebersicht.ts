@@ -36,6 +36,8 @@ interface Abfrage {
   seiteVon: string;
   seiteBis: string;
   fehlerquote: string;
+  // Raw input; empty means the general setting, 0 no limit
+  frist: string;
   anzahl: number;
   // Tasks the selection contains; null while it is counted
   umfang: number | null;
@@ -362,6 +364,7 @@ export class LhUebersicht extends LitElement {
       seiteVon: "",
       seiteBis: "",
       fehlerquote: "",
+      frist: "",
       anzahl: ABFRAGE_STANDARD,
       umfang: null,
       fehler: "",
@@ -1037,7 +1040,12 @@ export class LhUebersicht extends LitElement {
       const anzahl = Math.min(MAX_ABFRAGE, Math.max(1, Math.round(abfrage.anzahl) || 1));
       const auswahl = this._auswahl(daten, abfrage);
       if (auswahl !== null) {
-        void this._frage(abfrage.fachId, auswahl, anzahl);
+        const frist = abfrage.frist.trim() === "" ? NaN : Math.round(Number(abfrage.frist));
+        void this._frage(
+          abfrage.fachId,
+          Number.isFinite(frist) && frist >= 0 ? { ...auswahl, frist_minuten: frist } : auswahl,
+          anzahl,
+        );
       }
     };
     const seite = (lektion: string, rand: "von" | "bis"): TemplateResult => html`
@@ -1168,6 +1176,19 @@ export class LhUebersicht extends LitElement {
               }}
             />
           </label>
+          <label class="feld">
+            ${t("abfrage_frist")}
+            <input
+              type="number"
+              min="0"
+              max="1440"
+              .value=${abfrage.frist}
+              @input=${(e: Event) => {
+                this._abfrage = { ...abfrage, frist: (e.target as HTMLInputElement).value };
+              }}
+            />
+          </label>
+          <div class="klein">${t("abfrage_frist_hinweis")}</div>
           ${abfrage.fehler ? html`<div class="fehler">${abfrage.fehler}</div>` : nothing}
           <div class="klein">
             ${umfang === null ? t("abfrage_umfang_laedt") : t("abfrage_umfang", { n: umfang })}

@@ -987,6 +987,7 @@ class LearnBuddyManager:
         *,
         auswahl_filter: AbfrageFilter | None = None,
         anzahl: int = 1,
+        frist_minuten: int | None = None,
     ) -> None:
         """Ask several questions in a row right now (manual request).
 
@@ -1009,6 +1010,7 @@ class LearnBuddyManager:
                     manuell=True,
                     fach_id=fach_id,
                     auswahl_filter=auswahl_filter,
+                    frist_minuten=frist_minuten,
                 )
                 self._plane(kind_id)
                 return
@@ -1050,9 +1052,11 @@ class LearnBuddyManager:
                 fach_id=fach_id,
                 auswahl_filter=auswahl_filter,
                 kurz=True,
+                frist_minuten=frist_minuten,
             )
             zustand.zusatz_offen = anzahl - 1
             zustand.zusatz_filter = auswahl_filter
+            zustand.zusatz_frist = frist_minuten
             if fach_id is None:
                 self._serie_frei.add(kind_id)
             else:
@@ -1113,6 +1117,7 @@ class LearnBuddyManager:
         fach_id: str | None = None,
         auswahl_filter: AbfrageFilter | None = None,
         kurz: bool = False,
+        frist_minuten: int | None = None,
     ) -> FrageStatus:
         kind = self.kinder[kind_id]
         zustand = self.zustand(kind_id)
@@ -1152,7 +1157,15 @@ class LearnBuddyManager:
         stat = aufgabe.statistik_fuer(richtung_key)
         stat.zuletzt_gefragt = jetzt
         stat.gefragt += 1
-        frist = self._frist(kind_id, aufgabe, arbeit)
+        eigene = (
+            frist_minuten
+            if frist_minuten is not None
+            else (zustand.zusatz_frist if kurz else None)
+        )
+        if eigene is None:
+            frist = self._frist(kind_id, aufgabe, arbeit)
+        else:
+            frist = timedelta(minutes=eigene) if eigene > 0 else None
         erinnerung = self.erinnerung
         zustand.offene_frage = OffeneFrage(
             fach_id=fach.id,
@@ -1175,6 +1188,7 @@ class LearnBuddyManager:
         if not kurz:
             # Only the questions a child asked for stay within a lesson
             zustand.zusatz_filter = AbfrageFilter()
+            zustand.zusatz_frist = None
         self._letzte_aufgabe[kind_id] = aufgabe.id
         self._letztes_fach[kind_id] = fach.id
         self.task_stores[fach.id].async_schedule_save()
@@ -1640,6 +1654,7 @@ class LearnBuddyManager:
         )
         zustand.rechenweg_angebot = None
         zustand.zusatz_filter = _lektionsfilter(lektion)
+        zustand.zusatz_frist = None
         zustand.zusatz_offen = anzahl - 1
         self._serie_frei.discard(kind_id)
         await self._async_zusatzfrage(kind_id, fach_id)

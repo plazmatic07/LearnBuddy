@@ -309,6 +309,8 @@ export interface AbfrageAuswahl {
   // Book pages of single lessons
   lektion_seiten?: { lektion: string; von: number | null; bis: number | null }[];
   fehlerquote_ab?: number | null;
+  // Minutes to answer (0: no limit), left out: general setting
+  frist_minuten?: number | null;
 }
 
 export interface DashboardArbeit {

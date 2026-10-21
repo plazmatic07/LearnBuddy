@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
+from datetime import timedelta
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
@@ -184,3 +185,46 @@ async def test_pause_bis_setzt_von_selbst_fort(
     assert frage.timeout_um == dt_util.parse_datetime("2026-10-06 22:30:01+02:00")
     await _zeit(hass, freezer, "2026-10-06 22:30:03+02:00")
     assert manager.zustand(KIND_ID).offene_frage is None
+
+
+async def test_abfrage_mit_eigener_frist(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, starte: Starte
+) -> None:
+    manager = await starte()
+    await manager.async_abfrage_starten(KIND_ID, FACH_ID, anzahl=2, frist_minuten=0)
+    frage = manager.zustand(KIND_ID).offene_frage
+    assert frage is not None
+    assert frage.timeout_um is None
+    assert manager.zustand(KIND_ID).zusatz_frist == 0
+
+    await _zeit(hass, freezer, "2026-10-08 12:00:00+02:00")
+    assert manager.zustand(KIND_ID).offene_frage is frage
+
+
+async def test_abfrage_frist_gilt_fuer_die_serie(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, starte: Starte
+) -> None:
+    manager = await starte()
+    await manager.async_abfrage_starten(KIND_ID, FACH_ID, anzahl=2, frist_minuten=5)
+    erste = manager.zustand(KIND_ID).offene_frage
+    assert erste is not None
+    assert erste.timeout_um == dt_util.utcnow() + timedelta(minutes=5)
+
+    await hass.services.async_call(
+        DOMAIN, "submit_answer", {"text": "x", "kind_id": KIND_ID}, blocking=True
+    )
+    await hass.async_block_till_done()
+    zweite = manager.zustand(KIND_ID).offene_frage
+    assert zweite is not None and zweite is not erste
+    assert zweite.timeout_um == dt_util.utcnow() + timedelta(minutes=5)
+
+    # A scheduled question uses the general setting again
+    await hass.services.async_call(
+        DOMAIN, "submit_answer", {"text": "x", "kind_id": KIND_ID}, blocking=True
+    )
+    await hass.async_block_till_done()
+    await _zeit(hass, freezer, "2026-10-06 16:00:01+02:00")
+    normal = manager.zustand(KIND_ID).offene_frage
+    assert normal is not None
+    assert normal.timeout_um == dt_util.utcnow() + timedelta(minutes=60)
+    assert manager.zustand(KIND_ID).zusatz_frist is None

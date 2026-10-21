@@ -911,6 +911,8 @@ class KindZustand:
     wunsch_offen: WunschAngebot | None = None
     # Tasks the extra questions are limited to
     zusatz_filter: AbfrageFilter = AbfrageFilter()
+    # Minutes to answer the extra questions (0: no limit), None: general setting
+    zusatz_frist: int | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
@@ -933,6 +935,7 @@ class KindZustand:
             ),
             wunsch_offen=None if wunsch is None else WunschAngebot.from_dict(wunsch),
             zusatz_filter=AbfrageFilter.from_dict(data.get("zusatz_filter") or {}),
+            zusatz_frist=data.get("zusatz_frist"),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -957,6 +960,7 @@ class KindZustand:
                 None if self.wunsch_offen is None else self.wunsch_offen.to_dict()
             ),
             "zusatz_filter": self.zusatz_filter.to_dict(),
+            "zusatz_frist": self.zusatz_frist,
         }
 
     def ist_pausiert(self, jetzt: datetime) -> bool:
