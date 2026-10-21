@@ -215,7 +215,8 @@ async def test_abfrage_frist_gilt_fuer_die_serie(
     )
     await hass.async_block_till_done()
     zweite = manager.zustand(KIND_ID).offene_frage
-    assert zweite is not None and zweite is not erste
+    assert zweite is not None
+    assert zweite is not erste
     assert zweite.timeout_um == dt_util.utcnow() + timedelta(minutes=5)
 
     # A scheduled question uses the general setting again
