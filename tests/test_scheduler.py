@@ -125,6 +125,26 @@ def test_naechster_zeitpunkt_mindestabstand() -> None:
     assert ergebnis == _zeit(DIENSTAG, 15, 15)
 
 
+def test_naechster_zeitpunkt_eigener_mindestabstand() -> None:
+    arbeit = _arbeit(DIENSTAG + timedelta(days=3), abfragen_pro_tag=24)
+    ergebnis = naechster_zeitpunkt(
+        _zeit(DIENSTAG, 15, 6),
+        KIND,
+        [arbeit],
+        letzte_frage=_zeit(DIENSTAG, 15, 5),
+        mindestabstand=timedelta(minutes=30),
+    )
+    assert ergebnis == _zeit(DIENSTAG, 15, 35)
+    ohne = naechster_zeitpunkt(
+        _zeit(DIENSTAG, 15, 6),
+        KIND,
+        [arbeit],
+        letzte_frage=_zeit(DIENSTAG, 15, 5),
+        mindestabstand=timedelta(0),
+    )
+    assert ohne == _zeit(DIENSTAG, 15, 15)
+
+
 def test_naechster_zeitpunkt_fruehestens() -> None:
     arbeit = _arbeit(DIENSTAG + timedelta(days=5))
     uebermorgen = DIENSTAG + timedelta(days=2)

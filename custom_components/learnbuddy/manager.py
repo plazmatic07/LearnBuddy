@@ -34,12 +34,14 @@ from .const import (
     CONF_FACH_ID,
     CONF_GEAENDERT,
     CONF_KI_ENTITY,
+    CONF_MINDESTABSTAND_MINUTEN,
     CONF_NAME,
     CONF_SPRACHE,
     CONF_TIMEOUT_MINUTEN,
     CONF_VERLAUF,
     CONF_WUNSCH_KI,
     DEFAULT_ERINNERUNG_MINUTEN,
+    DEFAULT_MINDESTABSTAND_MINUTEN,
     DEFAULT_TIMEOUT_MINUTEN,
     DOMAIN,
     DOPPELT_SEKUNDEN,
@@ -386,6 +388,17 @@ class LearnBuddyManager:
         return timedelta(
             minutes=int(
                 self.entry.options.get(CONF_TIMEOUT_MINUTEN, DEFAULT_TIMEOUT_MINUTEN)
+            )
+        )
+
+    @property
+    def mindestabstand(self) -> timedelta:
+        """Return the shortest time between two scheduled questions."""
+        return timedelta(
+            minutes=int(
+                self.entry.options.get(
+                    CONF_MINDESTABSTAND_MINUTEN, DEFAULT_MINDESTABSTAND_MINUTEN
+                )
             )
         )
 
@@ -790,6 +803,7 @@ class LearnBuddyManager:
             self.arbeiten_von(kind_id),
             letzte_frage=zustand.letzte_frage_um,
             fruehestens=zustand.pausiert_bis,
+            mindestabstand=self.mindestabstand,
         )
         self.naechste_abfrage[kind_id] = zeitpunkt
         if zeitpunkt is None:

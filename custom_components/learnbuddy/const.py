@@ -25,6 +25,7 @@ SUBENTRY_ARBEIT: Final = "arbeit"
 # Options of the main config entry
 CONF_TIMEOUT_MINUTEN: Final = "timeout_minuten"
 CONF_ERINNERUNG_MINUTEN: Final = "erinnerung_minuten"
+CONF_MINDESTABSTAND_MINUTEN: Final = "mindestabstand_minuten"
 CONF_SPRACHE: Final = "sprache"
 CONF_KI_ENTITY: Final = "ki_entity"
 CONF_AUTO_FREIGABE: Final = "auto_freigabe"
@@ -137,7 +138,7 @@ BUNDESLAENDER: Final = [
 SPRACH_CODES: Final = ["de", "en", "fr", "es", "it", "la"]
 
 # Minimum distance between two questions for the same child
-MINDESTABSTAND: Final = timedelta(minutes=10)
+DEFAULT_MINDESTABSTAND_MINUTEN: Final = 10
 # Delays between the retries of a failed notification
 SENDE_WIEDERHOLUNGEN: Final = (
     timedelta(seconds=30),

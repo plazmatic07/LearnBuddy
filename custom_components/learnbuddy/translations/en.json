@@ -7,6 +7,7 @@
         "data": {
           "timeout_minuten": "Timeout for open questions",
           "erinnerung_minuten": "Reminder for open questions",
+          "mindestabstand_minuten": "Minimum gap between questions",
           "sprache": "Language of the messages",
           "ki_entity": "AI entity for evaluation",
           "auto_freigabe": "Approve generated tasks automatically",
@@ -21,6 +22,7 @@
         },
         "data_description": {
           "timeout_minuten": "After this time a question counts as unanswered (not as wrong). 0 = the question never expires.",
+          "mindestabstand_minuten": "Shortest time between two scheduled questions. With many questions per day, those that would be closer are dropped. 0 = no gap.",
           "erinnerung_minuten": "After this time without an answer LearnBuddy sends a reminder with the question (\"Hey …, you still have an open task\"). 0 = no reminder. The time stands still while questions are paused. If it is not shorter than the timeout there is no reminder.",
           "ki_entity": "Optional. This AI task entity checks vocabulary answers that are wrong locally for synonyms and typos, evaluates math answers that are no plain numbers, explains solutions and creates math tasks. No name or other personal data is sent.",
           "auto_freigabe": "Off: tasks created by the AI wait in the panel until you approve them. On: they are asked right away if their solution could be verified.",
@@ -46,6 +48,7 @@
         "data": {
           "timeout_minuten": "Timeout for open questions",
           "erinnerung_minuten": "Reminder for open questions",
+          "mindestabstand_minuten": "Minimum gap between questions",
           "sprache": "Language of the messages",
           "ki_entity": "AI entity for evaluation",
           "auto_freigabe": "Approve generated tasks automatically",
@@ -60,6 +63,7 @@
         },
         "data_description": {
           "timeout_minuten": "After this time a question counts as unanswered (not as wrong). 0 = the question never expires.",
+          "mindestabstand_minuten": "Shortest time between two scheduled questions. With many questions per day, those that would be closer are dropped. 0 = no gap.",
           "erinnerung_minuten": "After this time without an answer LearnBuddy sends a reminder with the question (\"Hey …, you still have an open task\"). 0 = no reminder. The time stands still while questions are paused. If it is not shorter than the timeout there is no reminder.",
           "ki_entity": "Optional. This AI task entity checks vocabulary answers that are wrong locally for synonyms and typos, evaluates math answers that are no plain numbers, explains solutions and creates math tasks. No name or other personal data is sent.",
           "auto_freigabe": "Off: tasks created by the AI wait in the panel until you approve them. On: they are asked right away if their solution could be verified.",

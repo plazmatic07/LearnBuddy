@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING
 
-from .const import MINDESTABSTAND
+from .const import DEFAULT_MINDESTABSTAND_MINUTEN
 from .models import Ergebnis
 
 if TYPE_CHECKING:
@@ -66,6 +66,7 @@ def naechster_zeitpunkt(
     *,
     letzte_frage: datetime | None = None,
     fruehestens: datetime | None = None,
+    mindestabstand: timedelta = timedelta(minutes=DEFAULT_MINDESTABSTAND_MINUTEN),
 ) -> datetime | None:
     """Return the next point in time at which a question should be asked.
 
@@ -82,7 +83,7 @@ def naechster_zeitpunkt(
     if fruehestens is not None:
         start = max(start, fruehestens.astimezone(zone))
     if letzte_frage is not None:
-        start = max(start, letzte_frage.astimezone(zone) + MINDESTABSTAND)
+        start = max(start, letzte_frage.astimezone(zone) + mindestabstand)
 
     tag = start.date()
     letzter_tag = max(arbeit.datum for arbeit in arbeiten)

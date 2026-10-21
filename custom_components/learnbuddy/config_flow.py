@@ -68,6 +68,7 @@ from .const import (
     CONF_KIND_ID,
     CONF_KLASSENSTUFE,
     CONF_LEKTIONEN,
+    CONF_MINDESTABSTAND_MINUTEN,
     CONF_MUTTERSPRACHE,
     CONF_NAME,
     CONF_NOTIFY_DATA,
@@ -95,6 +96,7 @@ from .const import (
     DEFAULT_ABFRAGEN_PRO_TAG,
     DEFAULT_ERINNERUNG_MINUTEN,
     DEFAULT_KALENDER_UM,
+    DEFAULT_MINDESTABSTAND_MINUTEN,
     DEFAULT_SIMULATION_ANZAHL,
     DEFAULT_START_TAGE_VORHER,
     DEFAULT_TIMEOUT_MINUTEN,
@@ -152,6 +154,17 @@ OPTIONS_SCHEMA = vol.Schema(
         ),
         vol.Required(
             CONF_ERINNERUNG_MINUTEN, default=DEFAULT_ERINNERUNG_MINUTEN
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=0,
+                max=MAX_TIMEOUT_MINUTEN,
+                step=1,
+                mode=NumberSelectorMode.BOX,
+                unit_of_measurement="min",
+            )
+        ),
+        vol.Required(
+            CONF_MINDESTABSTAND_MINUTEN, default=DEFAULT_MINDESTABSTAND_MINUTEN
         ): NumberSelector(
             NumberSelectorConfig(
                 min=0,

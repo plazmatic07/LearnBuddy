@@ -95,6 +95,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["options"] == {
         "timeout_minuten": 45,
         "erinnerung_minuten": 0,
+        "mindestabstand_minuten": 10,
         "sprache": "auto",
         "auto_freigabe": False,
         "verlauf": True,
@@ -129,6 +130,7 @@ async def test_options_flow(hass: HomeAssistant, setup_entry: MockConfigEntry) -
     assert setup_entry.options == {
         "timeout_minuten": 30,
         "erinnerung_minuten": 0,
+        "mindestabstand_minuten": 10,
         "sprache": "en",
         "auto_freigabe": False,
         "verlauf": True,
