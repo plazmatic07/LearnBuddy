@@ -661,6 +661,10 @@
     }
   },
   "issues": {
+    "serie_beendet": {
+      "title": "Series of questions for {name} ended",
+      "description": "A series of extra questions (\"Ask now\" or a wish of the child) was ended because two scheduled questions could not be asked while a question of the series was still open. Nobody answered it in time. The open question stays and can still be answered. The notice disappears when the next series or scheduled question starts."
+    },
     "senden_fehlgeschlagen": {
       "title": "Messages to {name} cannot be delivered",
       "description": "LearnBuddy could not send a message using `{ziel}`. Check that the messenger integration works and that the notify target of the child is correct. The issue disappears after the next successful message."

@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_call_later,
@@ -52,6 +53,7 @@ from .const import (
     LOGGER,
     MAX_ZUSATZAUFGABEN,
     SENDE_WIEDERHOLUNGEN,
+    SERIE_VERPASSTE_TERMINE,
     SICHER_AB_BOX,
     SPRACHE_AUTO,
     SUBENTRY_ARBEIT,
@@ -193,6 +195,10 @@ class LearnBuddyManager:
         self.arbeiten: dict[str, Arbeit] = {}
         self.naechste_abfrage: dict[str, datetime | None] = {}
         self._timer: dict[str, CALLBACK_TYPE] = {}
+        # Watches the scheduled slots that pass while a series is running
+        self._waechter: dict[str, CALLBACK_TYPE] = {}
+        self._verpasst: dict[str, int] = {}
+        self._verpasst_bis: dict[str, datetime] = {}
         self._sendeversuche: dict[str, int] = {}
         self._wiederholung_um: dict[str, datetime] = {}
         self._letzte_aufgabe: dict[str, str] = {}
@@ -347,9 +353,14 @@ class LearnBuddyManager:
     @callback
     def async_stop(self) -> None:
         """Cancel all timers and pending retries."""
-        for abbrechen in (*self._timer.values(), *self._sim_timer.values()):
+        for abbrechen in (
+            *self._timer.values(),
+            *self._waechter.values(),
+            *self._sim_timer.values(),
+        ):
             abbrechen()
         self._timer.clear()
+        self._waechter.clear()
         self._sim_timer.clear()
         if self._tagesuhr is not None:
             self._tagesuhr()
@@ -735,6 +746,8 @@ class LearnBuddyManager:
         """(Re)start the timer of a child for its next question or timeout."""
         if abbrechen := self._timer.pop(kind_id, None):
             abbrechen()
+        if abbrechen := self._waechter.pop(kind_id, None):
+            abbrechen()
         self.naechste_abfrage[kind_id] = None
         if self.hass.is_stopping:
             return
@@ -756,42 +769,7 @@ class LearnBuddyManager:
             return
 
         if (frage := zustand.offene_frage) is not None:
-            jetzt_utc = dt_util.utcnow()
-            if zustand.ist_pausiert(jetzt_utc):
-                # The clock of the question stands still while asking is paused
-                if frage.angehalten_seit is None:
-                    frage.angehalten_seit = jetzt_utc
-                    self.config_store.async_schedule_save()
-                if zustand.aktiv and zustand.pausiert_bis is not None:
-
-                    async def _fortsetzen(_jetzt: datetime) -> None:
-                        self._timer.pop(kind_id, None)
-                        self._plane(kind_id)
-                        self._benachrichtige(kind_id)
-
-                    self._timer[kind_id] = async_track_point_in_time(
-                        self.hass, _fortsetzen, zustand.pausiert_bis
-                    )
-                return
-            if frage.angehalten_seit is not None:
-                pause = jetzt_utc - frage.angehalten_seit
-                frage.angehalten_seit = None
-                if frage.timeout_um is not None:
-                    frage.timeout_um += pause
-                if frage.erinnerung_um is not None:
-                    frage.erinnerung_um += pause
-                self.config_store.async_schedule_save()
-            faellig = [zeit for zeit in (frage.erinnerung_um, frage.timeout_um) if zeit]
-            if not faellig:
-                return
-
-            async def _faellig(_jetzt: datetime) -> None:
-                self._timer.pop(kind_id, None)
-                await self.async_frage_faellig(kind_id)
-
-            self._timer[kind_id] = async_track_point_in_time(
-                self.hass, _faellig, min(faellig)
-            )
+            self._plane_offene_frage(kind_id, zustand, frage)
             return
 
         if not zustand.aktiv:
@@ -815,6 +793,111 @@ class LearnBuddyManager:
 
         self._timer[kind_id] = async_track_point_in_time(self.hass, _frage, zeitpunkt)
 
+    def _plane_offene_frage(
+        self, kind_id: str, zustand: KindZustand, frage: OffeneFrage
+    ) -> None:
+        """Plan the timers of the open question or stop its clock while paused."""
+        jetzt_utc = dt_util.utcnow()
+        if zustand.ist_pausiert(jetzt_utc):
+            # The clock of the question stands still while asking is paused
+            if frage.angehalten_seit is None:
+                frage.angehalten_seit = jetzt_utc
+                self.config_store.async_schedule_save()
+            if zustand.aktiv and zustand.pausiert_bis is not None:
+
+                async def _fortsetzen(_jetzt: datetime) -> None:
+                    self._timer.pop(kind_id, None)
+                    self._plane(kind_id)
+                    self._benachrichtige(kind_id)
+
+                self._timer[kind_id] = async_track_point_in_time(
+                    self.hass, _fortsetzen, zustand.pausiert_bis
+                )
+            return
+        if frage.angehalten_seit is not None:
+            pause = jetzt_utc - frage.angehalten_seit
+            frage.angehalten_seit = None
+            if frage.timeout_um is not None:
+                frage.timeout_um += pause
+            if frage.erinnerung_um is not None:
+                frage.erinnerung_um += pause
+            self.config_store.async_schedule_save()
+        self._plane_waechter(kind_id)
+        faellig = [zeit for zeit in (frage.erinnerung_um, frage.timeout_um) if zeit]
+        if not faellig:
+            return
+
+        async def _faellig(_jetzt: datetime) -> None:
+            self._timer.pop(kind_id, None)
+            await self.async_frage_faellig(kind_id)
+
+        self._timer[kind_id] = async_track_point_in_time(
+            self.hass, _faellig, min(faellig)
+        )
+
+    def _serie_neu(self, kind_id: str) -> None:
+        """Forget the missed slots of a series and its notice."""
+        self._verpasst.pop(kind_id, None)
+        self._verpasst_bis.pop(kind_id, None)
+        ir.async_delete_issue(self.hass, DOMAIN, f"serie_beendet_{kind_id}")
+
+    @callback
+    def _plane_waechter(self, kind_id: str) -> None:
+        """Watch the next scheduled slot while a series keeps a question open."""
+        zustand = self.zustand(kind_id)
+        if zustand.zusatz_offen <= 0 or not zustand.aktiv:
+            return
+        zeitpunkt = naechster_zeitpunkt(
+            dt_util.now(),
+            self.kinder[kind_id],
+            self.arbeiten_von(kind_id),
+            letzte_frage=zustand.letzte_frage_um,
+            fruehestens=self._verpasst_bis.get(kind_id),
+            mindestabstand=self.mindestabstand,
+        )
+        if zeitpunkt is None:
+            return
+
+        @callback
+        def _verpasst(_jetzt: datetime) -> None:
+            self._waechter.pop(kind_id, None)
+            self._termin_verpasst(kind_id, zeitpunkt)
+
+        self._waechter[kind_id] = async_track_point_in_time(
+            self.hass, _verpasst, zeitpunkt
+        )
+
+    @callback
+    def _termin_verpasst(self, kind_id: str, zeitpunkt: datetime) -> None:
+        """Count a slot lost to an open question; end the series after a few."""
+        zustand = self.zustand(kind_id)
+        if zustand.offene_frage is None or zustand.zusatz_offen <= 0:
+            return
+        self._verpasst_bis[kind_id] = zeitpunkt + timedelta(seconds=1)
+        if not zustand.ist_pausiert(dt_util.utcnow()):
+            self._verpasst[kind_id] = self._verpasst.get(kind_id, 0) + 1
+        if self._verpasst.get(kind_id, 0) >= SERIE_VERPASSTE_TERMINE:
+            zustand.zusatz_offen = 0
+            zustand.zusatz_filter = AbfrageFilter()
+            zustand.zusatz_frist = None
+            self._serie_frei.discard(kind_id)
+            self._verpasst.pop(kind_id, None)
+            self._verpasst_bis.pop(kind_id, None)
+            self.config_store.async_schedule_save()
+            LOGGER.info("Series of extra questions ended: scheduled slots missed")
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"serie_beendet_{kind_id}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="serie_beendet",
+                translation_placeholders={"name": self.kinder[kind_id].name},
+            )
+            self._benachrichtige(kind_id)
+            return
+        self._plane_waechter(kind_id)
+
     async def _async_geplante_frage(self, kind_id: str) -> None:
         """Ask a scheduled question and plan the next step."""
         async with self._sperren[kind_id]:
@@ -825,6 +908,7 @@ class LearnBuddyManager:
                 zustand.rechenweg_angebot = None
                 zustand.zusatz_offen = 0
             if zustand.offene_frage is None and not zustand.ist_pausiert(dt_util.now()):
+                self._serie_neu(kind_id)
                 status = await self._async_frage(kind_id, manuell=False)
                 versuch = self._sendeversuche.get(kind_id, 0)
                 if status is FrageStatus.SENDEFEHLER and versuch < len(
@@ -1027,6 +1111,7 @@ class LearnBuddyManager:
                     translation_domain=DOMAIN, translation_key="keine_aufgaben"
                 )
             kind = self.kinder[kind_id]
+            self._serie_neu(kind_id)
             if fach_id is None:
                 nachricht = text(
                     self.sprache,
@@ -1655,6 +1740,7 @@ class LearnBuddyManager:
         zustand.rechenweg_angebot = None
         zustand.zusatz_filter = _lektionsfilter(lektion)
         zustand.zusatz_frist = None
+        self._serie_neu(kind_id)
         zustand.zusatz_offen = anzahl - 1
         self._serie_frei.discard(kind_id)
         await self._async_zusatzfrage(kind_id, fach_id)
@@ -1664,6 +1750,8 @@ class LearnBuddyManager:
     async def _async_zusatzfrage(self, kind_id: str, fach_id: str | None) -> None:
         """Ask one extra question; end the series if that is not possible."""
         zustand = self.zustand(kind_id)
+        # Somebody answers, so the series is not stuck
+        self._verpasst.pop(kind_id, None)
         if fach_id not in self.faecher or kind_id in self._serie_frei:
             fach_id = None
         try:

@@ -661,6 +661,10 @@
     }
   },
   "issues": {
+    "serie_beendet": {
+      "title": "Fragenserie für {name} beendet",
+      "description": "Eine Serie zusätzlicher Fragen („Jetzt abfragen“ oder ein Wunsch des Kindes) wurde beendet, weil zwei geplante Fragen nicht gestellt werden konnten, während eine Frage der Serie noch offen war. Sie wurde nicht rechtzeitig beantwortet. Die offene Frage bleibt bestehen und kann noch beantwortet werden. Der Hinweis verschwindet, sobald die nächste Serie oder geplante Frage beginnt."
+    },
     "senden_fehlgeschlagen": {
       "title": "Nachrichten an {name} können nicht zugestellt werden",
       "description": "LearnBuddy konnte über `{ziel}` keine Nachricht senden. Bitte prüfen, ob die Messenger-Integration funktioniert und das Notify-Ziel des Kindes stimmt. Der Hinweis verschwindet nach der nächsten erfolgreichen Nachricht."

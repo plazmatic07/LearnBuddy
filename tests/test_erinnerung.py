@@ -8,6 +8,7 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 import pytest
 from pytest_homeassistant_custom_component.common import (
@@ -229,3 +230,58 @@ async def test_abfrage_frist_gilt_fuer_die_serie(
     assert normal is not None
     assert normal.timeout_um == dt_util.utcnow() + timedelta(minutes=60)
     assert manager.zustand(KIND_ID).zusatz_frist is None
+
+
+async def test_serie_endet_nach_zwei_verpassten_terminen(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, starte: Starte
+) -> None:
+    manager = await starte(timeout_minuten=0)
+    # Two slots a day (16:00 and 18:00), exam on Friday
+    await _zeit(hass, freezer, "2026-10-06 15:00:00+02:00")
+    await manager.async_abfrage_starten(KIND_ID, FACH_ID, anzahl=5)
+    assert manager.zustand(KIND_ID).zusatz_offen == 4
+
+    await _zeit(hass, freezer, "2026-10-06 16:00:01+02:00")
+    assert manager.zustand(KIND_ID).zusatz_offen == 4
+    assert manager._verpasst[KIND_ID] == 1
+
+    await _zeit(hass, freezer, "2026-10-06 18:00:01+02:00")
+    zustand = manager.zustand(KIND_ID)
+    assert zustand.zusatz_offen == 0
+    assert zustand.zusatz_frist is None
+    # The open question stays
+    assert zustand.offene_frage is not None
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, f"serie_beendet_{KIND_ID}")
+    assert issue is not None
+    assert issue.translation_key == "serie_beendet"
+
+
+async def test_serie_laeuft_weiter_wenn_beantwortet(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, starte: Starte
+) -> None:
+    manager = await starte(timeout_minuten=0)
+    await _zeit(hass, freezer, "2026-10-06 15:00:00+02:00")
+    await manager.async_abfrage_starten(KIND_ID, FACH_ID, anzahl=5)
+    await _zeit(hass, freezer, "2026-10-06 16:00:01+02:00")
+    assert manager._verpasst[KIND_ID] == 1
+
+    await hass.services.async_call(
+        DOMAIN, "submit_answer", {"text": "x", "kind_id": KIND_ID}, blocking=True
+    )
+    await hass.async_block_till_done()
+    await _zeit(hass, freezer, "2026-10-06 18:00:01+02:00")
+    assert manager.zustand(KIND_ID).zusatz_offen > 0
+    assert (
+        ir.async_get(hass).async_get_issue(DOMAIN, f"serie_beendet_{KIND_ID}") is None
+    )
+
+
+async def test_pause_zaehlt_keine_verpassten_termine(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, starte: Starte
+) -> None:
+    manager = await starte(timeout_minuten=0)
+    await _zeit(hass, freezer, "2026-10-06 15:00:00+02:00")
+    await manager.async_abfrage_starten(KIND_ID, FACH_ID, anzahl=5)
+    manager.async_set_aktiv(KIND_ID, False)
+    await _zeit(hass, freezer, "2026-10-06 18:30:00+02:00")
+    assert manager._verpasst.get(KIND_ID, 0) == 0
