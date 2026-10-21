@@ -2169,7 +2169,7 @@ class Verwaltung:
             )
         except (ValueError, TypeError) as err:
             raise _ungueltig("arbeit_ungueltig") from err
-        if not 1 <= abfragen <= 24 or not 1 <= start <= 90:
+        if abfragen < 1 or not 1 <= start <= 90:
             raise _ungueltig("arbeit_ungueltig")
         if frist is not None and not 1 <= frist <= MAX_TIMEOUT_MINUTEN:
             raise _ungueltig("arbeit_ungueltig")

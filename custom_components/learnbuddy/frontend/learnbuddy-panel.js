@@ -2877,7 +2877,7 @@ gehen; to go`}
         <input
           type="number"
           min="1"
-          max=${b}
+          max=${b??_}
           .value=${String(t[c])}
           @input=${m=>this._setzeArbeit(c,Number(k(m))||1)}
         />
@@ -2919,7 +2919,7 @@ gehen; to go`}
             </option>
           </select>
         </label>
-        ${o("abfragen",e("abfragen_pro_tag"),24)}
+        ${o("abfragen",e("abfragen_pro_tag"))}
         ${o("start",e("start_tage_vorher"),90)}
         <label class="feld">
           ${e("antwortfrist")}

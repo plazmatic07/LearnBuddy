@@ -3954,14 +3954,14 @@ export class LearnBuddyPanel extends LitElement {
     const zahl = (
       feld: "abfragen" | "start",
       label: string,
-      max: number,
+      max?: number,
     ): TemplateResult => html`
       <label class="feld">
         ${label}
         <input
           type="number"
           min="1"
-          max=${max}
+          max=${max ?? nothing}
           .value=${String(arbeit[feld])}
           @input=${(e: Event) => this._setzeArbeit(feld, Number(wert(e)) || 1)}
         />
@@ -4015,7 +4015,7 @@ export class LearnBuddyPanel extends LitElement {
             </option>
           </select>
         </label>
-        ${zahl("abfragen", t("abfragen_pro_tag"), 24)}
+        ${zahl("abfragen", t("abfragen_pro_tag"))}
         ${zahl("start", t("start_tage_vorher"), 90)}
         <label class="feld">
           ${t("antwortfrist")}

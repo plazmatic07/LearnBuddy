@@ -537,6 +537,19 @@ async def test_exams_save_aendern(
     assert manager.arbeiten[ARBEIT_ID].thema == "Unit 3+4"
 
 
+async def test_exams_save_viele_abfragen(
+    hass: HomeAssistant, mit_vokabeln: MockConfigEntry, client: Client
+) -> None:
+    await client.ok(
+        "exams/save",
+        arbeit_id=ARBEIT_ID,
+        arbeit={"datum": "2026-10-12", "thema": "Unit 3", "abfragen_pro_tag": 60},
+    )
+    await hass.async_block_till_done()
+    manager: LearnBuddyManager = mit_vokabeln.runtime_data
+    assert manager.arbeiten[ARBEIT_ID].abfragen_pro_tag == 60
+
+
 @pytest.mark.parametrize(
     ("arbeit_id", "aenderung", "fehler"),
     [
@@ -561,7 +574,7 @@ async def test_exams_save_aendern(
         ),
         (
             None,
-            {"abfragen_pro_tag": 99},
+            {"abfragen_pro_tag": 0},
             {"code": "invalid_format", "message": "arbeit_ungueltig"},
         ),
         (

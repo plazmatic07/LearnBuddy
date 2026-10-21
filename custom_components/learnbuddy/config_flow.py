@@ -841,9 +841,7 @@ class ArbeitSubentryFlow(ConfigSubentryFlow):
                 vol.Required(
                     CONF_ABFRAGEN_PRO_TAG, default=DEFAULT_ABFRAGEN_PRO_TAG
                 ): NumberSelector(
-                    NumberSelectorConfig(
-                        min=1, max=24, step=1, mode=NumberSelectorMode.BOX
-                    )
+                    NumberSelectorConfig(min=1, step=1, mode=NumberSelectorMode.BOX)
                 ),
                 vol.Required(
                     CONF_START_TAGE_VORHER, default=DEFAULT_START_TAGE_VORHER
