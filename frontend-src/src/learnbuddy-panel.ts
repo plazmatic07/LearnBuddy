@@ -2326,7 +2326,6 @@ export class LearnBuddyPanel extends LitElement {
     const [a = "", b = ""] = fach.sprachen;
     const filter = this._filter;
     const mathe = fach.typ === "mathe";
-    const sach = this._ansicht === "sach";
     // Only the knowledge subject itself needs the AI for its questions
     const sachFach = fach.typ === "sach";
     const satz = this._satzAnsicht;
@@ -2340,7 +2339,7 @@ export class LearnBuddyPanel extends LitElement {
     return html`
       <div class="leiste">
         <button class="primaer" @click=${this._neueAufgabe}>
-          ${t(sach ? "neue_frage" : "neue_aufgabe")}
+          ${t(sachFach ? "neue_frage" : "neue_aufgabe")}
         </button>
         <button @click=${this._oeffneLektionen}>${t("lektion_hinzufuegen")}</button>
         <button @click=${this._oeffneBereiche}>${t("bereiche_verwalten")}</button>
