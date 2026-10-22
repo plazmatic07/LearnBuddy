@@ -1029,8 +1029,15 @@ def baue_satzaufgaben_prompt(
             ),
             "- antwort is the word or words that belong into the gap.",
             (
-                "- Every task has exactly one correct answer. Make the "
-                "context so clear that no other word fits."
+                "- Every task has exactly one correct answer. Give the "
+                "sentence enough context, for example a name or a noun "
+                "before the gap, so that no other word fits; a bare "
+                "'___ is my friend.' is not allowed."
+            ),
+            (
+                "- Check every task before you return it: replace the gap "
+                "with each wrong option and with other words of the same "
+                "kind. If a second one fits, rewrite the sentence."
             ),
             (
                 "- form luecke: alternativen lists other correct spellings "
