@@ -438,3 +438,42 @@ async def test_uebersetzungen_erzeugen(
     assert isinstance(aufgabe, SachAufgabe)
     assert aufgabe.form is SachForm.UEBERSETZUNG
     assert aufgabe.alternativen == ["I'm a boy."]
+
+
+async def test_erzeugen_haelt_sich_an_die_form(
+    hass: HomeAssistant,
+    mit_vokabeln: MockConfigEntry,
+    client: Client,  # noqa: F811
+) -> None:
+    from unittest.mock import AsyncMock, patch  # noqa: PLC0415
+
+    manager = await _mit_ki(hass, mit_vokabeln)
+    bereich = await _satzbereich(client)
+    ki = AsyncMock(return_value={"saetze": [UEBERSETZUNG, LUECKE_SATZ, AUSWAHL_SATZ]})
+    with patch("custom_components.learnbuddy.ai._async_generate_data", ki):
+        ergebnis = await client.ok(
+            "tasks/generate_sentences",
+            fach_id=FACH_ID,
+            bereich=bereich,
+            anzahl=3,
+            form="uebersetzung",
+            beschreibung="Personalpronomen",
+        )
+        # "gemischt" means gap and choice, no translations
+        gemischt = await client.ok(
+            "tasks/generate_sentences",
+            fach_id=FACH_ID,
+            bereich=bereich,
+            anzahl=3,
+            form="gemischt",
+            beschreibung="Personalpronomen",
+        )
+    store = manager.task_stores[FACH_ID]
+    assert [store.aufgaben[i].form.value for i in ergebnis["aufgabe_ids"]] == [  # type: ignore[union-attr]
+        "uebersetzung"
+    ]
+    assert ergebnis["verworfen"] == 2
+    assert [store.aufgaben[i].form.value for i in gemischt["aufgabe_ids"]] == [  # type: ignore[union-attr]
+        "luecke",
+        "auswahl",
+    ]

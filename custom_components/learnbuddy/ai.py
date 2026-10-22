@@ -1096,6 +1096,12 @@ def baue_satzaufgaben_prompt(
                 "options of the same kind as antwort, never correct in this "
                 "sentence. alternativen is empty."
             ),
+            (
+                "- Every task must practise the topic named by the parents. "
+                "If it is a grammar point, each sentence has to contain it "
+                "(for personal pronouns: a personal pronoun is the gap or "
+                "part of the translation, never a noun like 'the boy')."
+            ),
             "- Vary the sentences, do not repeat them.",
             "Plain text without markup.",
         ]

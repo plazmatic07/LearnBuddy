@@ -2111,6 +2111,14 @@ class Verwaltung:
                     "home_assistant_error", manager.ki.fehler_schluessel
                 )
 
+            # The AI sometimes ignores the wished form
+            erlaubt = (
+                {form}
+                if form in SATZ_FORMEN
+                else {SachForm.LUECKE.value, SachForm.AUSWAHL.value}
+            )
+            vorschlaege = [v for v in vorschlaege if v.form.value in erlaubt]
+
             # The subject may have been removed while the AI was working
             fach, store = self._fach(fach_id)
             vorhanden = self._schluessel_menge(fach, store)

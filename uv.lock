@@ -144,7 +144,7 @@ wheels = [
 
 [[package]]
 name = "aiohttp-cors"
-version = "0.8.2"
+version = "0.8.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
