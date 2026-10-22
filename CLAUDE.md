@@ -1,6 +1,6 @@
 # LearnBuddy – Arbeitsnotizen
 
-Home Assistant Custom Integration (`learnbuddy`). Ursprüngliches Lastenheft: `SPEC.md`. Zielversion: HA 2026.9.x, Python ≥ 3.14.2. Stand: Version 0.9.1, Storage 1.15.
+Home Assistant Custom Integration (`learnbuddy`). Ursprüngliches Lastenheft: `SPEC.md`. Zielversion: HA 2026.9.x, Python ≥ 3.14.2. Stand: Version 0.9.2, Storage 1.15.
 
 Das Projekt hieß früher „Lernhelfer“ und „Lernbuddy“. Im Code gibt es keine Migration von den alten Namen; nur der JSON-Import nimmt noch Exporte mit dem Format `lernbuddy-aufgaben` an.
 
