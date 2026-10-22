@@ -229,3 +229,14 @@ async def test_upload_einer_seite_bleibt_groesser(
         with Image.open(upload_ordner / (await antwort.json())["bild"]) as bild:
             groessen.append(bild.size)
     assert groessen == [(1600, 800), (2400, 1200)]
+
+
+def test_verarbeite_iphone_jpeg_als_mpo() -> None:
+    """A phone photo that Pillow reports as MPO is accepted as JPEG."""
+    bild = Image.new("RGB", (40, 30), "red")
+    puffer = BytesIO()
+    bild.save(puffer, "MPO", save_all=True, append_images=[bild])
+    assert Image.open(BytesIO(puffer.getvalue())).format == "MPO"
+    inhalt, endung = verarbeite(puffer.getvalue())
+    assert endung == "jpg"
+    assert inhalt.startswith(b"\xff\xd8")

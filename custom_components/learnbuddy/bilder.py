@@ -39,7 +39,9 @@ ZWECK_SEITE: Final = "seite"
 # An upload is attached to its tasks right afterwards; until then it must
 # survive a cleanup
 SCHONFRIST: Final = 24 * 60 * 60
-ERLAUBTE_FORMATE: Final = frozenset({"PNG", "JPEG", "WEBP", "GIF"})
+# Phone photos are JPEGs that Pillow reports as MPO (multi picture); the first
+# frame is the photo itself
+ERLAUBTE_FORMATE: Final = frozenset({"PNG", "JPEG", "MPO", "WEBP", "GIF"})
 MIME: Final = {"png": "image/png", "jpg": "image/jpeg"}
 _BILD_ID: Final = re.compile(r"^[0-9a-f]{32}\.(?:png|jpg)$")
 _BLOCK: Final = 64 * 1024
@@ -67,7 +69,7 @@ def _kodiere(roh: Image.Image, kante: int) -> tuple[bytes, str]:
     bild = ImageOps.exif_transpose(roh)
     bild.thumbnail((kante, kante))
     ausgabe = BytesIO()
-    if roh.format == "JPEG":
+    if roh.format in ("JPEG", "MPO"):
         bild.convert("RGB").save(ausgabe, "JPEG", quality=88, optimize=True)
         return ausgabe.getvalue(), "jpg"
     if bild.mode not in ("RGB", "RGBA", "L", "LA", "P"):
