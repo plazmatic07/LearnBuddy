@@ -1062,7 +1062,11 @@ def baue_satzaufgaben_prompt(
     if any(kontext):
         zeilen.append("School level: " + ", ".join(k for k in kontext if k) + ".")
     if beschreibung:
-        zeilen.append(f"Topic and wishes of the parents: {beschreibung[:500]}")
+        zeilen.append(
+            "Topic and wishes of the parents (follow them exactly, they decide "
+            "what the gap contains and what is practised): "
+            f"{beschreibung[:500]}"
+        )
     zeilen.append(
         {
             SachForm.LUECKE.value: "Form of all tasks: luecke.",
@@ -1076,8 +1080,12 @@ def baue_satzaufgaben_prompt(
             (
                 f"- form luecke and auswahl: satz is a short, simple sentence "
                 f"in {sprache} with exactly one gap written as ___ (three "
-                "underscores). antwort is the word or words that belong into "
-                "the gap."
+                "underscores). antwort is what belongs into the gap: usually "
+                "one word, but several words if the wishes of the parents ask "
+                "for it, for example a pronoun together with the form of 'to "
+                "be' ('she is') when they want that practised; then the gap "
+                "replaces all of those words and alternativen lists the "
+                "contraction (she's)."
             ),
             (
                 f"- form uebersetzung: satz is a short, simple sentence in "
