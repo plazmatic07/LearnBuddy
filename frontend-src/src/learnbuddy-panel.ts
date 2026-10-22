@@ -729,13 +729,13 @@ export class LearnBuddyPanel extends LitElement {
     }
   }
 
-  /** Send the translation of gap tasks with the question, or leave it out. */
+  /** Send the translation of gap and choice tasks with the question, or leave it out. */
   private async _setzeHilfeSenden(ids: string[], senden: boolean): Promise<void> {
     const betroffen = this._aufgaben.filter(
       (x) =>
         ids.includes(x.id) &&
         x.typ === "sach" &&
-        x.form === "luecke" &&
+        (x.form === "luecke" || x.form === "auswahl") &&
         x.hilfe &&
         (x.hilfe_senden ?? false) !== senden,
     );
@@ -876,8 +876,13 @@ export class LearnBuddyPanel extends LitElement {
                 entwurf.form === "luecke" || entwurf.form === "uebersetzung"
                   ? teile(entwurf.altB)
                   : [],
-              hilfe: entwurf.form === "luecke" ? entwurf.hilfe.trim() || null : null,
-              hilfe_senden: entwurf.form === "luecke" && entwurf.hilfeSenden,
+              hilfe:
+                entwurf.form === "luecke" || entwurf.form === "auswahl"
+                  ? entwurf.hilfe.trim() || null
+                  : null,
+              hilfe_senden:
+                (entwurf.form === "luecke" || entwurf.form === "auswahl") &&
+                entwurf.hilfeSenden,
             }
           : {
               frage: { [a]: entwurf.a, [b]: entwurf.b },
@@ -2877,7 +2882,7 @@ export class LearnBuddyPanel extends LitElement {
             </button>`
           : nothing}
         ${aufgabe.frage}
-        ${aufgabe.hilfe && aufgabe.form === "luecke"
+        ${aufgabe.hilfe && (aufgabe.form === "luecke" || aufgabe.form === "auswahl")
           ? html`<div class="klein">
               (${aufgabe.hilfe})
               <label class="feld zeile" title=${t("hilfe_senden")}>
@@ -3127,7 +3132,7 @@ export class LearnBuddyPanel extends LitElement {
                         ? eingabe("altB", alt, alt)
                         : mehrzeilig("kernpunkte", t("kernpunkte"))}
                   </div>
-                  ${satzEntwurf && entwurf.form === "luecke"
+                  ${satzEntwurf && (entwurf.form === "luecke" || entwurf.form === "auswahl")
                     ? html`<div style="margin-top: 4px">
                         ${eingabe(
                           "hilfe",

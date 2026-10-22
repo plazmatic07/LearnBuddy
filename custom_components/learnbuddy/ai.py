@@ -556,7 +556,7 @@ def parse_satzaufgaben(daten: Any) -> list[GenerierteSatzaufgabe] | None:
                 falsche_optionen=falsche,
                 hilfe=(
                     bereinige_text(roh.get("hilfe"), MAX_SACHTEXT)
-                    if form is SachForm.LUECKE
+                    if form is not SachForm.UEBERSETZUNG
                     else None
                 ),
             )
@@ -1092,12 +1092,12 @@ def baue_satzaufgaben_prompt(
                 "before the gap, so that no other word fits."
             ),
             (
-                f"- hilfe (only luecke): the whole sentence "
+                f"- hilfe (only luecke and auswahl): the whole sentence "
                 f"translated into {_sprache(ausgangssprache)}, with the "
                 "gap word filled in, for example 'Er ist mein bester Freund.' "
                 "for '___ is my best friend.'. It makes the task unambiguous "
-                "because it tells who or what is meant. With auswahl and "
-                "uebersetzung hilfe is empty."
+                "because it tells who or what is meant. With uebersetzung "
+                "hilfe is empty."
             ),
             (
                 "- Check every task before you return it: replace the gap "

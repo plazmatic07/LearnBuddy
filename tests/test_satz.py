@@ -547,7 +547,7 @@ async def test_hilfe_bei_luecke_und_auswahl(
     )
     assert fehler["code"] == "invalid_format"
 
-    # The AI delivers it with gap tasks only
+    # The AI delivers it with gap and choice tasks
     ki = AsyncMock(
         return_value={
             "saetze": [
@@ -568,8 +568,8 @@ async def test_hilfe_bei_luecke_und_auswahl(
         )
     assert "hilfe" in ki.await_args.kwargs["instructions"]
     hilfen = [store.aufgaben[i].hilfe for i in ergebnis["aufgabe_ids"]]  # type: ignore[union-attr]
-    # Only gap tasks carry a translation
-    assert hilfen == ["Ich bin ein Junge.", None]
+    # Gap and choice tasks carry a translation, translations do not
+    assert hilfen == ["Ich bin ein Junge.", "Ihr Name ist Anna."]
     # Whether it is sent is the parents' choice
     assert not any(
         store.aufgaben[i].hilfe_senden  # type: ignore[union-attr]
@@ -592,3 +592,46 @@ def test_hilfe_senden_aus_alten_daten() -> None:
     assert isinstance(ohne, SachAufgabe)
     assert ohne.hilfe_senden is False
     assert SachAufgabe(fach_id="f", frage="x", antwort="y").hilfe_senden is False
+
+
+async def test_hilfe_bei_auswahl(
+    hass: HomeAssistant,
+    mit_vokabeln: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+    client: Client,  # noqa: F811
+) -> None:
+    bereich = await _satzbereich(client)
+    aufgabe = await client.ok(
+        "tasks/create",
+        fach_id=FACH_ID,
+        aufgabe={
+            "bereich": bereich,
+            "form": "auswahl",
+            "frage": "___ name is Anna.",
+            "antwort": "Her",
+            "falsche_optionen": ["She", "Hers"],
+            "hilfe": "Ihr Name ist Anna.",
+        },
+    )
+
+    async def frage() -> list[str]:
+        await client.ok(
+            "ask", kind_id=KIND_ID, fach_id=FACH_ID, bereiche=[bereich], anzahl=1
+        )
+        await hass.async_block_till_done()
+        return str(notify_calls[-1].data["message"]).split("\n")
+
+    # Optional: without the tick only the question and the options are sent
+    zeilen = await frage()
+    assert zeilen[0].endswith("___ name is Anna.")
+    assert zeilen[1].startswith("A) ")
+
+    await client.ok(
+        "tasks/update",
+        fach_id=FACH_ID,
+        aufgabe_id=aufgabe["id"],
+        aenderungen={"hilfe_senden": True},
+    )
+    zeilen = await frage()
+    assert zeilen[1] == "(Ihr Name ist Anna.)"
+    assert zeilen[2].startswith("A) ")

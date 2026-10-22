@@ -150,7 +150,7 @@ export interface SachAufgabe extends AufgabeBasis {
   alternativen: string[];
   /** Translation that shows what the gap of a sentence means. */
   hilfe?: string | null;
-  /** Whether the translation is sent with the question (gap tasks only). */
+  /** Whether the translation is sent with the question (gap and choice tasks). */
   hilfe_senden?: boolean;
   stelle: string | null;
   quelle_bild: string | null;
