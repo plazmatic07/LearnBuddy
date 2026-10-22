@@ -622,15 +622,25 @@ export class LearnBuddyPanel extends LitElement {
     return this._fach?.bereiche ?? [];
   }
 
-  /** Sections only show up once a subject has more than the standard one. */
+  /** Whether the server tells the topics of the subject (older ones do not). */
   private get _hatBereiche(): boolean {
+    return this._bereiche.length > 0;
+  }
+
+  /** With several topics there is a view of all of them. */
+  private get _mehrere(): boolean {
     return this._bereiche.length > 1;
   }
 
   private get _aktiverBereich(): string {
-    return this._hatBereiche && this._bereiche.some((b) => b.id === this._bereichId)
-      ? this._bereichId
-      : "";
+    if (!this._hatBereiche) {
+      return "";
+    }
+    if (this._bereiche.some((b) => b.id === this._bereichId)) {
+      return this._bereichId;
+    }
+    // A single topic is the whole subject
+    return this._mehrere ? "" : (this._bereiche[0]?.id ?? "");
   }
 
   private _ansichtVon(bereich: Bereich): "vokabel" | "mathe" | "sach" {
@@ -2395,7 +2405,7 @@ export class LearnBuddyPanel extends LitElement {
                     ${t("rechenweg_erzeugen")}
                   </button>`
                 : nothing}
-              ${this._hatBereiche
+              ${this._mehrere
                 ? html`<select
                     aria-label=${t("verschieben_nach")}
                     ?disabled=${this._beschaeftigt}
@@ -2456,16 +2466,18 @@ export class LearnBuddyPanel extends LitElement {
 
       ${this._hatBereiche
         ? html`<div class="kinder fachwahl" role="group" aria-label=${t("bereich")}>
-            <button
-              class="kindwahl"
-              aria-pressed=${this._aktiverBereich === "" ? "true" : "false"}
-              @click=${() => {
-                this._bereichId = "";
-                this._auswahl = new Set();
-              }}
-            >
-              ${t("alle")} (${this._aufgaben.length})
-            </button>
+            ${this._mehrere
+              ? html`<button
+                  class="kindwahl"
+                  aria-pressed=${this._aktiverBereich === "" ? "true" : "false"}
+                  @click=${() => {
+                    this._bereichId = "";
+                    this._auswahl = new Set();
+                  }}
+                >
+                  ${t("alle")} (${this._aufgaben.length})
+                </button>`
+              : nothing}
             ${this._bereiche.map(
               (bereich) =>
                 html`<button
