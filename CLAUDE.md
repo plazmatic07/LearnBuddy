@@ -1,6 +1,6 @@
 # LearnBuddy – Arbeitsnotizen
 
-Home Assistant Custom Integration (`learnbuddy`). Ursprüngliches Lastenheft: `SPEC.md`. Zielversion: HA 2026.9.x, Python ≥ 3.14.2. Stand: Version 0.8.3, Storage 1.14.
+Home Assistant Custom Integration (`learnbuddy`). Ursprüngliches Lastenheft: `SPEC.md`. Zielversion: HA 2026.9.x, Python ≥ 3.14.2. Stand: Version 0.8.3 (unveröffentlicht: Bereiche und Satzaufgaben für 0.9.0), Storage 1.15.
 
 Das Projekt hieß früher „Lernhelfer“ und „Lernbuddy“. Im Code gibt es keine Migration von den alten Namen; nur der JSON-Import nimmt noch Exporte mit dem Format `lernbuddy-aufgaben` an.
 
@@ -60,6 +60,9 @@ python -m script.hassfest --action validate --integration-path <repo>/custom_com
 - Sicherung für Serien (`manager._plane_waechter`, `_termin_verpasst`): Hält eine offene Frage einer Serie zusätzlicher Fragen (Jetzt abfragen, Üben auf Wunsch) geplante Termine auf, zählt ein Wächter-Timer sie (nicht bei Pause); nach `SERIE_VERPASSTE_TERMINE` (2) endet die Serie (`zusatz_offen = 0`), die offene Frage bleibt, und ein Repair-Hinweis `serie_beendet_<kind>` erscheint. Eine neue Serie oder geplante Frage löscht ihn, jede Serienfrage setzt den Zähler zurück. Eine einzelne offene Frage ohne Serie wird nicht überwacht.
 - Jetzt abfragen kennt eine eigene Ablaufzeit (`frist_minuten`, leer = Option, 0 = nie), gespeichert als `KindZustand.zusatz_frist` für die Serie.
 - Frist, Erinnerung, Pause (Optionen `timeout_minuten`, `erinnerung_minuten`): Timeout 0 = die Frage läuft nie ab (`OffeneFrage.timeout_um` und `RechenwegAngebot.bis` sind dann `None`; eine eigene Antwortfrist der Arbeit gilt trotzdem). Erinnerung 0 = aus; sonst schickt `manager.async_erinnere` einmal „Hey …, du hast noch eine offene Aufgabe“ samt Frage (nur wenn sie vor dem Timeout liegt). Beide Zeiten stehen als `timeout_um`/`erinnerung_um` an der offenen Frage; `_plane` setzt einen Timer auf die frühere. Pause oder Ausschalten hält die Uhr an (`angehalten_seit`); beim Fortsetzen, auch am Ende einer Pause „bis“ (eigener Timer), werden beide Zeiten um die Pausendauer verschoben. Panel-Status: „Abfragen aktiv“ nur, wenn eine Frage offen oder eine Abfrage geplant ist, sonst „Keine Abfrage geplant“ ohne Pausieren-Knopf.
+
+- Bereiche (Reiter eines Fachs, Storage 1.15): `TaskStore.bereiche` (`{id, name, art}`) und `standard_name`; der Standard-Bereich (`STANDARD_BEREICH`, Aufgabe mit `bereich=None`) ist implizit und nicht in der Liste, deshalb keine Datenmigration. `art` ist die Fachart, bei Fremdsprachen zusätzlich `satz`. Eine Aufgabe zieht nur in einen Bereich ihrer Art um (`bereich_art_ungueltig`). Arbeiten (`Arbeit.bereiche`, Union mit Lektionen und IDs) und `AbfrageFilter.bereiche` (Schnittmenge) kennen Bereiche. Löschen nur leerer Bereiche, ein Bereich in Arbeiten wird dabei entfernt. WS `sections/add|rename|delete`, Fach im Dashboard mit `bereiche`.
+- Satzaufgaben: Fremdsprachenfächer halten neben `Vokabel` auch `SachAufgabe` (Bereich der Art `satz`, Richtung `sach`) mit den Formen `luecke` (lokal wie Vokabeln bewertet, mit `alternativen`), `auswahl`, `kurz` (KI). `Fach.richtungen` einer Fremdsprache enthält deshalb `sach`; Kennzahlen/Lernstand zählen nur passende Richtungen (`models.karten_richtungen`). Text- und Foto-Import kennen nur Vokabeln (`import_satz`, `foto_satz`), JSON-Export/-Import tragen Satzaufgaben (`typ: sach`). Im Panel hat ein Fach mit Satz-Bereich keine Ansicht „Alle“.
 
 ## Konventionen
 
