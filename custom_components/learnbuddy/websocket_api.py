@@ -490,6 +490,48 @@ async def ws_tasks_generate_from_pages(
 
 @websocket_command(
     {
+        vol.Required("type"): "learnbuddy/tasks/generate_sentences",
+        vol.Required("fach_id"): str,
+        vol.Required("bereich"): str,
+        vol.Required("anzahl"): int,
+        vol.Optional("form"): vol.Any(str, None),
+        vol.Optional("beschreibung"): vol.Any(str, None),
+        vol.Optional("seiten", default=list): [str],
+        vol.Optional("uebernehmen", default=False): bool,
+        vol.Optional("lektion"): vol.Any(str, None),
+    }
+)
+@require_admin
+@async_response
+async def ws_tasks_generate_sentences(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Let the AI create sentence tasks with a gap."""
+    verwaltung = _verwaltung(hass)
+    if verwaltung is None:
+        connection.send_error(msg["id"], "not_loaded", "nicht_geladen")
+        return
+    try:
+        ergebnis = await verwaltung.satzaufgaben_erzeugen(
+            msg["fach_id"],
+            bereich=msg["bereich"],
+            anzahl=msg["anzahl"],
+            form=msg.get("form"),
+            beschreibung=msg.get("beschreibung"),
+            seiten=msg["seiten"],
+            uebernehmen=msg["uebernehmen"],
+            lektion=msg.get("lektion"),
+        )
+    except VerwaltungError as err:
+        connection.send_error(msg["id"], err.code, err.schluessel)
+        return
+    connection.send_result(msg["id"], ergebnis)
+
+
+@websocket_command(
+    {
         vol.Required("type"): "learnbuddy/tasks/photo_extract",
         vol.Required("fach_id"): str,
         vol.Required("seiten"): [str],
@@ -893,6 +935,7 @@ def async_setup_websocket_api(hass: HomeAssistant) -> None:
         ws_tasks_export,
         ws_tasks_import_json,
         ws_tasks_generate,
+        ws_tasks_generate_sentences,
         ws_tasks_verify,
         ws_tasks_photo_extract,
         ws_tasks_photo_accept,

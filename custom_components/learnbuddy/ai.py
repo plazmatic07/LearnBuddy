@@ -41,6 +41,7 @@ MAX_LOESUNG = 100
 MAX_RECHNUNG = 200
 MAX_ANZAHL = 20
 MAX_SACHFRAGEN = 15
+MAX_SATZAUFGABEN = 20
 MAX_SACHTEXT = 500
 MAX_OPTION = 200
 MAX_STELLE = 300
@@ -223,6 +224,42 @@ SACHFRAGEN_SCHEMA = vol.Schema(
                     "seite": {
                         "required": True,
                         "selector": {"number": {"min": 1, "max": MAX_SEITEN}},
+                    },
+                },
+            )
+        ),
+    }
+)
+
+
+SATZAUFGABEN_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            "saetze", description="The sentence tasks with a gap"
+        ): selector.ObjectSelector(
+            selector.ObjectSelectorConfig(
+                multiple=True,
+                fields={
+                    "satz": {"required": True, "selector": {"text": {}}},
+                    "form": {
+                        "required": True,
+                        "selector": {
+                            "select": {
+                                "options": [
+                                    SachForm.LUECKE.value,
+                                    SachForm.AUSWAHL.value,
+                                ]
+                            }
+                        },
+                    },
+                    "antwort": {"required": True, "selector": {"text": {}}},
+                    "alternativen": {
+                        "required": True,
+                        "selector": {"text": {"multiple": True}},
+                    },
+                    "falsche_optionen": {
+                        "required": True,
+                        "selector": {"text": {"multiple": True}},
                     },
                 },
             )
@@ -429,6 +466,84 @@ def parse_sachfragen(daten: Any) -> list[GenerierteSachfrage] | None:
                     and 1 <= nummer <= MAX_SEITEN
                     else None
                 ),
+            )
+        )
+    return ergebnis
+
+
+# Spellings of the gap the AI may use instead of three underscores
+_LUECKE_SCHREIBUNG = re.compile(r"_{2,}|\.{4,}|…{2,}|\[\s*(?:\.{3}|…)?\s*\]|\(\s*\)")
+LUECKE = "___"
+
+
+@dataclass(frozen=True, slots=True)
+class GenerierteSatzaufgabe:
+    """A validated sentence task with a gap proposed by the AI."""
+
+    satz: str
+    form: SachForm
+    antwort: str
+    alternativen: list[str]
+    falsche_optionen: list[str]
+
+
+def _satz_text(wert: Any) -> str | None:
+    """Return a one-line sentence with its gap written as ___."""
+    if not isinstance(wert, str):
+        return None
+    text = _LEERRAUM.sub(" ", re.sub(r"[`#~|]|\*\*", "", wert)).strip()
+    text = _LUECKE_SCHREIBUNG.sub(LUECKE, text)
+    return text if 0 < len(text) <= MAX_SACHTEXT else None
+
+
+def parse_satzaufgaben(daten: Any) -> list[GenerierteSatzaufgabe] | None:
+    """Validate generated sentence tasks; invalid ones are dropped.
+
+    A task needs exactly one gap in its sentence and an answer. Returns None
+    if the data is not a list of tasks at all.
+    """
+    if not isinstance(daten, dict) or not isinstance(daten.get("saetze"), list):
+        return None
+    ergebnis: list[GenerierteSatzaufgabe] = []
+    for roh in daten["saetze"][:MAX_SATZAUFGABEN]:
+        if not isinstance(roh, dict):
+            continue
+        satz = _satz_text(roh.get("satz"))
+        try:
+            form = SachForm(str(roh.get("form")))
+        except ValueError:
+            continue
+        antwort = bereinige_text(roh.get("antwort"), MAX_OPTION)
+        if (
+            satz is None
+            or antwort is None
+            or satz.count(LUECKE) != 1
+            or form not in (SachForm.LUECKE, SachForm.AUSWAHL)
+        ):
+            continue
+        falsche: list[str] = []
+        alternativen: list[str] = []
+        if form is SachForm.AUSWAHL:
+            falsche = [
+                option
+                for option in _liste(roh.get("falsche_optionen"), 4, MAX_OPTION)
+                if option.casefold() != antwort.casefold()
+            ][:3]
+            if len(falsche) < 2:
+                continue
+        else:
+            alternativen = [
+                alternative
+                for alternative in _liste(roh.get("alternativen"), 4, MAX_OPTION)
+                if alternative.casefold() != antwort.casefold()
+            ]
+        ergebnis.append(
+            GenerierteSatzaufgabe(
+                satz=satz,
+                form=form,
+                antwort=antwort,
+                alternativen=alternativen,
+                falsche_optionen=falsche,
             )
         )
     return ergebnis
@@ -850,6 +965,84 @@ def baue_sachfragen_prompt(
                 "- seite: the number of the attached image the answer is on, "
                 "counted from 1 in the order of the attachments."
             ),
+            "Plain text without markup.",
+        ]
+    )
+    return "\n".join(zeilen)
+
+
+def baue_satzaufgaben_prompt(
+    *,
+    anzahl: int,
+    form: str,
+    zielsprache: str,
+    beschreibung: str | None,
+    klassenstufe: int | None,
+    schulart: str | None,
+    mit_seiten: bool,
+    uebernehmen: bool,
+) -> str:
+    """Build the instructions for creating sentence tasks with a gap.
+
+    Only the school level is passed on, never anything that identifies the
+    child.
+    """
+    sprache = _sprache(zielsprache)
+    zeilen = [
+        (
+            f"Create {anzahl} short sentence tasks in {sprache} for a school "
+            "student who learns the language. The student fills in the gap."
+        ),
+    ]
+    if mit_seiten:
+        zeilen.append(_SEITEN_HINWEIS.strip())
+        zeilen.append(
+            "Take over the exercises of the attached pages as they are, write "
+            "each gap as ___ and solve it yourself if the book gives no "
+            "solution."
+            if uebernehmen
+            else (
+                "Create new tasks of the same kind and on the same grammar "
+                "topic as the exercises of the attached pages."
+            )
+        )
+    kontext = [
+        f"grade {klassenstufe}" if klassenstufe else None,
+        f"school type {schulart}" if schulart else None,
+    ]
+    if any(kontext):
+        zeilen.append("School level: " + ", ".join(k for k in kontext if k) + ".")
+    if beschreibung:
+        zeilen.append(f"Topic and wishes of the parents: {beschreibung[:500]}")
+    zeilen.append(
+        {
+            SachForm.LUECKE.value: "Form of all tasks: luecke.",
+            SachForm.AUSWAHL.value: "Form of all tasks: auswahl.",
+        }.get(form, "Mix both forms, about half of the tasks each.")
+    )
+    zeilen.extend(
+        [
+            "Rules:",
+            (
+                f"- satz is a short, simple sentence in {sprache} with exactly "
+                "one gap written as ___ (three underscores)."
+            ),
+            "- antwort is the word or words that belong into the gap.",
+            (
+                "- Every task has exactly one correct answer. Make the "
+                "context so clear that no other word fits."
+            ),
+            (
+                "- form luecke: alternativen lists other correct spellings "
+                "like contractions (for example 'm for am), otherwise it is "
+                "empty. falsche_optionen is empty."
+            ),
+            (
+                "- form auswahl: falsche_optionen are three plausible wrong "
+                "options of the same kind as antwort, never correct in this "
+                "sentence. alternativen is empty."
+            ),
+            "- Vary the sentences, do not repeat them.",
             "Plain text without markup.",
         ]
     )
@@ -1288,6 +1481,19 @@ class KiBewerter:
             bilder=seiten,
         )
         return self._geprueft(entity_id, daten, parse_sachfragen)
+
+    async def async_erzeuge_satzaufgaben(
+        self, entity_id: str, prompt: str, seiten: Sequence[str] = ()
+    ) -> list[GenerierteSatzaufgabe] | None:
+        """Ask the AI for sentence tasks with a gap, optionally from photos."""
+        daten = await self._async_frage(
+            entity_id,
+            prompt,
+            SATZAUFGABEN_SCHEMA,
+            dauer=GENERIEREN_TIMEOUT,
+            bilder=seiten,
+        )
+        return self._geprueft(entity_id, daten, parse_satzaufgaben)
 
     async def async_lies_vokabeln(
         self, entity_id: str, prompt: str, seiten: Sequence[str]

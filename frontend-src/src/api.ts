@@ -4,6 +4,7 @@ import type {
   Bereich,
   Dashboard,
   GenerierEingabe,
+  SaetzeEingabe,
   SeitenEingabe,
   SimulationsErgebnis,
   SimulationsWeg,
@@ -242,6 +243,10 @@ export class Api {
 
   generieren(fachId: string, eingabe: GenerierEingabe): Promise<GenerierErgebnis> {
     return this.call("tasks/generate", { fach_id: fachId, ...eingabe });
+  }
+
+  satzaufgabenErzeugen(fachId: string, eingabe: SaetzeEingabe): Promise<GenerierErgebnis> {
+    return this.call("tasks/generate_sentences", { fach_id: fachId, ...eingabe });
   }
 
   fragenAusSeiten(fachId: string, eingabe: SeitenEingabe): Promise<GenerierErgebnis> {

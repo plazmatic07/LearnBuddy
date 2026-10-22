@@ -186,3 +186,142 @@ async def test_export_import_mit_satzaufgaben(
     ergebnis = await client.ok("tasks/import_json", fach_id=FACH_ID, daten=daten)
     assert ergebnis["fehler"] == [0]
     assert sum(1 for a in store.aufgaben.values() if isinstance(a, SachAufgabe)) == 2
+
+
+KI = "ai_task.test"
+LUECKE_SATZ = {
+    "satz": "I ____ a boy.",
+    "form": "luecke",
+    "antwort": "am",
+    "alternativen": ["'m", "am"],
+    "falsche_optionen": [],
+}
+AUSWAHL_SATZ = {
+    "satz": "___ name is Anna.",
+    "form": "auswahl",
+    "antwort": "Her",
+    "alternativen": [],
+    "falsche_optionen": ["She", "Hers", "Her"],
+}
+
+
+def test_parse_satzaufgaben() -> None:
+    from custom_components.learnbuddy.ai import parse_satzaufgaben  # noqa: PLC0415
+
+    assert parse_satzaufgaben({}) is None
+    ergebnis = parse_satzaufgaben(
+        {
+            "saetze": [
+                LUECKE_SATZ,
+                AUSWAHL_SATZ,
+                # No gap, two gaps, no answer, wrong form, too few options
+                {**LUECKE_SATZ, "satz": "I am a boy."},
+                {**LUECKE_SATZ, "satz": "___ am ___ boy."},
+                {**LUECKE_SATZ, "antwort": ""},
+                {**LUECKE_SATZ, "form": "kurz"},
+                {**AUSWAHL_SATZ, "falsche_optionen": ["She"]},
+                # Other spellings of the gap are normalised
+                {**LUECKE_SATZ, "satz": "She [...] nice.", "antwort": "is"},
+                "kein Objekt",
+            ]
+        }
+    )
+    assert ergebnis is not None
+    assert [(s.satz, s.form.value) for s in ergebnis] == [
+        ("I ___ a boy.", "luecke"),
+        ("___ name is Anna.", "auswahl"),
+        ("She ___ nice.", "luecke"),
+    ]
+    # The answer is no alternative of itself, nor a wrong option
+    assert ergebnis[0].alternativen == ["'m"]
+    assert ergebnis[1].falsche_optionen == ["She", "Hers"]
+
+
+async def _mit_ki(hass: HomeAssistant, entry: MockConfigEntry) -> LearnBuddyManager:
+    hass.states.async_set(KI, "unknown", {"supported_features": 3})
+    hass.config_entries.async_update_entry(
+        entry, options={**entry.options, "ki_entity": KI}
+    )
+    await hass.async_block_till_done()
+    manager: LearnBuddyManager = entry.runtime_data
+    return manager
+
+
+async def test_satzaufgaben_erzeugen(
+    hass: HomeAssistant,
+    mit_vokabeln: MockConfigEntry,
+    client: Client,  # noqa: F811
+) -> None:
+    from unittest.mock import AsyncMock, patch  # noqa: PLC0415
+
+    manager = await _mit_ki(hass, mit_vokabeln)
+    store = manager.task_stores[FACH_ID]
+    bereich = await _satzbereich(client)
+
+    ki = AsyncMock(return_value={"saetze": [LUECKE_SATZ, AUSWAHL_SATZ, LUECKE_SATZ]})
+    with patch("custom_components.learnbuddy.ai._async_generate_data", ki):
+        ergebnis = await client.ok(
+            "tasks/generate_sentences",
+            fach_id=FACH_ID,
+            bereich=bereich,
+            anzahl=3,
+            form="gemischt",
+            beschreibung="Personalpronomen in kurzen Sätzen",
+        )
+    assert (ergebnis["erzeugt"], ergebnis["uebersprungen"]) == (2, 1)
+    instruktionen = ki.await_args.kwargs["instructions"]
+    assert "Personalpronomen in kurzen Sätzen" in instruktionen
+    assert "in English" in instruktionen
+    assert ki.await_args.kwargs["attachments"] is None
+    for aufgabe_id in ergebnis["aufgabe_ids"]:
+        aufgabe = store.aufgaben[aufgabe_id]
+        assert isinstance(aufgabe, SachAufgabe)
+        assert aufgabe.bereich == bereich
+        # Nothing can verify a sentence, so it waits for approval
+        assert aufgabe.geprueft is False
+
+    # Without a text or photos there is nothing to go on
+    fehler = await client.fehler(
+        "tasks/generate_sentences", fach_id=FACH_ID, bereich=bereich, anzahl=3
+    )
+    assert fehler["message"] == "generieren_ohne_vorgabe"
+    # Only into a sentence section
+    fehler = await client.fehler(
+        "tasks/generate_sentences",
+        fach_id=FACH_ID,
+        bereich="standard",
+        anzahl=3,
+        beschreibung="x",
+    )
+    assert fehler["message"] == "saetze_nur_satzbereich"
+
+
+async def test_satzaufgaben_aus_fotos(
+    hass: HomeAssistant,
+    mit_vokabeln: MockConfigEntry,
+    client: Client,  # noqa: F811
+) -> None:
+    from unittest.mock import AsyncMock, patch  # noqa: PLC0415
+
+    from .test_sach_ablauf import _seiten  # noqa: PLC0415
+
+    manager = await _mit_ki(hass, mit_vokabeln)
+    bereich = await _satzbereich(client)
+    seiten = await _seiten(mit_vokabeln, 2)
+
+    ki = AsyncMock(return_value={"saetze": [LUECKE_SATZ]})
+    with patch("custom_components.learnbuddy.ai._async_generate_data", ki):
+        ergebnis = await client.ok(
+            "tasks/generate_sentences",
+            fach_id=FACH_ID,
+            bereich=bereich,
+            anzahl=1,
+            form="luecke",
+            seiten=seiten,
+            uebernehmen=True,
+        )
+    assert ergebnis["erzeugt"] == 1
+    assert "Take over the exercises" in ki.await_args.kwargs["instructions"]
+    assert len(ki.await_args.kwargs["attachments"]) == 2
+    # The pages are not kept
+    assert all(manager.bilder.pfad(seite) is None for seite in seiten)

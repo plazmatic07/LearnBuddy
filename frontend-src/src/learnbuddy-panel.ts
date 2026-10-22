@@ -42,6 +42,7 @@ type Dialog =
   | "bildaufgabe"
   | "bild"
   | "seiten"
+  | "saetze"
   | "foto"
   | "simulation"
   | null;
@@ -77,6 +78,19 @@ interface AufgabeEntwurf {
   form: SachForm;
   kernpunkte: string;
   falsche: string;
+}
+
+interface SaetzeEntwurf {
+  // With photos of book pages instead of a description
+  foto: boolean;
+  bereich: string;
+  dateien: File[];
+  vorschauen: string[];
+  lektion: string;
+  anzahl: number;
+  form: "gemischt" | "luecke" | "auswahl";
+  beschreibung: string;
+  uebernehmen: boolean;
 }
 
 interface SeitenEntwurf {
@@ -306,6 +320,7 @@ export class LearnBuddyPanel extends LitElement {
   @state() private _bildText = "";
 
   @state() private _seiten: SeitenEntwurf | null = null;
+  @state() private _saetze: SaetzeEntwurf | null = null;
 
   @state() private _foto: FotoEntwurf | null = null;
 
@@ -1490,6 +1505,91 @@ export class LearnBuddyPanel extends LitElement {
     }
   }
 
+  // --------------------------------------------- sentence tasks from the AI
+
+  private _oeffneSaetze(foto: boolean): void {
+    const satzBereiche = this._bereiche.filter((b) => b.art === "satz");
+    const aktiv = satzBereiche.find((b) => b.id === this._aktiverBereich);
+    this._saetze = {
+      foto,
+      bereich: (aktiv ?? satzBereiche[0])?.id ?? "",
+      dateien: [],
+      vorschauen: [],
+      lektion: this._filter.lektion === OHNE_LEKTION ? "" : this._filter.lektion,
+      anzahl: 8,
+      form: "gemischt",
+      beschreibung: "",
+      uebernehmen: false,
+    };
+    this._dialogFehler = "";
+    this._dialog = "saetze";
+  }
+
+  private _saetzeSeitenGewaehlt(ereignis: Event): void {
+    const entwurf = this._saetze;
+    if (!entwurf) {
+      return;
+    }
+    const gewaehlt = [...((ereignis.target as HTMLInputElement).files ?? [])];
+    for (const adresse of entwurf.vorschauen) {
+      URL.revokeObjectURL(adresse);
+    }
+    const dateien = gewaehlt.slice(0, MAX_SEITEN);
+    this._dialogFehler =
+      gewaehlt.length > MAX_SEITEN ? this._t("seiten_zu_viele", { n: MAX_SEITEN }) : "";
+    this._saetze = {
+      ...entwurf,
+      dateien,
+      vorschauen: dateien.map((datei) => URL.createObjectURL(datei)),
+    };
+  }
+
+  /** Let the AI create sentence tasks with a gap, from a wish or from photos. */
+  private async _erzeugeSaetze(): Promise<void> {
+    const entwurf = this._saetze;
+    if (!entwurf || !this._fachId) {
+      return;
+    }
+    this._beschaeftigt = true;
+    this._dialogFehler = "";
+    try {
+      const seiten: string[] = [];
+      if (entwurf.foto) {
+        for (const datei of entwurf.dateien) {
+          seiten.push(await this._api.bildHochladen(datei, true));
+        }
+      }
+      const ergebnis = await this._api.satzaufgabenErzeugen(this._fachId, {
+        bereich: entwurf.bereich,
+        anzahl: entwurf.anzahl,
+        form: entwurf.form,
+        beschreibung: entwurf.beschreibung.trim() || null,
+        seiten,
+        uebernehmen: entwurf.foto && entwurf.uebernehmen,
+        lektion: entwurf.lektion || null,
+      });
+      this._schliesseDialog();
+      this._auswahl = new Set();
+      this._bereichId = entwurf.bereich;
+      if (ergebnis.erzeugt) {
+        // Show what waits for approval
+        this._filter = { ...LEERER_FILTER, geprueft: "nein" };
+      }
+      this._zeigeErfolg(
+        this._t("saetze_fertig", {
+          erzeugt: ergebnis.erzeugt,
+          verworfen: ergebnis.verworfen,
+          doppelt: ergebnis.uebersprungen,
+        }),
+      );
+      await this._neuLaden();
+    } catch (fehler) {
+      this._dialogFehler = fehlertext(this._t, fehler);
+    } finally {
+      this._beschaeftigt = false;
+    }
+  }
+
   // ------------------------------------------------------------- lessons
 
   private _oeffneLektionen(): void {
@@ -2200,6 +2300,24 @@ export class LearnBuddyPanel extends LitElement {
             >
               ${t("generieren")}
             </button>`
+          : nothing}
+        ${this._bereiche.some((b) => b.art === "satz")
+          ? html`
+              <button
+                ?disabled=${!kiAn}
+                title=${kiAn ? "" : kiGrund}
+                @click=${() => this._oeffneSaetze(false)}
+              >
+                ${t("saetze_generieren")}
+              </button>
+              <button
+                ?disabled=${!kiBilder}
+                title=${kiGrund}
+                @click=${() => this._oeffneSaetze(true)}
+              >
+                ${t("saetze_foto")}
+              </button>
+            `
           : nothing}
         ${satz
           ? nothing
@@ -3097,6 +3215,9 @@ export class LearnBuddyPanel extends LitElement {
       case "seiten":
         inhalt = this._seitenDialog();
         break;
+      case "saetze":
+        inhalt = this._saetzeDialog();
+        break;
       case "foto":
         inhalt = this._fotoDialog();
         break;
@@ -3543,6 +3664,140 @@ export class LearnBuddyPanel extends LitElement {
           @click=${this._erzeugeFragen}
         >
           ${t("seiten_start")}
+        </button>
+      </div>
+    `;
+  }
+
+  private _saetzeDialog(): TemplateResult {
+    const t = this._t;
+    const entwurf = this._saetze;
+    if (!entwurf) {
+      return html``;
+    }
+    const setze = <K extends keyof SaetzeEntwurf>(feld: K, neu: SaetzeEntwurf[K]): void => {
+      this._saetze = { ...entwurf, [feld]: neu };
+    };
+    const formen: SaetzeEntwurf["form"][] = ["gemischt", "luecke", "auswahl"];
+    const satzBereiche = this._bereiche.filter((b) => b.art === "satz");
+    const ohneEingabe = entwurf.foto
+      ? !entwurf.dateien.length
+      : !entwurf.beschreibung.trim();
+    return html`
+      <h2>${t(entwurf.foto ? "saetze_foto" : "saetze_generieren")}</h2>
+      <p class="klein">${t(entwurf.foto ? "saetze_hilfe_foto" : "saetze_hilfe_text")}</p>
+      ${entwurf.foto
+        ? html`
+            <label class="feld">
+              ${t("seiten_waehlen", { n: MAX_SEITEN })} *
+              <input
+                type="file"
+                multiple
+                accept="image/png,image/jpeg,image/webp"
+                aria-label=${t("seiten_waehlen", { n: MAX_SEITEN })}
+                @change=${this._saetzeSeitenGewaehlt}
+              />
+            </label>
+            ${entwurf.vorschauen.length
+              ? html`<div class="leiste" style="margin: 12px 0 0">
+                  ${entwurf.vorschauen.map(
+                    (adresse, index) =>
+                      html`<img
+                        class="grossbild"
+                        style="max-height: 140px; margin: 0"
+                        src=${adresse}
+                        alt=${`${t("spalte_seite")} ${index + 1}`}
+                      />`,
+                  )}
+                </div>`
+              : nothing}
+            <div class="chips" style="margin: 12px 0">
+              ${[false, true].map(
+                (uebernehmen) => html`
+                  <label class="feld zeile">
+                    <input
+                      type="radio"
+                      name="saetze-modus"
+                      .checked=${entwurf.uebernehmen === uebernehmen}
+                      @change=${() => setze("uebernehmen", uebernehmen)}
+                    />
+                    ${t(uebernehmen ? "saetze_uebernehmen" : "saetze_aehnliche")}
+                  </label>
+                `,
+              )}
+            </div>
+          `
+        : nothing}
+      <label class="feld" style="margin-top: 12px">
+        ${t("saetze_beschreibung")}${entwurf.foto ? "" : " *"}
+        <textarea
+          maxlength="500"
+          placeholder=${t("saetze_beschreibung_hilfe")}
+          .value=${entwurf.beschreibung}
+          @input=${(e: Event) => setze("beschreibung", wert(e))}
+        ></textarea>
+      </label>
+      <div class="raster" style="margin-top: 12px">
+        <label class="feld">
+          ${t("bereich")}
+          <select
+            .value=${entwurf.bereich}
+            @change=${(e: Event) => setze("bereich", wert(e))}
+          >
+            ${satzBereiche.map(
+              (bereich) =>
+                html`<option value=${bereich.id} ?selected=${entwurf.bereich === bereich.id}>
+                  ${this._bereichName_(bereich)}
+                </option>`,
+            )}
+          </select>
+        </label>
+        <label class="feld">
+          ${t("spalte_lektion")}
+          ${this._lektionAuswahl(
+            entwurf.lektion,
+            (neu) => setze("lektion", neu),
+            t("spalte_lektion"),
+          )}
+        </label>
+        <label class="feld">
+          ${t("seiten_anzahl")}
+          <input
+            type="number"
+            min="1"
+            max="20"
+            .value=${String(entwurf.anzahl)}
+            @input=${(e: Event) =>
+              setze("anzahl", Math.min(Math.max(Math.round(Number(wert(e))) || 1, 1), 20))}
+          />
+        </label>
+        <label class="feld">
+          ${t("form")}
+          <select
+            .value=${entwurf.form}
+            @change=${(e: Event) =>
+              setze("form", formen.find((form) => form === wert(e)) ?? "gemischt")}
+          >
+            ${formen.map(
+              (form) =>
+                html`<option value=${form} ?selected=${entwurf.form === form}>
+                  ${t(`form_${form}`)}
+                </option>`,
+            )}
+          </select>
+        </label>
+      </div>
+      ${this._beschaeftigt
+        ? html`<p class="klein" role="status">${t("saetze_laeuft")}</p>`
+        : nothing}
+      <div class="aktionen">
+        <button @click=${this._schliesseDialog}>${t("abbrechen")}</button>
+        <button
+          class="primaer"
+          ?disabled=${this._beschaeftigt || ohneEingabe || !entwurf.bereich}
+          @click=${this._erzeugeSaetze}
+        >
+          ${t("saetze_start")}
         </button>
       </div>
     `;

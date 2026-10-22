@@ -286,6 +286,16 @@ export interface SeitenEingabe {
   bereich?: string | null;
 }
 
+export interface SaetzeEingabe {
+  bereich: string;
+  anzahl: number;
+  form: "gemischt" | "luecke" | "auswahl";
+  beschreibung: string | null;
+  seiten: string[];
+  uebernehmen: boolean;
+  lektion: string | null;
+}
+
 export interface GenerierEingabe {
   anzahl: number;
   lektion: string | null;

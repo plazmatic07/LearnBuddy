@@ -152,6 +152,21 @@ const de = {
   form_auswahl: "Auswahl",
   form_gemischt: "Gemischt",
   form_luecke: "Lückentext",
+  saetze_generieren: "Sätze generieren",
+  saetze_foto: "Sätze aus Foto",
+  saetze_hilfe_text:
+    "Die KI schreibt kurze Sätze mit einer Lücke, die das Kind ausfüllt. Die Aufgaben warten danach auf deine Freigabe (Filter „Geprüft: nein“).",
+  saetze_hilfe_foto:
+    "Die KI liest Übungen von Buchseiten oder schreibt ähnliche neue. Die Aufgaben warten danach auf deine Freigabe.",
+  saetze_beschreibung: "Thema und Wünsche",
+  saetze_beschreibung_hilfe: "z. B. Personalpronomen in kurzen Sätzen",
+  saetze_uebernehmen: "Übungen von der Seite übernehmen",
+  saetze_aehnliche: "Ähnliche neue Aufgaben erfinden",
+  saetze_laeuft: "Die KI schreibt die Sätze. Das kann eine Minute dauern …",
+  saetze_start: "Erzeugen",
+  saetze_fertig:
+    "{erzeugt} Aufgaben erzeugt, {verworfen} unbrauchbar, {doppelt} doppelt. Sie warten auf deine Freigabe.",
+  err_saetze_nur_satzbereich: "Das geht nur in einem Bereich für Sätze.",
   bereich_art: "Art der Aufgaben",
   bereich_art_vokabel: "Vokabeln (Wortpaare)",
   bereich_art_satz: "Sätze (Lückentext, Auswahl, Kurzantwort)",
@@ -728,6 +743,21 @@ const en: Record<Schluessel, string> = {
   form_auswahl: "Multiple choice",
   form_gemischt: "Mixed",
   form_luecke: "Gap text",
+  saetze_generieren: "Generate sentences",
+  saetze_foto: "Sentences from photo",
+  saetze_hilfe_text:
+    "The AI writes short sentences with a gap for the child to fill in. The tasks then wait for your approval (filter “Checked: no”).",
+  saetze_hilfe_foto:
+    "The AI reads exercises from book pages or writes similar new ones. The tasks then wait for your approval.",
+  saetze_beschreibung: "Topic and wishes",
+  saetze_beschreibung_hilfe: "e.g. personal pronouns in short sentences",
+  saetze_uebernehmen: "Take over the exercises of the page",
+  saetze_aehnliche: "Invent similar new tasks",
+  saetze_laeuft: "The AI is writing the sentences. This can take a minute …",
+  saetze_start: "Create",
+  saetze_fertig:
+    "{erzeugt} tasks created, {verworfen} unusable, {doppelt} duplicates. They wait for your approval.",
+  err_saetze_nur_satzbereich: "This only works in a section for sentences.",
   bereich_art: "Kind of tasks",
   bereich_art_vokabel: "Vocabulary (word pairs)",
   bereich_art_satz: "Sentences (gap, choice, short answer)",

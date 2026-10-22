@@ -93,6 +93,7 @@ WEG_AUSDRUCK = "ausdruck"
 WEG_MESSENGER = "messenger"
 MAX_FOTO_ZEILEN = 200
 MAX_SACHFRAGEN = 15
+MAX_SATZAUFGABEN = 20
 FORM_GEMISCHT = "gemischt"
 MIN_FALSCHE_OPTIONEN = 2
 MAX_FALSCHE_OPTIONEN = 3
@@ -2042,6 +2043,110 @@ class Verwaltung:
         finally:
             # Pages no question refers to are not kept
             self._bilder_aufraeumen(sofort=seiten)
+
+    async def satzaufgaben_erzeugen(
+        self,
+        fach_id: str,
+        *,
+        bereich: str | None,
+        anzahl: int,
+        form: str | None = None,
+        beschreibung: str | None = None,
+        seiten: list[str] | None = None,
+        uebernehmen: bool = False,
+        lektion: str | None = None,
+    ) -> dict[str, Any]:
+        """Let the AI create sentence tasks with a gap, from a text or photos.
+
+        The tasks always wait for approval: nothing can verify them.
+        """
+        manager = self._manager
+        fach, store = self._fach(fach_id)
+        seiten = seiten or []
+        try:
+            ziel = self._bereich_pruefen(store, bereich)
+            if (
+                fach.typ is not AufgabenTyp.VOKABEL
+                or self._bereich_art(fach, store, ziel) != ART_SATZ
+            ):
+                raise _ungueltig("saetze_nur_satzbereich")
+            if not 1 <= anzahl <= MAX_SATZAUFGABEN:
+                raise _ungueltig("anzahl_ungueltig")
+            if form not in (None, FORM_GEMISCHT, SachForm.LUECKE, SachForm.AUSWAHL):
+                raise _ungueltig("form_ungueltig")
+            beschreibung = _text(beschreibung, "beschreibung_ungueltig")
+            if seiten:
+                ki_entity = self._pruefe_seiten(fach, seiten)
+            elif beschreibung:
+                ki_entity = self._ki(fach)
+            else:
+                raise _ungueltig("generieren_ohne_vorgabe")
+            thema: str | None = None
+            if lektion and lektion.strip():
+                thema = store.lektion_finden(lektion)
+                if thema is None:
+                    raise _ungueltig("lektion_unbekannt")
+
+            # Lazy import: the AI module is only needed here
+            from .ai import baue_satzaufgaben_prompt  # noqa: PLC0415
+
+            kind = manager.kinder[fach.kind_id]
+            prompt = baue_satzaufgaben_prompt(
+                anzahl=anzahl,
+                form=form or FORM_GEMISCHT,
+                zielsprache=fach.sprachen[-1],
+                beschreibung=beschreibung,
+                klassenstufe=kind.klassenstufe,
+                schulart=kind.schulart,
+                mit_seiten=bool(seiten),
+                uebernehmen=uebernehmen,
+            )
+            vorschlaege = await manager.ki.async_erzeuge_satzaufgaben(
+                ki_entity, prompt, seiten
+            )
+            if vorschlaege is None:
+                raise VerwaltungError(
+                    "home_assistant_error", manager.ki.fehler_schluessel
+                )
+
+            # The subject may have been removed while the AI was working
+            fach, store = self._fach(fach_id)
+            vorhanden = self._schluessel_menge(fach, store)
+            erzeugt: list[str] = []
+            uebersprungen = 0
+            for vorschlag in vorschlaege[:anzahl]:
+                aufgabe = SachAufgabe(
+                    fach_id=fach_id,
+                    frage=vorschlag.satz,
+                    antwort=vorschlag.antwort,
+                    form=vorschlag.form,
+                    alternativen=list(vorschlag.alternativen),
+                    falsche_optionen=list(vorschlag.falsche_optionen),
+                    lektion=thema,
+                    bereich=ziel,
+                    quelle=Quelle.UPLOAD if seiten else Quelle.GENERIERT,
+                    geprueft=False,
+                )
+                schluessel = aufgabe_schluessel(fach, aufgabe)
+                if schluessel in vorhanden:
+                    uebersprungen += 1
+                    continue
+                vorhanden.add(schluessel)
+                store.add(aufgabe)
+                erzeugt.append(aufgabe.id)
+            if erzeugt:
+                self._gespeichert(fach, store)
+            return {
+                "erzeugt": len(erzeugt),
+                # What the AI returned but could not be used
+                "verworfen": max(0, anzahl - len(vorschlaege)),
+                "uebersprungen": uebersprungen,
+                "aufgabe_ids": erzeugt,
+            }
+        finally:
+            # Pages are only the source of the tasks and are not kept
+            if seiten:
+                self._bilder_aufraeumen(sofort=seiten)
 
     def _speichere_generierte(
         self,
