@@ -255,6 +255,11 @@ export const styles = css`
   header button.icon {
     color: inherit;
   }
+  .abschnitt {
+    margin: 18px 4px 6px;
+    font-size: 1.05em;
+    font-weight: 600;
+  }
   .tabelle-rahmen {
     overflow-x: auto;
     padding: 0;

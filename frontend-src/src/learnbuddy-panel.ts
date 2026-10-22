@@ -60,6 +60,8 @@ interface Filter {
 
 interface AufgabeEntwurf {
   id: string | null;
+  // Kind of task the editor is for; sentences of a language subject are "sach"
+  art: "vokabel" | "mathe" | "sach";
   a: string;
   b: string;
   altA: string;
@@ -610,19 +612,14 @@ export class LearnBuddyPanel extends LitElement {
     return this._bereiche.length > 1;
   }
 
-  /** Sentence sections have their own columns, so "all" is no view there. */
-  private get _gemischt(): boolean {
-    return this._bereiche.some((b) => b.art === "satz");
+  private get _aktiverBereich(): string {
+    return this._hatBereiche && this._bereiche.some((b) => b.id === this._bereichId)
+      ? this._bereichId
+      : "";
   }
 
-  private get _aktiverBereich(): string {
-    if (!this._hatBereiche) {
-      return "";
-    }
-    if (this._bereiche.some((b) => b.id === this._bereichId)) {
-      return this._bereichId;
-    }
-    return this._gemischt ? (this._bereiche[0]?.id ?? "") : "";
+  private _ansichtVon(bereich: Bereich): "vokabel" | "mathe" | "sach" {
+    return bereich.art === "satz" ? "sach" : (this._fach?.typ ?? "vokabel");
   }
 
   /** The kind of tasks the table shows: columns and editor follow it. */
@@ -634,6 +631,7 @@ export class LearnBuddyPanel extends LitElement {
     return this._fach?.typ ?? "vokabel";
   }
 
+  /** Whether the shown tasks are sentences of a language subject. */
   private get _satzAnsicht(): boolean {
     return this._ansicht === "sach" && this._fach?.typ === "vokabel";
   }
@@ -757,10 +755,11 @@ export class LearnBuddyPanel extends LitElement {
     const sach = aufgabe?.typ === "sach" ? aufgabe : null;
     this._entwurf = {
       id: aufgabe?.id ?? null,
+      art: aufgabe?.typ ?? this._ansicht,
       // Math: a is the task and b the result; knowledge: question and answer
       a: mathe ? mathe.aufgabe : sach ? sach.frage : (vokabel?.frage[a] ?? ""),
       b: mathe ? mathe.loesung : sach ? sach.antwort : (vokabel?.frage[b] ?? ""),
-      form: sach?.form ?? (this._satzAnsicht ? "luecke" : "kurz"),
+      form: sach?.form ?? (this._satzAnsicht && !aufgabe ? "luecke" : "kurz"),
       kernpunkte: (sach?.kernpunkte ?? []).join("\n"),
       falsche: (sach?.falsche_optionen ?? []).join("\n"),
       altA: (vokabel?.alternativen[a] ?? []).join(" | "),
@@ -809,7 +808,7 @@ export class LearnBuddyPanel extends LitElement {
             schwierigkeit:
               entwurf.schwierigkeit === "" ? null : Number(entwurf.schwierigkeit),
           }
-        : this._ansicht === "sach"
+        : entwurf.art === "sach"
           ? {
               frage: entwurf.a,
               antwort: entwurf.b,
@@ -2172,10 +2171,7 @@ export class LearnBuddyPanel extends LitElement {
     const fach = this._fach as Fach;
     const sichtbar = this._gefiltert();
     const gewaehlt = [...this._auswahl];
-    const alleGewaehlt =
-      sichtbar.length > 0 && sichtbar.every((aufgabe) => this._auswahl.has(aufgabe.id));
     const [a = "", b = ""] = fach.sprachen;
-    const sprache = this.hass?.language ?? "en";
     const filter = this._filter;
     const mathe = fach.typ === "mathe";
     const sach = this._ansicht === "sach";
@@ -2342,18 +2338,16 @@ export class LearnBuddyPanel extends LitElement {
 
       ${this._hatBereiche
         ? html`<div class="kinder fachwahl" role="group" aria-label=${t("bereich")}>
-            ${this._gemischt
-              ? nothing
-              : html`<button
-                  class="kindwahl"
-                  aria-pressed=${this._aktiverBereich === "" ? "true" : "false"}
-                  @click=${() => {
-                    this._bereichId = "";
-                    this._auswahl = new Set();
-                  }}
-                >
-                  ${t("alle")} (${this._aufgaben.length})
-                </button>`}
+            <button
+              class="kindwahl"
+              aria-pressed=${this._aktiverBereich === "" ? "true" : "false"}
+              @click=${() => {
+                this._bereichId = "";
+                this._auswahl = new Set();
+              }}
+            >
+              ${t("alle")} (${this._aufgaben.length})
+            </button>
             ${this._bereiche.map(
               (bereich) =>
                 html`<button
@@ -2476,6 +2470,48 @@ export class LearnBuddyPanel extends LitElement {
         ${t("anzahl", { n: sichtbar.length, gesamt: this._aufgaben.length })}
       </div>
 
+      ${this._tabellen(sichtbar, a, b)}
+    `;
+  }
+
+  /** One table, or one per section when all sections of a mixed subject show. */
+  private _tabellen(sichtbar: Aufgabe[], a: string, b: string): TemplateResult {
+    const aktiv = this._aktiverBereich;
+    if (aktiv || !this._hatBereiche) {
+      return this._tabelle(sichtbar, this._ansicht, a, b, true);
+    }
+    const neu = this._neuBereich() ?? STANDARD_BEREICH;
+    const gruppen = this._bereiche.map((bereich) => ({
+      bereich,
+      aufgaben: sichtbar.filter(
+        (aufgabe) => (aufgabe.bereich ?? STANDARD_BEREICH) === bereich.id,
+      ),
+    }));
+    return html`${gruppen.map(
+      ({ bereich, aufgaben }) => html`
+        <h3 class="abschnitt">
+          ${this._bereichName_(bereich)} <span class="klein">(${aufgaben.length})</span>
+        </h3>
+        ${this._tabelle(aufgaben, this._ansichtVon(bereich), a, b, bereich.id === neu)}
+      `,
+    )}`;
+  }
+
+  private _tabelle(
+    aufgaben: Aufgabe[],
+    ansicht: "vokabel" | "mathe" | "sach",
+    a: string,
+    b: string,
+    neueZeile: boolean,
+  ): TemplateResult {
+    const t = this._t;
+    const sprache = this.hass?.language ?? "en";
+    const mathe = ansicht === "mathe";
+    const sach = ansicht === "sach";
+    const alleGewaehlt =
+      aufgaben.length > 0 && aufgaben.every((aufgabe) => this._auswahl.has(aufgabe.id));
+    const sichtbar = aufgaben;
+    return html`
       <div class="card tabelle-rahmen">
         <table>
           <thead>
@@ -2518,7 +2554,7 @@ export class LearnBuddyPanel extends LitElement {
             </tr>
           </thead>
           <tbody>
-            ${this._entwurf && this._entwurf.id === null
+            ${neueZeile && this._entwurf && this._entwurf.id === null
               ? this._editorZeile(this._entwurf, a, b)
               : nothing}
             ${sichtbar.map((aufgabe) =>
@@ -2528,7 +2564,7 @@ export class LearnBuddyPanel extends LitElement {
             )}
           </tbody>
         </table>
-        ${sichtbar.length === 0 && !this._entwurf
+        ${sichtbar.length === 0 && !(neueZeile && this._entwurf)
           ? html`<div class="leer">
               ${t(this._aufgaben.length ? "keine_treffer" : "keine_aufgaben")}
             </div>`
@@ -2769,7 +2805,8 @@ export class LearnBuddyPanel extends LitElement {
   private _editorZeile(entwurf: AufgabeEntwurf, a: string, b: string): TemplateResult {
     const t = this._t;
     const mathe = this._fach?.typ === "mathe";
-    const sach = this._ansicht === "sach";
+    const sach = entwurf.art === "sach";
+    const satzEntwurf = sach && this._fach?.typ === "vokabel";
     const sprache = this.hass?.language ?? "en";
     const mehrzeilig = (
       feld: "a" | "b" | "kernpunkte" | "falsche",
@@ -2857,7 +2894,7 @@ export class LearnBuddyPanel extends LitElement {
                       );
                     }}
                   >
-                    ${this._satzAnsicht
+                    ${satzEntwurf
                       ? html`<option value="luecke" ?selected=${entwurf.form === "luecke"}>
                           ${t("form_luecke")}
                         </option>`
