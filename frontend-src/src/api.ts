@@ -1,6 +1,7 @@
 import type {
   AbfrageAuswahl,
   ArbeitEingabe,
+  Bereich,
   Dashboard,
   GenerierEingabe,
   SeitenEingabe,
@@ -174,6 +175,35 @@ export class Api {
     return antwort.lektionen;
   }
 
+  async bereichHinzufuegen(fachId: string, name: string): Promise<Bereich[]> {
+    const antwort = await this.call<{ bereiche: Bereich[] }>("sections/add", {
+      fach_id: fachId,
+      name,
+    });
+    return antwort.bereiche;
+  }
+
+  async bereichUmbenennen(
+    fachId: string,
+    bereich: string,
+    name: string,
+  ): Promise<Bereich[]> {
+    const antwort = await this.call<{ bereiche: Bereich[] }>("sections/rename", {
+      fach_id: fachId,
+      bereich,
+      name,
+    });
+    return antwort.bereiche;
+  }
+
+  async bereichLoeschen(fachId: string, bereich: string): Promise<Bereich[]> {
+    const antwort = await this.call<{ bereiche: Bereich[] }>("sections/delete", {
+      fach_id: fachId,
+      bereich,
+    });
+    return antwort.bereiche;
+  }
+
   importVorschau(
     fachId: string,
     inhalt: string,
@@ -193,6 +223,7 @@ export class Api {
     lektion: string | null,
     trennzeichen: string | null,
     geprueft: boolean,
+    bereich: string | null = null,
   ): Promise<ImportErgebnis> {
     return this.call("tasks/import_text", {
       fach_id: fachId,
@@ -200,6 +231,7 @@ export class Api {
       lektion,
       trennzeichen,
       geprueft,
+      bereich,
     });
   }
 
@@ -219,8 +251,14 @@ export class Api {
     fachId: string,
     zeilen: Record<string, unknown>[],
     lektion: string | null,
+    bereich: string | null = null,
   ): Promise<{ importiert: number; uebersprungen: number; fehler: number[] }> {
-    return this.call("tasks/photo_accept", { fach_id: fachId, zeilen, lektion });
+    return this.call("tasks/photo_accept", {
+      fach_id: fachId,
+      zeilen,
+      lektion,
+      bereich,
+    });
   }
 
   nachrechnen(fachId: string, aufgabeIds: string[]): Promise<NachrechnenErgebnis> {
@@ -293,12 +331,14 @@ export class Api {
     daten: Record<string, unknown>,
     mitStatistik: boolean,
     lektion: string | null,
+    bereich: string | null = null,
   ): Promise<JsonImportErgebnis> {
     return this.call("tasks/import_json", {
       fach_id: fachId,
       daten,
       mit_statistik: mitStatistik,
       lektion,
+      bereich,
     });
   }
 

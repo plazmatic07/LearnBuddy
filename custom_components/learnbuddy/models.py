@@ -15,6 +15,7 @@ from .const import (
     CONF_ABSENDER_KENNUNG,
     CONF_ANTWORTFRIST,
     CONF_ART,
+    CONF_BEREICHE,
     CONF_BILD_AKTION,
     CONF_BUNDESLAND,
     CONF_DATUM,
@@ -63,6 +64,8 @@ RICHTUNG_TRENNER = ">"
 # Math tasks have no direction, their statistics use this fixed key
 MATHE_RICHTUNG = "mathe"
 SACH_RICHTUNG = "sach"
+# Tasks without an explicit section belong to the standard section of the subject
+STANDARD_BEREICH = "standard"
 MIN_SCHWIERIGKEIT = 1
 MAX_SCHWIERIGKEIT = 5
 
@@ -207,6 +210,8 @@ class Vokabel:
     erstellt: datetime = field(default_factory=dt_util.utcnow)
     geaendert: datetime = field(default_factory=dt_util.utcnow)
     lektion: str | None = None
+    # Section (tab) of the subject, None is the standard section
+    bereich: str | None = None
     quelle: Quelle = Quelle.MANUELL
     geprueft: bool = True
     alternativen: dict[str, list[str]] = field(default_factory=dict)
@@ -242,6 +247,7 @@ class Vokabel:
             erstellt=dt_util.parse_datetime(data["erstellt"], raise_on_error=True),
             geaendert=dt_util.parse_datetime(data["geaendert"], raise_on_error=True),
             lektion=data.get("lektion"),
+            bereich=data.get("bereich"),
             quelle=Quelle(data.get("quelle", Quelle.MANUELL)),
             geprueft=data.get("geprueft", True),
             frage=dict(data["frage"]),
@@ -266,6 +272,7 @@ class Vokabel:
             "erstellt": self.erstellt.isoformat(),
             "geaendert": self.geaendert.isoformat(),
             "lektion": self.lektion,
+            "bereich": self.bereich,
             "quelle": self.quelle.value,
             "geprueft": self.geprueft,
             "frage": dict(self.frage),
@@ -287,6 +294,8 @@ class MatheAufgabe:
     erstellt: datetime = field(default_factory=dt_util.utcnow)
     geaendert: datetime = field(default_factory=dt_util.utcnow)
     lektion: str | None = None
+    # Section (tab) of the subject, None is the standard section
+    bereich: str | None = None
     quelle: Quelle = Quelle.MANUELL
     geprueft: bool = True
     # Other spellings of the result that count as correct
@@ -332,6 +341,7 @@ class MatheAufgabe:
             erstellt=dt_util.parse_datetime(data["erstellt"], raise_on_error=True),
             geaendert=dt_util.parse_datetime(data["geaendert"], raise_on_error=True),
             lektion=data.get("lektion"),
+            bereich=data.get("bereich"),
             quelle=Quelle(data.get("quelle", Quelle.MANUELL)),
             geprueft=data.get("geprueft", True),
             aufgabe=data["aufgabe"],
@@ -360,6 +370,7 @@ class MatheAufgabe:
             "erstellt": self.erstellt.isoformat(),
             "geaendert": self.geaendert.isoformat(),
             "lektion": self.lektion,
+            "bereich": self.bereich,
             "quelle": self.quelle.value,
             "geprueft": self.geprueft,
             "aufgabe": self.aufgabe,
@@ -390,6 +401,8 @@ class SachAufgabe:
     erstellt: datetime = field(default_factory=dt_util.utcnow)
     geaendert: datetime = field(default_factory=dt_util.utcnow)
     lektion: str | None = None
+    # Section (tab) of the subject, None is the standard section
+    bereich: str | None = None
     quelle: Quelle = Quelle.MANUELL
     geprueft: bool = True
     # What a complete answer has to contain
@@ -433,6 +446,7 @@ class SachAufgabe:
             erstellt=dt_util.parse_datetime(data["erstellt"], raise_on_error=True),
             geaendert=dt_util.parse_datetime(data["geaendert"], raise_on_error=True),
             lektion=data.get("lektion"),
+            bereich=data.get("bereich"),
             quelle=Quelle(data.get("quelle", Quelle.MANUELL)),
             geprueft=data.get("geprueft", True),
             frage=data["frage"],
@@ -459,6 +473,7 @@ class SachAufgabe:
             "erstellt": self.erstellt.isoformat(),
             "geaendert": self.geaendert.isoformat(),
             "lektion": self.lektion,
+            "bereich": self.bereich,
             "quelle": self.quelle.value,
             "geprueft": self.geprueft,
             "frage": self.frage,
@@ -487,6 +502,11 @@ def aufgabe_from_dict(data: dict[str, Any]) -> Aufgabe | None:
     if typ == AufgabenTyp.SACH.value:
         return SachAufgabe.from_dict(data)
     return None
+
+
+def bereich_id(aufgabe: Aufgabe) -> str:
+    """Return the id of the section a task belongs to."""
+    return aufgabe.bereich or STANDARD_BEREICH
 
 
 @dataclass(slots=True, frozen=True)
@@ -612,6 +632,8 @@ class Arbeit:
     art: ArbeitArt = ArbeitArt.ARBEIT
     thema: str = ""
     lektionen: tuple[str, ...] = ()
+    # Sections of the subject that belong to the exam as a whole
+    bereiche: tuple[str, ...] = ()
     abfragen_pro_tag: int = DEFAULT_ABFRAGEN_PRO_TAG
     start_tage_vorher: int = DEFAULT_START_TAGE_VORHER
     intensivierung: bool = True
@@ -634,6 +656,7 @@ class Arbeit:
             art=ArbeitArt(data.get(CONF_ART, ArbeitArt.ARBEIT)),
             thema=data.get(CONF_THEMA, ""),
             lektionen=tuple(data.get(CONF_LEKTIONEN, ())),
+            bereiche=tuple(data.get(CONF_BEREICHE, ())),
             abfragen_pro_tag=int(
                 data.get(CONF_ABFRAGEN_PRO_TAG, DEFAULT_ABFRAGEN_PRO_TAG)
             ),
@@ -750,6 +773,8 @@ class AbfrageFilter:
     lektion_seiten: tuple[tuple[str, int | None, int | None], ...] = ()
     # Share of wrong answers in percent a task has at least
     fehlerquote_ab: int | None = None
+    # Section ids, see STANDARD_BEREICH
+    bereiche: tuple[str, ...] = ()
 
     @property
     def aktiv(self) -> bool:
@@ -759,6 +784,8 @@ class AbfrageFilter:
     def passt(self, aufgabe: Aufgabe) -> bool:
         """Return whether a task belongs to the selection."""
         if self.lektionen and aufgabe.lektion not in self.lektionen:
+            return False
+        if self.bereiche and bereich_id(aufgabe) not in self.bereiche:
             return False
         if not _seite_passt(aufgabe.seite, self.seite_von, self.seite_bis):
             return False
@@ -779,6 +806,7 @@ class AbfrageFilter:
         """Create the filter from stored data."""
         return cls(
             lektionen=tuple(data.get("lektionen", ())),
+            bereiche=tuple(data.get("bereiche", ())),
             seite_von=data.get("seite_von"),
             seite_bis=data.get("seite_bis"),
             lektion_seiten=tuple(
@@ -792,6 +820,7 @@ class AbfrageFilter:
         """Return the storable representation."""
         return {
             "lektionen": list(self.lektionen),
+            "bereiche": list(self.bereiche),
             "seite_von": self.seite_von,
             "seite_bis": self.seite_bis,
             "lektion_seiten": [list(eintrag) for eintrag in self.lektion_seiten],

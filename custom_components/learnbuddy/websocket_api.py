@@ -45,6 +45,7 @@ AUFGABE_SCHEMA = vol.Schema(
         vol.Optional("hinweis"): vol.Any(str, None),
         vol.Optional("seite"): vol.Any(int, None),
         vol.Optional("lektion"): vol.Any(str, None),
+        vol.Optional("bereich"): vol.Any(str, None),
         vol.Optional("geprueft"): bool,
     }
 )
@@ -55,6 +56,7 @@ ARBEIT_SCHEMA = vol.Schema(
         vol.Required("thema"): str,
         vol.Optional("art"): str,
         vol.Optional("lektionen"): [str],
+        vol.Optional("bereiche"): [str],
         vol.Optional("aufgaben_ids"): [str],
         vol.Optional("abfragen_pro_tag"): vol.Coerce(int),
         vol.Optional("start_tage_vorher"): vol.Coerce(int),
@@ -137,6 +139,7 @@ def ws_set_active(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
 _SEITE = vol.Any(None, vol.All(int, vol.Range(min=1, max=9999)))
 _ABFRAGE_AUSWAHL: dict[str | vol.Marker, Any] = {
     vol.Optional("lektionen", default=list): [str],
+    vol.Optional("bereiche", default=list): [str],
     vol.Optional("seite_von"): _SEITE,
     vol.Optional("seite_bis"): _SEITE,
     vol.Optional("lektion_seiten", default=list): [
@@ -291,8 +294,61 @@ def ws_lessons_delete(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
 
 @websocket_command(
     {
+        vol.Required("type"): "learnbuddy/sections/add",
+        vol.Required("fach_id"): str,
+        vol.Required("name"): str,
+        vol.Optional("art"): vol.Any(str, None),
+    }
+)
+@require_admin
+@_befehl
+def ws_sections_add(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
+    """Create a section (tab) of a subject."""
+    return {
+        "bereiche": verwaltung.bereich_hinzufuegen(
+            msg["fach_id"], msg["name"], msg.get("art")
+        )
+    }
+
+
+@websocket_command(
+    {
+        vol.Required("type"): "learnbuddy/sections/rename",
+        vol.Required("fach_id"): str,
+        vol.Required("bereich"): str,
+        vol.Required("name"): str,
+    }
+)
+@require_admin
+@_befehl
+def ws_sections_rename(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
+    """Rename a section of a subject."""
+    return {
+        "bereiche": verwaltung.bereich_umbenennen(
+            msg["fach_id"], msg["bereich"], msg["name"]
+        )
+    }
+
+
+@websocket_command(
+    {
+        vol.Required("type"): "learnbuddy/sections/delete",
+        vol.Required("fach_id"): str,
+        vol.Required("bereich"): str,
+    }
+)
+@require_admin
+@_befehl
+def ws_sections_delete(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
+    """Delete an empty section of a subject."""
+    return {"bereiche": verwaltung.bereich_loeschen(msg["fach_id"], msg["bereich"])}
+
+
+@websocket_command(
+    {
         vol.Required("type"): "learnbuddy/tasks/import_text",
         vol.Required("fach_id"): str,
+        vol.Optional("bereich"): vol.Any(str, None),
         vol.Required("inhalt"): str,
         vol.Optional("lektion"): vol.Any(str, None),
         vol.Optional("trennzeichen"): vol.Any(str, None),
@@ -311,6 +367,7 @@ def ws_tasks_import_text(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
         trennzeichen=msg.get("trennzeichen") or None,
         geprueft=msg["geprueft"],
         vorschau=msg["vorschau"],
+        bereich=msg.get("bereich"),
     )
 
 
@@ -332,6 +389,7 @@ def ws_tasks_export(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
     {
         vol.Required("type"): "learnbuddy/tasks/import_json",
         vol.Required("fach_id"): str,
+        vol.Optional("bereich"): vol.Any(str, None),
         vol.Required("daten"): dict,
         vol.Optional("mit_statistik", default=False): bool,
         vol.Optional("lektion"): vol.Any(str, None),
@@ -346,6 +404,7 @@ def ws_tasks_import_json(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
         msg["daten"],
         mit_statistik=msg["mit_statistik"],
         lektion=msg.get("lektion"),
+        bereich=msg.get("bereich"),
     )
 
 
@@ -353,6 +412,7 @@ def ws_tasks_import_json(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
     {
         vol.Required("type"): "learnbuddy/tasks/generate",
         vol.Required("fach_id"): str,
+        vol.Optional("bereich"): vol.Any(str, None),
         vol.Required("anzahl"): int,
         vol.Optional("lektion"): vol.Any(str, None),
         vol.Optional("schwierigkeit"): vol.Any(int, None),
@@ -380,6 +440,7 @@ async def ws_tasks_generate(
             schwierigkeit=msg.get("schwierigkeit"),
             beschreibung=msg.get("beschreibung"),
             beispiel_ids=msg.get("beispiel_ids"),
+            bereich=msg.get("bereich"),
         )
     except VerwaltungError as err:
         connection.send_error(msg["id"], err.code, err.schluessel)
@@ -391,6 +452,7 @@ async def ws_tasks_generate(
     {
         vol.Required("type"): "learnbuddy/tasks/generate_from_pages",
         vol.Required("fach_id"): str,
+        vol.Optional("bereich"): vol.Any(str, None),
         vol.Required("seiten"): [str],
         vol.Required("anzahl"): int,
         vol.Optional("form"): vol.Any(str, None),
@@ -418,6 +480,7 @@ async def ws_tasks_generate_from_pages(
             form=msg.get("form"),
             lektion=msg.get("lektion"),
             schwerpunkt=msg.get("schwerpunkt"),
+            bereich=msg.get("bereich"),
         )
     except VerwaltungError as err:
         connection.send_error(msg["id"], err.code, err.schluessel)
@@ -456,6 +519,7 @@ async def ws_tasks_photo_extract(
     {
         vol.Required("type"): "learnbuddy/tasks/photo_accept",
         vol.Required("fach_id"): str,
+        vol.Optional("bereich"): vol.Any(str, None),
         vol.Required("zeilen"): [dict],
         vol.Optional("lektion"): vol.Any(str, None),
     }
@@ -465,7 +529,10 @@ async def ws_tasks_photo_extract(
 def ws_tasks_photo_accept(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
     """Store the tasks taken over from the preview of a photo."""
     return verwaltung.foto_uebernehmen(
-        msg["fach_id"], msg["zeilen"], lektion=msg.get("lektion")
+        msg["fach_id"],
+        msg["zeilen"],
+        lektion=msg.get("lektion"),
+        bereich=msg.get("bereich"),
     )
 
 
@@ -819,6 +886,9 @@ def async_setup_websocket_api(hass: HomeAssistant) -> None:
         ws_tasks_delete,
         ws_lessons_add,
         ws_lessons_delete,
+        ws_sections_add,
+        ws_sections_rename,
+        ws_sections_delete,
         ws_tasks_import_text,
         ws_tasks_export,
         ws_tasks_import_json,

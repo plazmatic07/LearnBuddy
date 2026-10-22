@@ -5,11 +5,13 @@ import { Api } from "./api";
 import "./uebersicht";
 import { fehlertext, sprachname, uebersetzer, type Uebersetzer } from "./i18n";
 import { styles } from "./styles";
+import { STANDARD_BEREICH } from "./types";
 import type {
   Arbeit,
   ArbeitEingabe,
   Aufgabe,
   AufgabeEingabe,
+  Bereich,
   Fach,
   Fachart,
   FotoZeile,
@@ -33,6 +35,7 @@ type Dialog =
   | "importJson"
   | "arbeit"
   | "lektion"
+  | "bereiche"
   | "generieren"
   | "nachrechnen"
   | "aufgabenart"
@@ -190,6 +193,7 @@ interface ArbeitEntwurf {
   fachOffen: boolean;
   modus: "alle" | "auswahl";
   lektionen: Set<string>;
+  bereiche: Set<string>;
   ids: Set<string>;
   seit: string;
   seiteVon: string;
@@ -340,6 +344,10 @@ export class LearnBuddyPanel extends LitElement {
   @state() private _dialogFehler = "";
 
   @state() private _lektionName = "";
+  // Selected section of the subject, empty shows all of them
+  @state() private _bereichId = "";
+  @state() private _bereichName = "";
+  @state() private _bereichUmbenennen: { id: string; name: string } | null = null;
 
   @state() private _jsonLektion = "";
 
@@ -499,6 +507,12 @@ export class LearnBuddyPanel extends LitElement {
       if (nur && !nur.has(aufgabe.id)) {
         return false;
       }
+      if (
+        this._aktiverBereich &&
+        (aufgabe.bereich ?? STANDARD_BEREICH) !== this._aktiverBereich
+      ) {
+        return false;
+      }
       if (suche) {
         const text = [
           ...(aufgabe.typ === "mathe"
@@ -580,7 +594,106 @@ export class LearnBuddyPanel extends LitElement {
   private _zuruecksetzen(): void {
     this._auswahl = new Set();
     this._entwurf = null;
+    this._bereichId = "";
     this._filter = { ...LEERER_FILTER };
+  }
+
+  // ------------------------------------------------------------ sections
+
+  private get _bereiche(): Bereich[] {
+    return this._fach?.bereiche ?? [];
+  }
+
+  /** Sections only show up once a subject has more than the standard one. */
+  private get _hatBereiche(): boolean {
+    return this._bereiche.length > 1;
+  }
+
+  private get _aktiverBereich(): string {
+    return this._hatBereiche && this._bereiche.some((b) => b.id === this._bereichId)
+      ? this._bereichId
+      : "";
+  }
+
+  /** The section new tasks go to; null leaves them in the standard section. */
+  private _neuBereich(): string | null {
+    const aktiv = this._aktiverBereich;
+    return aktiv && aktiv !== STANDARD_BEREICH ? aktiv : null;
+  }
+
+  private _bereichName_(bereich: Bereich): string {
+    return bereich.name ?? this._t(`bereich_standard_${bereich.art}`);
+  }
+
+  private _oeffneBereiche(): void {
+    this._bereichName = "";
+    this._bereichUmbenennen = null;
+    this._dialogFehler = "";
+    this._dialog = "bereiche";
+  }
+
+  private async _bereichAnlegen(): Promise<void> {
+    const name = this._bereichName.trim();
+    if (!name || !this._fachId) {
+      return;
+    }
+    this._dialogFehler = "";
+    try {
+      await this._api.bereichHinzufuegen(this._fachId, name);
+      this._bereichName = "";
+      this._zeigeErfolg(this._t("bereich_angelegt", { name }));
+      await this._neuLaden();
+    } catch (fehler) {
+      this._dialogFehler = fehlertext(this._t, fehler);
+    }
+  }
+
+  private async _bereichUmbenennenSpeichern(): Promise<void> {
+    const eintrag = this._bereichUmbenennen;
+    if (!eintrag || !eintrag.name.trim()) {
+      return;
+    }
+    this._dialogFehler = "";
+    try {
+      await this._api.bereichUmbenennen(this._fachId, eintrag.id, eintrag.name.trim());
+      this._bereichUmbenennen = null;
+      await this._neuLaden();
+    } catch (fehler) {
+      this._dialogFehler = fehlertext(this._t, fehler);
+    }
+  }
+
+  private async _bereichLoeschen(id: string): Promise<void> {
+    this._dialogFehler = "";
+    try {
+      await this._api.bereichLoeschen(this._fachId, id);
+      if (this._bereichId === id) {
+        this._bereichId = "";
+      }
+      await this._neuLaden();
+    } catch (fehler) {
+      this._dialogFehler = fehlertext(this._t, fehler);
+    }
+  }
+
+  private async _verschiebe(ziel: string): Promise<void> {
+    const ids = [...this._auswahl];
+    if (!ziel || !ids.length || !this._fachId) {
+      return;
+    }
+    this._beschaeftigt = true;
+    try {
+      for (const id of ids) {
+        await this._api.aufgabeAendern(this._fachId, id, { bereich: ziel });
+      }
+      this._auswahl = new Set();
+      this._zeigeErfolg(this._t("verschoben", { n: ids.length }));
+      await this._neuLaden();
+    } catch (fehler) {
+      this._zeigeFehler(fehler);
+    } finally {
+      this._beschaeftigt = false;
+    }
   }
 
   private _setzeFilter(feld: keyof Filter, neu: string): void {
@@ -679,6 +792,8 @@ export class LearnBuddyPanel extends LitElement {
       seite: entwurf.seite.trim() === "" ? null : Number(entwurf.seite),
       lektion: entwurf.lektion || null,
       geprueft: entwurf.geprueft,
+      // A changed task stays in its section, moving is a separate action
+      ...(entwurf.id ? {} : { bereich: this._neuBereich() }),
     };
     this._beschaeftigt = true;
     try {
@@ -848,6 +963,7 @@ export class LearnBuddyPanel extends LitElement {
           alternativen: teile(teil.alternativen),
           bild,
           lektion: entwurf.lektion || null,
+          bereich: this._neuBereich(),
           seite: entwurf.seite.trim() === "" ? null : Number(entwurf.seite),
         });
         angelegt += 1;
@@ -964,6 +1080,7 @@ export class LearnBuddyPanel extends LitElement {
         schwierigkeit: entwurf.schwierigkeit === "" ? null : Number(entwurf.schwierigkeit),
         beschreibung: entwurf.beschreibung.trim() || null,
         beispiel_ids: [...this._auswahl],
+        bereich: this._neuBereich(),
       });
       this._schliesseDialog();
       this._auswahl = new Set();
@@ -1242,6 +1359,7 @@ export class LearnBuddyPanel extends LitElement {
         fach.id,
         zeilen,
         entwurf.lektion || null,
+        this._neuBereich(),
       );
       if (ergebnis.fehler.length && !ergebnis.importiert) {
         this._dialogFehler = this._t("foto_fehler", { n: ergebnis.fehler.length });
@@ -1316,6 +1434,7 @@ export class LearnBuddyPanel extends LitElement {
         form: entwurf.form,
         lektion: entwurf.lektion || null,
         schwerpunkt: entwurf.schwerpunkt.trim() || null,
+        bereich: this._neuBereich(),
       });
       this._schliesseDialog();
       this._auswahl = new Set();
@@ -1440,6 +1559,7 @@ export class LearnBuddyPanel extends LitElement {
         this._importLektion.trim() || null,
         this._importTrenner || null,
         this._importGeprueft,
+        this._neuBereich(),
       );
       this._schliesseDialog();
       this._zeigeErfolg(
@@ -1514,6 +1634,7 @@ export class LearnBuddyPanel extends LitElement {
         this._jsonDaten,
         this._mitStatistik,
         this._jsonLektion || null,
+        this._neuBereich(),
       );
       this._schliesseDialog();
       let text = this._t("import_ergebnis", {
@@ -1554,6 +1675,7 @@ export class LearnBuddyPanel extends LitElement {
       fachOffen: false,
       modus: gezielt ? "auswahl" : "alle",
       lektionen: new Set(arbeit?.lektionen ?? []),
+      bereiche: new Set(arbeit?.bereiche ?? []),
       ids: new Set(arbeit?.aufgaben_ids ?? ids),
       seit: "",
       seiteVon: "",
@@ -1614,6 +1736,7 @@ export class LearnBuddyPanel extends LitElement {
       fachOffen: false,
       modus: "alle",
       lektionen: new Set(),
+      bereiche: new Set(),
       ids: new Set(),
       seit: "",
       seiteVon: "",
@@ -1656,7 +1779,11 @@ export class LearnBuddyPanel extends LitElement {
     }
   }
 
-  private _arbeitMenge(feld: "lektionen" | "ids", eintrag: string, an: boolean): void {
+  private _arbeitMenge(
+    feld: "lektionen" | "bereiche" | "ids",
+    eintrag: string,
+    an: boolean,
+  ): void {
     if (!this._arbeit) {
       return;
     }
@@ -1703,17 +1830,20 @@ export class LearnBuddyPanel extends LitElement {
 
   private _arbeitUmfang(arbeit: {
     lektionen: Iterable<string>;
+    bereiche?: Iterable<string>;
     ids: Iterable<string>;
   }): number | null {
     const lektionen = new Set(arbeit.lektionen);
+    const bereiche = new Set(arbeit.bereiche ?? []);
     const ids = new Set(arbeit.ids);
-    if (!lektionen.size && !ids.size) {
+    if (!lektionen.size && !bereiche.size && !ids.size) {
       return null;
     }
     return this._aufgaben.filter(
       (aufgabe) =>
         ids.has(aufgabe.id) ||
-        (aufgabe.lektion !== null && lektionen.has(aufgabe.lektion)),
+        (aufgabe.lektion !== null && lektionen.has(aufgabe.lektion)) ||
+        bereiche.has(aufgabe.bereich ?? STANDARD_BEREICH),
     ).length;
   }
 
@@ -1732,6 +1862,7 @@ export class LearnBuddyPanel extends LitElement {
       thema: arbeit.thema,
       art: arbeit.art,
       lektionen: gezielt ? [...arbeit.lektionen] : [],
+      bereiche: gezielt ? [...arbeit.bereiche] : [],
       aufgaben_ids: gezielt ? [...arbeit.ids] : [],
       abfragen_pro_tag: arbeit.abfragen,
       start_tage_vorher: arbeit.start,
@@ -2027,6 +2158,7 @@ export class LearnBuddyPanel extends LitElement {
           ${t(sach ? "neue_frage" : "neue_aufgabe")}
         </button>
         <button @click=${this._oeffneLektionen}>${t("lektion_hinzufuegen")}</button>
+        <button @click=${this._oeffneBereiche}>${t("bereiche_verwalten")}</button>
         ${mathe
           ? html`<button
               ?disabled=${!kiAn}
@@ -2110,6 +2242,25 @@ export class LearnBuddyPanel extends LitElement {
                     ${t("rechenweg_erzeugen")}
                   </button>`
                 : nothing}
+              ${this._hatBereiche
+                ? html`<select
+                    aria-label=${t("verschieben_nach")}
+                    ?disabled=${this._beschaeftigt}
+                    @change=${(e: Event) => {
+                      const ziel = wert(e);
+                      (e.target as HTMLSelectElement).value = "";
+                      void this._verschiebe(ziel);
+                    }}
+                  >
+                    <option value="">${t("verschieben_nach")}</option>
+                    ${this._bereiche.map(
+                      (bereich) =>
+                        html`<option value=${bereich.id}>
+                          ${this._bereichName_(bereich)}
+                        </option>`,
+                    )}
+                  </select>`
+                : nothing}
               <button @click=${() => this._oeffneArbeit(null, gewaehlt)}>
                 ${t("arbeit_aus_auswahl")}
               </button>
@@ -2147,6 +2298,34 @@ export class LearnBuddyPanel extends LitElement {
       this._aufgaben.some((x) => x.typ === "mathe" && x.bild)
         ? html`<div class="meldung fehler" role="status">
             <span>${t("keine_bilder", { name: kind.name })}</span>
+          </div>`
+        : nothing}
+
+      ${this._hatBereiche
+        ? html`<div class="kinder fachwahl" role="group" aria-label=${t("bereich")}>
+            <button
+              class="kindwahl"
+              aria-pressed=${this._aktiverBereich === "" ? "true" : "false"}
+              @click=${() => {
+                this._bereichId = "";
+                this._auswahl = new Set();
+              }}
+            >
+              ${t("alle")} (${this._aufgaben.length})
+            </button>
+            ${this._bereiche.map(
+              (bereich) =>
+                html`<button
+                  class="kindwahl"
+                  aria-pressed=${this._aktiverBereich === bereich.id ? "true" : "false"}
+                  @click=${() => {
+                    this._bereichId = bereich.id;
+                    this._auswahl = new Set();
+                  }}
+                >
+                  ${this._bereichName_(bereich)} (${bereich.aufgaben})
+                </button>`,
+            )}
           </div>`
         : nothing}
 
@@ -2732,6 +2911,7 @@ export class LearnBuddyPanel extends LitElement {
         : arbeiten.map((arbeit) => {
             const umfang = this._arbeitUmfang({
               lektionen: arbeit.lektionen,
+              bereiche: arbeit.bereiche,
               ids: arbeit.aufgaben_ids,
             });
             return html`
@@ -2841,6 +3021,9 @@ export class LearnBuddyPanel extends LitElement {
         break;
       case "lektion":
         inhalt = this._lektionDialog();
+        break;
+      case "bereiche":
+        inhalt = this._bereicheDialog();
         break;
       default:
         inhalt = this._arbeitDialog();
@@ -3740,6 +3923,102 @@ export class LearnBuddyPanel extends LitElement {
     `;
   }
 
+  private _bereicheDialog(): TemplateResult {
+    const t = this._t;
+    const umbenennen = this._bereichUmbenennen;
+    return html`
+      <h2>${t("bereiche_titel")}</h2>
+      <p class="klein">${t("bereiche_hilfe")}</p>
+      <div class="leiste">
+        <label class="feld" style="flex: 1">
+          ${t("bereich_name")}
+          <input
+            type="text"
+            maxlength="60"
+            .value=${this._bereichName}
+            @input=${(e: Event) => {
+              this._bereichName = wert(e);
+            }}
+            @keydown=${(e: KeyboardEvent) => {
+              if (e.key === "Enter") {
+                void this._bereichAnlegen();
+              }
+            }}
+          />
+        </label>
+        <button
+          class="primaer"
+          style="align-self: flex-end"
+          ?disabled=${!this._bereichName.trim()}
+          @click=${this._bereichAnlegen}
+        >
+          ${t("hinzufuegen")}
+        </button>
+      </div>
+      <div class="liste">
+        ${this._bereiche.map((bereich) => {
+          const standard = bereich.id === STANDARD_BEREICH;
+          return html`
+            <div class="eintrag">
+              ${umbenennen?.id === bereich.id
+                ? html`<input
+                      type="text"
+                      maxlength="60"
+                      style="flex: 1"
+                      aria-label=${t("bereich_name")}
+                      .value=${umbenennen.name}
+                      @input=${(e: Event) => {
+                        this._bereichUmbenennen = { id: bereich.id, name: wert(e) };
+                      }}
+                      @keydown=${(e: KeyboardEvent) => {
+                        if (e.key === "Enter") {
+                          void this._bereichUmbenennenSpeichern();
+                        }
+                      }}
+                    />
+                    <button class="primaer" @click=${this._bereichUmbenennenSpeichern}>
+                      ${t("speichern")}
+                    </button>`
+                : html`<span style="flex: 1">${this._bereichName_(bereich)}</span>
+                    <span class="klein">${t("lektion_anzahl", { n: bereich.aufgaben })}</span>
+                    <button
+                      class="icon"
+                      title=${t("umbenennen")}
+                      aria-label=${`${t("umbenennen")}: ${this._bereichName_(bereich)}`}
+                      @click=${() => {
+                        this._bereichUmbenennen = {
+                          id: bereich.id,
+                          name: this._bereichName_(bereich),
+                        };
+                      }}
+                    >
+                      <ha-icon icon="mdi:pencil"></ha-icon>
+                    </button>
+                    <button
+                      class="icon"
+                      title=${standard
+                        ? t("bereich_standard_hinweis")
+                        : bereich.aufgaben > 0
+                          ? t("bereich_loeschen_hinweis")
+                          : t("loeschen")}
+                      aria-label=${`${t("loeschen")}: ${this._bereichName_(bereich)}`}
+                      ?disabled=${standard || bereich.aufgaben > 0}
+                      @click=${() => this._bereichLoeschen(bereich.id)}
+                    >
+                      <ha-icon icon="mdi:delete"></ha-icon>
+                    </button>`}
+            </div>
+          `;
+        })}
+      </div>
+      <div class="aktionen">
+        <button class="primaer" @click=${this._schliesseDialog}>
+          ${t("schliessen")}
+        </button>
+      </div>
+    `;
+  }
+
   private _statistikSchalter(): TemplateResult {
     return html`
       <label class="feld zeile">
@@ -4108,6 +4387,26 @@ export class LearnBuddyPanel extends LitElement {
         </div>
         ${arbeit.modus === "auswahl"
           ? html`
+              ${(fach.bereiche?.length ?? 0) > 1
+                ? html`
+                    <div class="klein">${t("schnell_bereiche")}</div>
+                    <div class="chips" style="margin: 6px 0 12px">
+                      ${(fach.bereiche ?? []).map(
+                        (bereich) => html`
+                          <label class="feld zeile">
+                            <input
+                              type="checkbox"
+                              .checked=${arbeit.bereiche.has(bereich.id)}
+                              @change=${(e: Event) =>
+                                this._arbeitMenge("bereiche", bereich.id, angehakt(e))}
+                            />
+                            ${this._bereichName_(bereich)}
+                          </label>
+                        `,
+                      )}
+                    </div>
+                  `
+                : nothing}
               ${fach.lektionen.length
                 ? html`
                     <div class="klein">${t("schnell_lektionen")}</div>

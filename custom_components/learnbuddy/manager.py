@@ -2322,6 +2322,7 @@ class LearnBuddyManager:
         lektion: str | None = None,
         trennzeichen: str | None = None,
         geprueft: bool = True,
+        bereich: str | None = None,
     ) -> dict[str, Any]:
         """Import tasks from text into a subject."""
         fach = self.faecher[fach_id]
@@ -2344,6 +2345,7 @@ class LearnBuddyManager:
                 zeile,
                 lektion=lektion.strip() if lektion and lektion.strip() else None,
                 geprueft=geprueft,
+                bereich=bereich,
             )
             schluessel = aufgabe_schluessel(fach, aufgabe)
             if schluessel in vorhanden:

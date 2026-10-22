@@ -21,7 +21,7 @@ from .const import (
     STORAGE_VERSION,
     VERLAUF_VERSION,
 )
-from .models import Aufgabe, KindZustand, aufgabe_from_dict
+from .models import STANDARD_BEREICH, Aufgabe, KindZustand, aufgabe_from_dict
 from .verlauf import KindVerlauf
 
 if TYPE_CHECKING:
@@ -81,6 +81,8 @@ def migrate_config(
             zustand.setdefault(
                 "zusatz_filter", {"lektionen": [lektion]} if lektion else None
             )
+    # 1.14 -> 1.15: needs no change in the config store, sections only live in
+    # the task stores and exams/filters read a missing list as empty
     return data
 
 
@@ -134,6 +136,13 @@ def migrate_tasks(
         for aufgabe in data["aufgaben"]:
             for stat in aufgabe.get("statistik", {}).values():
                 stat.setdefault("teilweise", 0)
+    if old_major == 1 and old_minor < 15:
+        # 1.14 -> 1.15: subjects can have sections; tasks without one belong to
+        # the standard section
+        data.setdefault("bereiche", [])
+        data.setdefault("standard_name", None)
+        for aufgabe in data["aufgaben"]:
+            aufgabe.setdefault("bereich", None)
     return data
 
 
@@ -319,6 +328,9 @@ class TaskStore:
         self.aufgaben: dict[str, Aufgabe] = {}
         # Lessons (or topics) of the subject in the order they were created
         self.lektionen: list[str] = []
+        # Sections (tabs): {id, name, art}; the standard section is implicit
+        self.bereiche: list[dict[str, str]] = []
+        self.standard_name: str | None = None
 
     async def async_load(self) -> None:
         """Load the tasks from disk."""
@@ -326,6 +338,8 @@ class TaskStore:
         if data is None:
             return
         self.lektionen = list(data.get("lektionen", []))
+        self.bereiche = [dict(b) for b in data.get("bereiche", [])]
+        self.standard_name = data.get("standard_name")
         self.aufgaben = {}
         for roh in data.get("aufgaben", []):
             if (aufgabe := aufgabe_from_dict(roh)) is not None:
@@ -351,6 +365,31 @@ class TaskStore:
         """Return how many tasks belong to a lesson."""
         return sum(1 for a in self.aufgaben.values() if a.lektion == name)
 
+    def bereich_finden(self, bereich: str) -> dict[str, str] | None:
+        """Return a section by its id; the standard section is not listed."""
+        return next((b for b in self.bereiche if b["id"] == bereich), None)
+
+    def bereich_name_vergeben(self, name: str, ausser: str | None = None) -> bool:
+        """Return whether a section name is taken, ignoring case."""
+        gesucht = name.strip().casefold()
+        if (
+            self.standard_name
+            and ausser != STANDARD_BEREICH
+            and self.standard_name.casefold() == gesucht
+        ):
+            return True
+        return any(
+            b["name"].casefold() == gesucht for b in self.bereiche if b["id"] != ausser
+        )
+
+    def bereich_verwendet(self, bereich: str) -> int:
+        """Return how many tasks belong to a section."""
+        return sum(
+            1
+            for a in self.aufgaben.values()
+            if (a.bereich or STANDARD_BEREICH) == bereich
+        )
+
     def add(self, aufgabe: Aufgabe) -> None:
         """Add or replace a task; its lesson is registered if it is new."""
         if aufgabe.lektion:
@@ -368,6 +407,8 @@ class TaskStore:
     def _data(self) -> dict[str, Any]:
         return {
             "lektionen": list(self.lektionen),
+            "bereiche": [dict(b) for b in self.bereiche],
+            "standard_name": self.standard_name,
             "aufgaben": [a.to_dict() for a in self.aufgaben.values()],
         }
 

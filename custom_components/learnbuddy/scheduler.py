@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from .const import DEFAULT_MINDESTABSTAND_MINUTEN
-from .models import Ergebnis
+from .models import Ergebnis, bereich_id
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
@@ -130,15 +130,17 @@ def aufgaben_der_arbeit(
 ) -> list[Aufgabe]:
     """Return the tasks that belong to an exam.
 
-    These are the tasks of the selected lessons plus the explicitly assigned
-    ones. Without any selection all tasks of the subject belong to the exam.
+    These are the tasks of the selected lessons and sections plus the
+    explicitly assigned ones. Without any selection all tasks of the subject belong to the exam.
     """
-    if not arbeit.lektionen and not explizit:
+    if not arbeit.lektionen and not arbeit.bereiche and not explizit:
         return list(aufgaben)
     return [
         aufgabe
         for aufgabe in aufgaben
-        if aufgabe.lektion in arbeit.lektionen or aufgabe.id in explizit
+        if aufgabe.lektion in arbeit.lektionen
+        or bereich_id(aufgabe) in arbeit.bereiche
+        or aufgabe.id in explizit
     ]
 
 

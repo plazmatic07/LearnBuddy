@@ -35,8 +35,20 @@ export interface Fach {
   ki_status?: KiStatus;
   sprachen: string[];
   lektionen: string[];
+  /** The standard section comes first; older servers send none. */
+  bereiche?: Bereich[];
   anzahl_aufgaben: number;
 }
+
+/** A section (tab) of a subject; its name is null for an unrenamed standard section. */
+export interface Bereich {
+  id: string;
+  name: string | null;
+  art: "vokabel" | "mathe" | "sach";
+  aufgaben: number;
+}
+
+export const STANDARD_BEREICH = "standard";
 
 export interface Arbeit {
   id: string;
@@ -45,6 +57,7 @@ export interface Arbeit {
   datum: string;
   thema: string;
   lektionen: string[];
+  bereiche?: string[];
   abfragen_pro_tag: number;
   start_tage_vorher: number;
   intensivierung: boolean;
@@ -92,6 +105,8 @@ interface AufgabeBasis {
   erstellt: string;
   geaendert: string;
   lektion: string | null;
+  /** Section id; null is the standard section. */
+  bereich?: string | null;
   quelle: Quelle;
   geprueft: boolean;
   hinweis: string | null;
@@ -153,6 +168,7 @@ export interface AufgabeEingabe {
   hinweis?: string | null;
   seite?: number | null;
   lektion?: string | null;
+  bereich?: string | null;
   geprueft?: boolean;
 }
 
@@ -162,6 +178,7 @@ export interface ArbeitEingabe {
   thema: string;
   art: "arbeit" | "hue";
   lektionen: string[];
+  bereiche?: string[];
   aufgaben_ids: string[];
   abfragen_pro_tag: number;
   start_tage_vorher: number;
@@ -264,6 +281,7 @@ export interface SeitenEingabe {
   form: SachForm | "gemischt";
   lektion: string | null;
   schwerpunkt: string | null;
+  bereich?: string | null;
 }
 
 export interface GenerierEingabe {
@@ -272,6 +290,7 @@ export interface GenerierEingabe {
   schwierigkeit: number | null;
   beschreibung: string | null;
   beispiel_ids: string[];
+  bereich?: string | null;
 }
 
 export interface LoeschErgebnis {
@@ -304,6 +323,7 @@ export interface DashboardFach extends Kennzahlen {
 /** What a manual request is limited to (only with a subject). */
 export interface AbfrageAuswahl {
   lektionen?: string[];
+  bereiche?: string[];
   seite_von?: number | null;
   seite_bis?: number | null;
   // Book pages of single lessons

@@ -74,6 +74,7 @@ CONF_ART: Final = "art"
 CONF_DATUM: Final = "datum"
 CONF_THEMA: Final = "thema"
 CONF_LEKTIONEN: Final = "lektionen"
+CONF_BEREICHE: Final = "bereiche"
 CONF_ABFRAGEN_PRO_TAG: Final = "abfragen_pro_tag"
 CONF_START_TAGE_VORHER: Final = "start_tage_vorher"
 CONF_INTENSIVIERUNG: Final = "intensivierung"
@@ -174,7 +175,7 @@ ATTR_BESCHREIBUNG: Final = "beschreibung"
 ATTR_BIS: Final = "bis"
 
 STORAGE_VERSION: Final = 1
-STORAGE_MINOR_VERSION: Final = 14
+STORAGE_MINOR_VERSION: Final = 15
 
 # Most extra questions a child can ask for at once
 MAX_ZUSATZAUFGABEN: Final = 20

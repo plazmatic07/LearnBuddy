@@ -7,6 +7,7 @@ from datetime import date, timedelta
 import re
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
+import uuid
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -16,6 +17,7 @@ from .const import (
     CONF_ABFRAGEN_PRO_TAG,
     CONF_ANTWORTFRIST,
     CONF_ART,
+    CONF_BEREICHE,
     CONF_DATUM,
     CONF_ERSTELLT,
     CONF_FACH_ID,
@@ -47,6 +49,7 @@ from .mathe import bewerte_mathe, zerlege
 from .models import (
     MAX_SCHWIERIGKEIT,
     MIN_SCHWIERIGKEIT,
+    STANDARD_BEREICH,
     AbfrageFilter,
     ArbeitArt,
     AufgabenTyp,
@@ -104,6 +107,8 @@ MAX_BEISPIELE = 10
 # AI calls that verify generated tasks at the same time
 PARALLEL_PRUEFEN = 4
 MAX_LEKTION = 100
+MAX_BEREICH = 60
+MAX_BEREICHE = 12
 MAX_SCHWIERIG = 5
 FORTSCHRITT_ZEITRAEUME = (7, 30, 90)
 REPORT_LEKTIONEN = 3
@@ -158,7 +163,12 @@ def aufgabe_schluessel(fach: Fach, aufgabe: Aufgabe) -> tuple[str, str]:
 
 
 def aufgabe_aus_zeile(
-    fach: Fach, zeile: ImportZeile, *, lektion: str | None, geprueft: bool
+    fach: Fach,
+    zeile: ImportZeile,
+    *,
+    lektion: str | None,
+    geprueft: bool,
+    bereich: str | None = None,
 ) -> Aufgabe:
     """Create a task from a parsed line of a text import."""
     if fach.typ is AufgabenTyp.MATHE:
@@ -169,6 +179,7 @@ def aufgabe_aus_zeile(
             alternativen=list(zeile.ziel_alternativen),
             hinweis=zeile.hinweis,
             lektion=lektion,
+            bereich=bereich,
             geprueft=geprueft,
         )
     ausgang, ziel = fach.sprachen
@@ -185,6 +196,7 @@ def aufgabe_aus_zeile(
         },
         hinweis=zeile.hinweis,
         lektion=lektion,
+        bereich=bereich,
         geprueft=geprueft,
     )
 
@@ -291,6 +303,7 @@ class Verwaltung:
                     "ki_status": manager.ki.status(manager.ki_entity(f)),
                     "sprachen": list(f.sprachen),
                     "lektionen": manager.lektionen(f.id),
+                    "bereiche": self._bereiche_liste(f, manager.task_stores[f.id]),
                     "anzahl_aufgaben": len(manager.task_stores[f.id].aufgaben),
                 }
                 for f in manager.faecher.values()
@@ -303,6 +316,7 @@ class Verwaltung:
                     "datum": a.datum.isoformat(),
                     "thema": a.thema,
                     "lektionen": list(a.lektionen),
+                    "bereiche": list(a.bereiche),
                     "abfragen_pro_tag": a.abfragen_pro_tag,
                     "start_tage_vorher": a.start_tage_vorher,
                     "intensivierung": a.intensivierung,
@@ -833,8 +847,16 @@ class Verwaltung:
         for anfang, ende in ((von, bis), *((v, b) for _, v, b in lektion_seiten)):
             if anfang is not None and ende is not None and anfang > ende:
                 raise _ungueltig("seiten_verdreht")
+        bereiche = tuple(auswahl.get("bereiche") or ())
+        bekannte_bereiche = {
+            STANDARD_BEREICH,
+            *(b["id"] for b in manager.task_stores[fach_id].bereiche),
+        }
+        if any(b not in bekannte_bereiche for b in bereiche):
+            raise _nicht_gefunden("bereich")
         return AbfrageFilter(
             lektionen=lektionen,
+            bereiche=bereiche,
             seite_von=von,
             seite_bis=bis,
             lektion_seiten=lektion_seiten,
@@ -907,6 +929,31 @@ class Verwaltung:
             "arbeiten": arbeiten,
         }
 
+    @staticmethod
+    def _bereiche_liste(fach: Fach, store: TaskStore) -> list[dict[str, Any]]:
+        """Return the sections of a subject; the standard section comes first."""
+        return [
+            {
+                "id": STANDARD_BEREICH,
+                "name": store.standard_name,
+                "art": fach.typ.value,
+                "aufgaben": store.bereich_verwendet(STANDARD_BEREICH),
+            },
+            *(
+                {**b, "aufgaben": store.bereich_verwendet(b["id"])}
+                for b in store.bereiche
+            ),
+        ]
+
+    @staticmethod
+    def _bereich_pruefen(store: TaskStore, wert: Any) -> str | None:
+        """Return the section id to store; None for the standard section."""
+        if wert is None or wert in ("", STANDARD_BEREICH):
+            return None
+        if not isinstance(wert, str) or store.bereich_finden(wert) is None:
+            raise _ungueltig("bereich_unbekannt")
+        return wert
+
     def aufgaben(self, fach_id: str) -> list[dict[str, Any]]:
         """Return all tasks of a subject including statistics."""
         _, store = self._fach(fach_id)
@@ -935,6 +982,8 @@ class Verwaltung:
         for feld in ("hinweis", "lektion"):
             if feld in daten:
                 ergebnis[feld] = _text(daten[feld], f"{feld}_ungueltig")
+        if "bereich" in daten and lektionen is not None:
+            ergebnis["bereich"] = self._bereich_pruefen(lektionen, daten["bereich"])
         if "seite" in daten:
             seite = daten["seite"]
             if seite is not None and (
@@ -1226,6 +1275,109 @@ class Verwaltung:
         return list(store.lektionen)
 
     # ------------------------------------------------------------------
+    # Sections
+    # ------------------------------------------------------------------
+
+    def bereich_hinzufuegen(
+        self, fach_id: str, name: Any, art: Any = None
+    ) -> list[dict[str, Any]]:
+        """Create a section (tab) of a subject."""
+        fach, store = self._fach(fach_id)
+        bereinigt = _text(name, "bereich_leer", pflicht=True)
+        if bereinigt is None or len(bereinigt) > MAX_BEREICH:
+            raise _ungueltig("bereich_ungueltig")
+        if len(store.bereiche) >= MAX_BEREICHE:
+            raise _ungueltig("bereich_zu_viele")
+        if store.bereich_name_vergeben(bereinigt) or bereinigt.casefold() == (
+            self._standard_anzeige(fach, store).casefold()
+        ):
+            raise _ungueltig("bereich_vorhanden")
+        if art not in (None, *self._bereich_arten(fach)):
+            raise _ungueltig("bereich_art_ungueltig")
+        store.bereiche.append(
+            {
+                "id": uuid.uuid4().hex[:8],
+                "name": bereinigt,
+                "art": art or fach.typ.value,
+            }
+        )
+        self._gespeichert(fach, store)
+        return self._bereiche_liste(fach, store)
+
+    @staticmethod
+    def _bereich_arten(fach: Fach) -> tuple[str, ...]:
+        """Return the kinds of tasks a section of the subject can hold."""
+        return (fach.typ.value,)
+
+    @staticmethod
+    def _standard_anzeige(fach: Fach, store: TaskStore) -> str:
+        """Return the name of the standard section as shown to the user."""
+        if store.standard_name:
+            return store.standard_name
+        return {
+            AufgabenTyp.VOKABEL: "Vokabeln",
+            AufgabenTyp.MATHE: "Aufgaben",
+            AufgabenTyp.SACH: "Fragen",
+        }[fach.typ]
+
+    def bereich_umbenennen(
+        self, fach_id: str, bereich_id: str, name: Any
+    ) -> list[dict[str, Any]]:
+        """Rename a section, the standard section included."""
+        fach, store = self._fach(fach_id)
+        bereinigt = _text(name, "bereich_leer", pflicht=True)
+        if bereinigt is None or len(bereinigt) > MAX_BEREICH:
+            raise _ungueltig("bereich_ungueltig")
+        if bereich_id == STANDARD_BEREICH:
+            if store.bereich_name_vergeben(bereinigt, ausser=STANDARD_BEREICH):
+                raise _ungueltig("bereich_vorhanden")
+            store.standard_name = bereinigt
+        else:
+            bereich = store.bereich_finden(bereich_id)
+            if bereich is None:
+                raise _nicht_gefunden("bereich")
+            if (
+                store.bereich_name_vergeben(bereinigt, ausser=bereich_id)
+                or bereinigt.casefold()
+                == self._standard_anzeige(fach, store).casefold()
+            ):
+                raise _ungueltig("bereich_vorhanden")
+            bereich["name"] = bereinigt
+        self._gespeichert(fach, store)
+        return self._bereiche_liste(fach, store)
+
+    def bereich_loeschen(self, fach_id: str, bereich_id: str) -> list[dict[str, Any]]:
+        """Delete a section that holds no tasks; the standard one stays."""
+        fach, store = self._fach(fach_id)
+        if bereich_id == STANDARD_BEREICH:
+            raise _ungueltig("bereich_standard")
+        if store.bereich_finden(bereich_id) is None:
+            raise _nicht_gefunden("bereich")
+        if store.bereich_verwendet(bereich_id):
+            raise _ungueltig("bereich_verwendet")
+        store.bereiche = [b for b in store.bereiche if b["id"] != bereich_id]
+        self._gespeichert(fach, store)
+        # Exams must not keep pointing to the deleted section
+        entry = self._manager.entry
+        for subentry in list(entry.subentries.values()):
+            if (
+                subentry.subentry_type == SUBENTRY_ARBEIT
+                and subentry.data[CONF_FACH_ID] == fach_id
+                and bereich_id in subentry.data.get(CONF_BEREICHE, [])
+            ):
+                self._manager.hass.config_entries.async_update_subentry(
+                    entry,
+                    subentry,
+                    data={
+                        **subentry.data,
+                        CONF_BEREICHE: [
+                            x for x in subentry.data[CONF_BEREICHE] if x != bereich_id
+                        ],
+                    },
+                )
+        return self._bereiche_liste(fach, store)
+
+    # ------------------------------------------------------------------
     # Import and export
     # ------------------------------------------------------------------
 
@@ -1238,6 +1390,7 @@ class Verwaltung:
         trennzeichen: str | None,
         geprueft: bool,
         vorschau: bool,
+        bereich: str | None = None,
     ) -> dict[str, Any]:
         """Preview a list of tasks or import it."""
         _, store = self._fach(fach_id)
@@ -1254,6 +1407,7 @@ class Verwaltung:
                 lektion=lektion,
                 trennzeichen=trennzeichen,
                 geprueft=geprueft,
+                bereich=self._bereich_pruefen(store, bereich),
             )
         except ServiceValidationError as err:
             raise _ungueltig(err.translation_key or "import_leer") from err
@@ -1325,6 +1479,7 @@ class Verwaltung:
         *,
         mit_statistik: bool,
         lektion: str | None = None,
+        bereich: str | None = None,
     ) -> dict[str, Any]:
         """Import tasks from an export; existing tasks are kept.
 
@@ -1337,6 +1492,7 @@ class Verwaltung:
             ziel_lektion = store.lektion_finden(lektion)
             if ziel_lektion is None:
                 raise _ungueltig("lektion_unbekannt")
+        ziel_bereich = self._bereich_pruefen(store, bereich)
         if (
             not isinstance(daten, dict)
             or daten.get("format") not in (EXPORT_FORMAT, *ALTE_EXPORT_FORMATE)
@@ -1404,8 +1560,10 @@ class Verwaltung:
                     else {}
                 )
                 quelle = Quelle(roh.get("quelle", Quelle.MANUELL))
-                if ziel_lektion is not None:
-                    felder["lektion"] = ziel_lektion
+                # Section ids of the file mean nothing here
+                felder |= {"bereich": ziel_bereich} | (
+                    {} if ziel_lektion is None else {"lektion": ziel_lektion}
+                )
                 aufgabe: Aufgabe
                 if mathe:
                     aufgabe = MatheAufgabe(
@@ -1459,6 +1617,7 @@ class Verwaltung:
         schwierigkeit: int | None = None,
         beschreibung: str | None = None,
         beispiel_ids: list[str] | None = None,
+        bereich: str | None = None,
     ) -> dict[str, Any]:
         """Let the AI create math tasks similar to existing ones.
 
@@ -1477,6 +1636,7 @@ class Verwaltung:
         ):
             raise _ungueltig("schwierigkeit_ungueltig")
         beschreibung = _text(beschreibung, "beschreibung_ungueltig")
+        self._bereich_pruefen(store, bereich)
         thema: str | None = None
         if lektion and lektion.strip():
             thema = store.lektion_finden(lektion)
@@ -1528,6 +1688,7 @@ class Verwaltung:
             list(zip(vorschlaege[:anzahl], ergebnisse, strict=True)),
             thema=thema,
             schwierigkeit=schwierigkeit,
+            bereich=self._bereich_pruefen(store, bereich),
         )
 
     def _ki(self, fach: Fach, *, bilder: bool = False) -> str:
@@ -1659,7 +1820,12 @@ class Verwaltung:
             self._bilder_aufraeumen(sofort=seiten)
 
     def foto_uebernehmen(
-        self, fach_id: str, zeilen: list[Any], *, lektion: str | None = None
+        self,
+        fach_id: str,
+        zeilen: list[Any],
+        *,
+        lektion: str | None = None,
+        bereich: str | None = None,
     ) -> dict[str, Any]:
         """Store the tasks the user took over from the preview of a photo."""
         fach, store = self._fach(fach_id)
@@ -1672,6 +1838,7 @@ class Verwaltung:
             ziel_lektion = store.lektion_finden(lektion)
             if ziel_lektion is None:
                 raise _ungueltig("lektion_unbekannt")
+        ziel_bereich = self._bereich_pruefen(store, bereich)
         mathe = fach.typ is AufgabenTyp.MATHE
         erlaubt = (
             ("aufgabe", "loesung", "seite")
@@ -1695,6 +1862,7 @@ class Verwaltung:
                         fach_id=fach_id,
                         quelle=Quelle.UPLOAD,
                         lektion=ziel_lektion,
+                        bereich=ziel_bereich,
                         verifikation=(
                             Verifikation(bestaetigt)
                             if bestaetigt in (Verifikation.RECHNERISCH, Verifikation.KI)
@@ -1707,6 +1875,7 @@ class Verwaltung:
                         fach_id=fach_id,
                         quelle=Quelle.UPLOAD,
                         lektion=ziel_lektion,
+                        bereich=ziel_bereich,
                         **felder,
                     )
             except VerwaltungError, ValueError, TypeError, AttributeError:
@@ -1736,6 +1905,7 @@ class Verwaltung:
         form: str | None = None,
         lektion: str | None = None,
         schwerpunkt: str | None = None,
+        bereich: str | None = None,
     ) -> dict[str, Any]:
         """Let the AI create questions about photographed pages of a book.
 
@@ -1752,6 +1922,7 @@ class Verwaltung:
             if form not in (None, FORM_GEMISCHT, *(f.value for f in SachForm)):
                 raise _ungueltig("form_ungueltig")
             schwerpunkt = _text(schwerpunkt, "beschreibung_ungueltig")
+            ziel_bereich = self._bereich_pruefen(store, bereich)
             thema: str | None = None
             if lektion and lektion.strip():
                 thema = store.lektion_finden(lektion)
@@ -1799,6 +1970,7 @@ class Verwaltung:
                         else 0
                     ],
                     lektion=thema,
+                    bereich=ziel_bereich,
                     quelle=Quelle.GENERIERT,
                     geprueft=False,
                 )
@@ -1829,6 +2001,7 @@ class Verwaltung:
         *,
         thema: str | None,
         schwierigkeit: int | None,
+        bereich: str | None = None,
     ) -> dict[str, Any]:
         """Store the generated tasks whose solution was verified."""
         # The subject may have been removed while the AI was working
@@ -1848,6 +2021,7 @@ class Verwaltung:
                 schwierigkeit=vorschlag.schwierigkeit or schwierigkeit,
                 verifikation=verifikation,
                 lektion=thema,
+                bereich=bereich,
                 quelle=Quelle.GENERIERT,
                 geprueft=self._manager.auto_freigabe,
             )
@@ -2141,6 +2315,15 @@ class Verwaltung:
     # Exams
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _pruefe_arbeit_bereiche(store: TaskStore, roh: Any) -> list[str]:
+        """Return the known sections of an exam's selection."""
+        roh = roh or []
+        if not isinstance(roh, list):
+            raise _ungueltig("arbeit_ungueltig")
+        bekannt = {STANDARD_BEREICH, *(b["id"] for b in store.bereiche)}
+        return [b for b in roh if b in bekannt]
+
     async def arbeit_speichern(
         self, arbeit_id: str | None, daten: dict[str, Any]
     ) -> str:
@@ -2193,6 +2376,7 @@ class Verwaltung:
             w for w in (_text(x, "arbeit_ungueltig") for x in lektionen_roh) if w
         ]
         aufgaben_ids = [i for i in ids_roh if i in store.aufgaben]
+        bereiche = self._pruefe_arbeit_bereiche(store, daten.get("bereiche"))
 
         jetzt = dt_util.utcnow().isoformat()
         subentry_daten = {
@@ -2201,6 +2385,7 @@ class Verwaltung:
             CONF_DATUM: datum.isoformat(),
             CONF_THEMA: thema,
             CONF_LEKTIONEN: lektionen,
+            CONF_BEREICHE: bereiche,
             CONF_ABFRAGEN_PRO_TAG: abfragen,
             CONF_START_TAGE_VORHER: start,
             CONF_INTENSIVIERUNG: bool(daten.get("intensivierung", True)),

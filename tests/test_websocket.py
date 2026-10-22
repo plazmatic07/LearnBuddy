@@ -137,6 +137,9 @@ async def test_overview(client: Client) -> None:
             "ki_status": "keine",
             "sprachen": ["de", "en"],
             "lektionen": ["Unit 3"],
+            "bereiche": [
+                {"id": "standard", "name": None, "art": "vokabel", "aufgaben": 2}
+            ],
             "anzahl_aufgaben": 2,
         }
     ]
@@ -148,6 +151,7 @@ async def test_overview(client: Client) -> None:
             "datum": "2026-10-09",
             "thema": "Unit 3",
             "lektionen": [],
+            "bereiche": [],
             "abfragen_pro_tag": 2,
             "start_tage_vorher": 7,
             "intensivierung": False,
@@ -975,3 +979,124 @@ async def test_sender_befehle(hass: HomeAssistant, client: Client) -> None:
     await client.ok("sender/assign", kind_id=KIND_ID, kennung="4711")
     ergebnis = await client.ok("overview")
     assert ergebnis["unbekannte_absender"] == []
+
+
+async def test_bereiche(
+    hass: HomeAssistant, mit_vokabeln: MockConfigEntry, client: Client
+) -> None:
+    manager: LearnBuddyManager = mit_vokabeln.runtime_data
+    store = manager.task_stores[FACH_ID]
+
+    ergebnis = await client.ok(
+        "sections/add", fach_id=FACH_ID, name="  Personalpronomen "
+    )
+    neu = ergebnis["bereiche"][1]
+    assert neu["name"] == "Personalpronomen"
+    assert neu["art"] == "vokabel"
+    # Existing tasks stay in the standard section
+    assert ergebnis["bereiche"][0] == {
+        "id": "standard",
+        "name": None,
+        "art": "vokabel",
+        "aufgaben": 2,
+    }
+    uebersicht = await client.ok("overview")
+    assert [b["id"] for b in uebersicht["faecher"][0]["bereiche"]] == [
+        "standard",
+        neu["id"],
+    ]
+
+    for name, schluessel in (
+        ("personalpronomen", "bereich_vorhanden"),
+        ("Vokabeln", "bereich_vorhanden"),
+        ("  ", "bereich_leer"),
+        ("x" * 61, "bereich_ungueltig"),
+    ):
+        fehler = await client.fehler("sections/add", fach_id=FACH_ID, name=name)
+        assert fehler == {"code": "invalid_format", "message": schluessel}
+    fehler = await client.fehler("sections/add", fach_id=FACH_ID, name="A", art="mathe")
+    assert fehler["message"] == "bereich_art_ungueltig"
+
+    # A task in a section; unknown sections are refused
+    aufgabe = await client.ok(
+        "tasks/create",
+        fach_id=FACH_ID,
+        aufgabe={"frage": {"de": "ich", "en": "I"}, "bereich": neu["id"]},
+    )
+    assert aufgabe["bereich"] == neu["id"]
+    fehler = await client.fehler(
+        "tasks/create",
+        fach_id=FACH_ID,
+        aufgabe={"frage": {"de": "du", "en": "you"}, "bereich": "gibtsnicht"},
+    )
+    assert fehler == {"code": "invalid_format", "message": "bereich_unbekannt"}
+
+    # Renaming, also of the standard section
+    ergebnis = await client.ok(
+        "sections/rename", fach_id=FACH_ID, bereich="standard", name="Wörter"
+    )
+    assert ergebnis["bereiche"][0]["name"] == "Wörter"
+    assert store.standard_name == "Wörter"
+    fehler = await client.fehler(
+        "sections/rename", fach_id=FACH_ID, bereich=neu["id"], name="wörter"
+    )
+    assert fehler["message"] == "bereich_vorhanden"
+    fehler = await client.fehler(
+        "sections/rename", fach_id=FACH_ID, bereich="gibtsnicht", name="B"
+    )
+    assert fehler["code"] == "not_found"
+
+    # Sections with tasks and the standard section cannot be deleted
+    fehler = await client.fehler("sections/delete", fach_id=FACH_ID, bereich=neu["id"])
+    assert fehler["message"] == "bereich_verwendet"
+    fehler = await client.fehler("sections/delete", fach_id=FACH_ID, bereich="standard")
+    assert fehler["message"] == "bereich_standard"
+
+    # Exams and filters know sections
+    await client.ok(
+        "exams/save",
+        arbeit_id=ARBEIT_ID,
+        arbeit={"datum": "2026-10-12", "thema": "x", "bereiche": [neu["id"], "x"]},
+    )
+    await hass.async_block_till_done()
+    assert manager.arbeiten[ARBEIT_ID].bereiche == (neu["id"],)
+    umfang = await client.ok(
+        "ask_count", kind_id=KIND_ID, fach_id=FACH_ID, bereiche=[neu["id"]]
+    )
+    assert umfang == {"aufgaben": 1}
+
+    # Moving the task out allows deleting the section, which cleans the exam
+    await client.ok(
+        "tasks/update",
+        fach_id=FACH_ID,
+        aufgabe_id=aufgabe["id"],
+        aenderungen={"bereich": "standard"},
+    )
+    assert store.aufgaben[aufgabe["id"]].bereich is None
+    ergebnis = await client.ok("sections/delete", fach_id=FACH_ID, bereich=neu["id"])
+    await hass.async_block_till_done()
+    assert [b["id"] for b in ergebnis["bereiche"]] == ["standard"]
+    assert manager.arbeiten[ARBEIT_ID].bereiche == ()
+
+
+async def test_import_json_in_bereich(
+    mit_vokabeln: MockConfigEntry, client: Client
+) -> None:
+    manager: LearnBuddyManager = mit_vokabeln.runtime_data
+    store = manager.task_stores[FACH_ID]
+    bereich = (await client.ok("sections/add", fach_id=FACH_ID, name="Pronomen"))[
+        "bereiche"
+    ][1]["id"]
+    daten = await client.ok("tasks/export", fach_id=FACH_ID)
+    daten["aufgaben"] = [{"frage": {"de": "Maus", "en": "mouse"}, "bereich": "fremd"}]
+    ergebnis = await client.ok(
+        "tasks/import_json", fach_id=FACH_ID, daten=daten, bereich=bereich
+    )
+    assert ergebnis["importiert"] == 1
+    assert [a.bereich for a in store.aufgaben.values() if a.frage["de"] == "Maus"] == [
+        bereich
+    ]
+    fehler = await client.fehler(
+        "tasks/import_json", fach_id=FACH_ID, daten=daten, bereich="gibtsnicht"
+    )
+    assert fehler["message"] == "bereich_unbekannt"
