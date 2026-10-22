@@ -94,6 +94,8 @@ class SachForm(StrEnum):
     AUSWAHL = "auswahl"
     # Gap in a sentence, judged locally (foreign language subjects)
     LUECKE = "luecke"
+    # Sentence of the native language to be translated, judged like vocabulary
+    UEBERSETZUNG = "uebersetzung"
 
 
 class Quelle(StrEnum):

@@ -94,6 +94,7 @@ WEG_MESSENGER = "messenger"
 MAX_FOTO_ZEILEN = 200
 MAX_SACHFRAGEN = 15
 MAX_SATZAUFGABEN = 20
+SATZ_FORMEN = (SachForm.LUECKE, SachForm.AUSWAHL, SachForm.UEBERSETZUNG)
 FORM_GEMISCHT = "gemischt"
 MIN_FALSCHE_OPTIONEN = 2
 MAX_FALSCHE_OPTIONEN = 3
@@ -2072,7 +2073,7 @@ class Verwaltung:
                 raise _ungueltig("saetze_nur_satzbereich")
             if not 1 <= anzahl <= MAX_SATZAUFGABEN:
                 raise _ungueltig("anzahl_ungueltig")
-            if form not in (None, FORM_GEMISCHT, SachForm.LUECKE, SachForm.AUSWAHL):
+            if form not in (None, FORM_GEMISCHT, *SATZ_FORMEN):
                 raise _ungueltig("form_ungueltig")
             beschreibung = _text(beschreibung, "beschreibung_ungueltig")
             if seiten:
@@ -2095,6 +2096,7 @@ class Verwaltung:
                 anzahl=anzahl,
                 form=form or FORM_GEMISCHT,
                 zielsprache=fach.sprachen[-1],
+                ausgangssprache=fach.sprachen[0],
                 beschreibung=beschreibung,
                 klassenstufe=kind.klassenstufe,
                 schulart=kind.schulart,

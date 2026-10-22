@@ -152,6 +152,7 @@ const de = {
   form_auswahl: "Auswahl",
   form_gemischt: "Gemischt",
   form_luecke: "Lückentext",
+  form_uebersetzung: "Übersetzung",
   saetze_generieren: "Sätze generieren",
   saetze_foto: "Sätze aus Foto",
   saetze_hilfe_text:
@@ -743,6 +744,7 @@ const en: Record<Schluessel, string> = {
   form_auswahl: "Multiple choice",
   form_gemischt: "Mixed",
   form_luecke: "Gap text",
+  form_uebersetzung: "Translation",
   saetze_generieren: "Generate sentences",
   saetze_foto: "Sentences from photo",
   saetze_hilfe_text:

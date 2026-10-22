@@ -325,3 +325,116 @@ async def test_satzaufgaben_aus_fotos(
     assert len(ki.await_args.kwargs["attachments"]) == 2
     # The pages are not kept
     assert all(manager.bilder.pfad(seite) is None for seite in seiten)
+
+
+UEBERSETZUNG = {
+    "satz": "Ich bin ein Junge.",
+    "form": "uebersetzung",
+    "antwort": "I am a boy.",
+    "alternativen": ["I'm a boy."],
+    "falsche_optionen": [],
+}
+
+
+def test_parse_uebersetzung() -> None:
+    from custom_components.learnbuddy.ai import parse_satzaufgaben  # noqa: PLC0415
+
+    ergebnis = parse_satzaufgaben(
+        {
+            "saetze": [
+                UEBERSETZUNG,
+                # A sentence to translate has no gap
+                {**UEBERSETZUNG, "satz": "Ich ___ ein Junge."},
+            ]
+        }
+    )
+    assert ergebnis is not None
+    assert [(s.satz, s.form.value, s.alternativen) for s in ergebnis] == [
+        ("Ich bin ein Junge.", "uebersetzung", ["I'm a boy."])
+    ]
+
+
+async def test_uebersetzung_fragen_und_bewerten(
+    hass: HomeAssistant,
+    mit_vokabeln: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+    client: Client,  # noqa: F811
+) -> None:
+    from unittest.mock import AsyncMock, patch  # noqa: PLC0415
+
+    bereich = await _satzbereich(client)
+    await client.ok(
+        "tasks/create",
+        fach_id=FACH_ID,
+        aufgabe={
+            "bereich": bereich,
+            "form": "uebersetzung",
+            "frage": "Ich bin ein Junge.",
+            "antwort": "I am a boy.",
+            "alternativen": ["I'm a boy."],
+        },
+    )
+
+    async def frage_und_antwort(antwort: str) -> dict[str, Any]:
+        await client.ok(
+            "ask", kind_id=KIND_ID, fach_id=FACH_ID, bereiche=[bereich], anzahl=1
+        )
+        await hass.async_block_till_done()
+        ergebnis = await hass.services.async_call(
+            DOMAIN,
+            "submit_answer",
+            {"kind_id": KIND_ID, "text": antwort},
+            blocking=True,
+            return_response=True,
+        )
+        await hass.async_block_till_done()
+        assert isinstance(ergebnis, dict)
+        return ergebnis
+
+    ergebnis = await frage_und_antwort("i am a boy")
+    assert ergebnis["ergebnis"] == "richtig"
+    assert ergebnis["bewertet_von"] == "lokal"
+    assert (
+        "Übersetze ins Englische: Ich bin ein Junge." in notify_calls[0].data["message"]
+    )
+    assert (await frage_und_antwort("I'm a boy."))["ergebnis"] == "richtig"
+    # Without an AI a wrong sentence is wrong
+    assert (await frage_und_antwort("He is a boy."))["ergebnis"] == "falsch"
+
+    # With an AI another wording is judged by it
+    manager = await _mit_ki(hass, mit_vokabeln)
+    assert manager is not None
+    ki = AsyncMock(return_value={"ergebnis": "richtig", "erklaerung": "Stimmt."})
+    with patch("custom_components.learnbuddy.ai._async_generate_data", ki):
+        ergebnis = await frage_und_antwort("I am a young boy.")
+    assert (ergebnis["ergebnis"], ergebnis["bewertet_von"]) == ("richtig", "ki")
+    assert "Ich bin ein Junge." in ki.await_args.kwargs["instructions"]
+
+
+async def test_uebersetzungen_erzeugen(
+    hass: HomeAssistant,
+    mit_vokabeln: MockConfigEntry,
+    client: Client,  # noqa: F811
+) -> None:
+    from unittest.mock import AsyncMock, patch  # noqa: PLC0415
+
+    manager = await _mit_ki(hass, mit_vokabeln)
+    bereich = await _satzbereich(client)
+    ki = AsyncMock(return_value={"saetze": [UEBERSETZUNG]})
+    with patch("custom_components.learnbuddy.ai._async_generate_data", ki):
+        ergebnis = await client.ok(
+            "tasks/generate_sentences",
+            fach_id=FACH_ID,
+            bereich=bereich,
+            anzahl=1,
+            form="uebersetzung",
+            beschreibung="Personalpronomen",
+        )
+    assert ergebnis["erzeugt"] == 1
+    instruktionen = ki.await_args.kwargs["instructions"]
+    assert "Form of all tasks: uebersetzung." in instruktionen
+    assert "in German" in instruktionen
+    aufgabe = manager.task_stores[FACH_ID].aufgaben[ergebnis["aufgabe_ids"][0]]
+    assert isinstance(aufgabe, SachAufgabe)
+    assert aufgabe.form is SachForm.UEBERSETZUNG
+    assert aufgabe.alternativen == ["I'm a boy."]

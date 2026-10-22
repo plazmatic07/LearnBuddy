@@ -34,6 +34,8 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
         "frage_sach_kurz": "{frage}",
         "frage_luecke": "Hallo {name}! ✏️ {fach}: Setze ein: {frage}",
         "frage_luecke_kurz": "Setze ein: {frage}",
+        "frage_uebersetzung": "Hallo {name}! 🌍 {fach}: Übersetze ins {zielsprache}e: {frage}",
+        "frage_uebersetzung_kurz": "Übersetze ins {zielsprache}e: {frage}",
         "fast_richtig_sach": (
             "Fast richtig, {name}! 👍 Achte auf die Schreibweise: „{loesung}“."
         ),
@@ -142,6 +144,8 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
         "frage_sach_kurz": "{frage}",
         "frage_luecke": "Hi {name}! ✏️ {fach}: Fill in the gap: {frage}",
         "frage_luecke_kurz": "Fill in the gap: {frage}",
+        "frage_uebersetzung": "Hi {name}! 🌍 {fach}: Translate into {zielsprache}: {frage}",
+        "frage_uebersetzung_kurz": "Translate into {zielsprache}: {frage}",
         "fast_richtig_sach": "Almost, {name}! 👍 Mind the spelling: “{loesung}”.",
         "frage_optionen": "\n{optionen}\nAnswer with the letter.",
         "richtig_sach": "Correct, {name}! 🎉",

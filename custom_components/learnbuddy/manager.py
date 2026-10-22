@@ -1165,13 +1165,19 @@ class LearnBuddyManager:
         Follow-up questions of a running conversation need no greeting.
         """
         if isinstance(aufgabe, SachAufgabe):
-            art = "luecke" if aufgabe.form is SachForm.LUECKE else "sach"
+            art = {
+                SachForm.LUECKE: "luecke",
+                SachForm.UEBERSETZUNG: "uebersetzung",
+            }.get(aufgabe.form, "sach")
             nachricht = text(
                 self.sprache,
                 f"frage_{art}_kurz" if kurz else f"frage_{art}",
                 name=kind.name,
                 fach=fach.name,
                 frage=aufgabe.frage,
+                zielsprache=sprachname(self.sprache, fach.sprachen[-1])
+                if fach.sprachen
+                else "",
             )
             if optionen:
                 nachricht += text(
@@ -1400,18 +1406,30 @@ class LearnBuddyManager:
             if aufgabe.form is SachForm.AUSWAHL:
                 gezeigt = optionen or [aufgabe.antwort, *aufgabe.falsche_optionen]
                 return bewerte_auswahl(antwort, gezeigt, loesung), "lokal", None
-            if aufgabe.form is SachForm.LUECKE:
+            if aufgabe.form in (SachForm.LUECKE, SachForm.UEBERSETZUNG):
                 # Judged like a vocabulary answer, in the language to be learned
-                return (
-                    bewerte_vokabel(
-                        antwort,
-                        loesung,
-                        aufgabe.alternativen,
-                        fach.sprachen[-1] if fach.sprachen else "",
-                    ),
-                    "lokal",
-                    None,
-                )
+                nach = fach.sprachen[-1] if fach.sprachen else ""
+                ergebnis = bewerte_vokabel(antwort, loesung, aufgabe.alternativen, nach)
+                if (
+                    aufgabe.form is SachForm.UEBERSETZUNG
+                    and ergebnis is Ergebnis.FALSCH
+                    and ki_entity
+                    and antwort.strip()
+                ):
+                    # Other wordings of a sentence can only be judged by the AI
+                    bewertung = await self.ki.async_bewerte_uebersetzung(
+                        ki_entity,
+                        satz=aufgabe.frage,
+                        loesung=loesung,
+                        alternativen=aufgabe.alternativen,
+                        antwort=antwort,
+                        von=fach.sprachen[0],
+                        nach=nach,
+                        erklaersprache=waehle_sprache(self.sprache),
+                    )
+                    if bewertung is not None:
+                        return bewertung.ergebnis, "ki", bewertung.erklaerung
+                return ergebnis, "lokal", None
             if gleiche_antwort(antwort, loesung):
                 return Ergebnis.RICHTIG, "lokal", None
             if ki_entity and antwort.strip():
@@ -1966,6 +1984,17 @@ class LearnBuddyManager:
         if aufgabe.form is SachForm.AUSWAHL:
             return BlattAufgabe(
                 aufgabe.frage, Art.AUSWAHL, optionen=tuple(eintrag.optionen or ())
+            )
+        if aufgabe.form is SachForm.UEBERSETZUNG:
+            fach = self.faecher[aufgabe.fach_id]
+            return BlattAufgabe(
+                text(
+                    self.sprache,
+                    "blatt_uebersetze",
+                    zielsprache=sprachname(self.sprache, fach.sprachen[-1]),
+                    wort=aufgabe.frage,
+                ),
+                Art.LINIE,
             )
         return BlattAufgabe(aufgabe.frage, Art.ZEILEN)
 

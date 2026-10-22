@@ -138,7 +138,7 @@ export interface MatheAufgabe extends AufgabeBasis {
   bild: string | null;
 }
 
-export type SachForm = "kurz" | "auswahl" | "luecke";
+export type SachForm = "kurz" | "auswahl" | "luecke" | "uebersetzung";
 
 export interface SachAufgabe extends AufgabeBasis {
   typ: "sach";
@@ -289,7 +289,7 @@ export interface SeitenEingabe {
 export interface SaetzeEingabe {
   bereich: string;
   anzahl: number;
-  form: "gemischt" | "luecke" | "auswahl";
+  form: "gemischt" | "luecke" | "auswahl" | "uebersetzung";
   beschreibung: string | null;
   seiten: string[];
   uebernehmen: boolean;

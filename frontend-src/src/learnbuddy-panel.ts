@@ -88,7 +88,7 @@ interface SaetzeEntwurf {
   vorschauen: string[];
   lektion: string;
   anzahl: number;
-  form: "gemischt" | "luecke" | "auswahl";
+  form: "gemischt" | "luecke" | "auswahl" | "uebersetzung";
   beschreibung: string;
   uebernehmen: boolean;
 }
@@ -840,7 +840,10 @@ export class LearnBuddyPanel extends LitElement {
               form: entwurf.form,
               kernpunkte: entwurf.form === "kurz" ? zeilen(entwurf.kernpunkte) : [],
               falsche_optionen: entwurf.form === "auswahl" ? zeilen(entwurf.falsche) : [],
-              alternativen: entwurf.form === "luecke" ? teile(entwurf.altB) : [],
+              alternativen:
+                entwurf.form === "luecke" || entwurf.form === "uebersetzung"
+                  ? teile(entwurf.altB)
+                  : [],
             }
           : {
               frage: { [a]: entwurf.a, [b]: entwurf.b },
@@ -3020,14 +3023,22 @@ export class LearnBuddyPanel extends LitElement {
                       const form = wert(e);
                       this._setzeEntwurf(
                         "form",
-                        form === "auswahl" || form === "luecke" ? form : "kurz",
+                        form === "auswahl" || form === "luecke" || form === "uebersetzung"
+                          ? form
+                          : "kurz",
                       );
                     }}
                   >
                     ${satzEntwurf
                       ? html`<option value="luecke" ?selected=${entwurf.form === "luecke"}>
-                          ${t("form_luecke")}
-                        </option>`
+                            ${t("form_luecke")}
+                          </option>
+                          <option
+                            value="uebersetzung"
+                            ?selected=${entwurf.form === "uebersetzung"}
+                          >
+                            ${t("form_uebersetzung")}
+                          </option>`
                       : nothing}
                     <option value="kurz" ?selected=${entwurf.form === "kurz"}>
                       ${t("form_kurz")}
@@ -3046,7 +3057,7 @@ export class LearnBuddyPanel extends LitElement {
                   <div style="margin-top: 4px">
                     ${entwurf.form === "auswahl"
                       ? mehrzeilig("falsche", t("falsche_optionen"))
-                      : entwurf.form === "luecke"
+                      : entwurf.form === "luecke" || entwurf.form === "uebersetzung"
                         ? eingabe("altB", alt, alt)
                         : mehrzeilig("kernpunkte", t("kernpunkte"))}
                   </div>
@@ -3690,7 +3701,12 @@ export class LearnBuddyPanel extends LitElement {
     const setze = <K extends keyof SaetzeEntwurf>(feld: K, neu: SaetzeEntwurf[K]): void => {
       this._saetze = { ...entwurf, [feld]: neu };
     };
-    const formen: SaetzeEntwurf["form"][] = ["gemischt", "luecke", "auswahl"];
+    const formen: SaetzeEntwurf["form"][] = [
+      "gemischt",
+      "luecke",
+      "auswahl",
+      "uebersetzung",
+    ];
     const satzBereiche = this._bereiche.filter((b) => b.art === "satz");
     const ohneEingabe = entwurf.foto
       ? !entwurf.dateien.length
