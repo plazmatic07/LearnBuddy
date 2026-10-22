@@ -2103,8 +2103,13 @@ class Verwaltung:
                 mit_seiten=bool(seiten),
                 uebernehmen=uebernehmen,
             )
+            erlaubt = (
+                (SachForm(form),)
+                if form in SATZ_FORMEN
+                else (SachForm.LUECKE, SachForm.AUSWAHL)
+            )
             vorschlaege = await manager.ki.async_erzeuge_satzaufgaben(
-                ki_entity, prompt, seiten
+                ki_entity, prompt, seiten, erlaubt
             )
             if vorschlaege is None:
                 raise VerwaltungError(
@@ -2112,12 +2117,7 @@ class Verwaltung:
                 )
 
             # The AI sometimes ignores the wished form
-            erlaubt = (
-                {form}
-                if form in SATZ_FORMEN
-                else {SachForm.LUECKE.value, SachForm.AUSWAHL.value}
-            )
-            vorschlaege = [v for v in vorschlaege if v.form.value in erlaubt]
+            vorschlaege = [v for v in vorschlaege if v.form in erlaubt]
 
             # The subject may have been removed while the AI was working
             fach, store = self._fach(fach_id)

@@ -232,40 +232,44 @@ SACHFRAGEN_SCHEMA = vol.Schema(
 )
 
 
-SATZAUFGABEN_SCHEMA = vol.Schema(
-    {
-        vol.Required(
-            "saetze", description="The sentence tasks with a gap"
-        ): selector.ObjectSelector(
-            selector.ObjectSelectorConfig(
-                multiple=True,
-                fields={
-                    "satz": {"required": True, "selector": {"text": {}}},
-                    "form": {
-                        "required": True,
-                        "selector": {
-                            "select": {
-                                "options": [
-                                    SachForm.LUECKE.value,
-                                    SachForm.AUSWAHL.value,
-                                    SachForm.UEBERSETZUNG.value,
-                                ]
-                            }
+def satzaufgaben_schema(formen: Sequence[SachForm]) -> vol.Schema:
+    """Return the structure of generated sentence tasks limited to some forms.
+
+    Offering only the wished forms keeps the AI from mixing in others.
+    """
+    return vol.Schema(
+        {
+            vol.Required(
+                "saetze", description="The sentence tasks"
+            ): selector.ObjectSelector(
+                selector.ObjectSelectorConfig(
+                    multiple=True,
+                    fields={
+                        "satz": {"required": True, "selector": {"text": {}}},
+                        "form": {
+                            "required": True,
+                            "selector": {
+                                "select": {"options": [form.value for form in formen]}
+                            },
+                        },
+                        "antwort": {"required": True, "selector": {"text": {}}},
+                        "alternativen": {
+                            "required": True,
+                            "selector": {"text": {"multiple": True}},
+                        },
+                        "falsche_optionen": {
+                            "required": True,
+                            "selector": {"text": {"multiple": True}},
                         },
                     },
-                    "antwort": {"required": True, "selector": {"text": {}}},
-                    "alternativen": {
-                        "required": True,
-                        "selector": {"text": {"multiple": True}},
-                    },
-                    "falsche_optionen": {
-                        "required": True,
-                        "selector": {"text": {"multiple": True}},
-                    },
-                },
-            )
-        ),
-    }
+                )
+            ),
+        }
+    )
+
+
+SATZAUFGABEN_SCHEMA = satzaufgaben_schema(
+    (SachForm.LUECKE, SachForm.AUSWAHL, SachForm.UEBERSETZUNG)
 )
 
 
@@ -1099,8 +1103,10 @@ def baue_satzaufgaben_prompt(
             (
                 "- Every task must practise the topic named by the parents. "
                 "If it is a grammar point, each sentence has to contain it "
-                "(for personal pronouns: a personal pronoun is the gap or "
-                "part of the translation, never a noun like 'the boy')."
+                "(personal pronouns: with luecke and auswahl the missing word "
+                "is a personal pronoun; with uebersetzung the sentence "
+                "contains one, for example 'Er spielt im Park.', and has "
+                "no gap)."
             ),
             "- Vary the sentences, do not repeat them.",
             "Plain text without markup.",
@@ -1543,13 +1549,17 @@ class KiBewerter:
         return self._geprueft(entity_id, daten, parse_sachfragen)
 
     async def async_erzeuge_satzaufgaben(
-        self, entity_id: str, prompt: str, seiten: Sequence[str] = ()
+        self,
+        entity_id: str,
+        prompt: str,
+        seiten: Sequence[str] = (),
+        formen: Sequence[SachForm] = (SachForm.LUECKE, SachForm.AUSWAHL),
     ) -> list[GenerierteSatzaufgabe] | None:
         """Ask the AI for sentence tasks with a gap, optionally from photos."""
         daten = await self._async_frage(
             entity_id,
             prompt,
-            SATZAUFGABEN_SCHEMA,
+            satzaufgaben_schema(formen),
             dauer=GENERIEREN_TIMEOUT,
             bilder=seiten,
         )
