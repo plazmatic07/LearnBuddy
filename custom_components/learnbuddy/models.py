@@ -417,6 +417,9 @@ class SachAufgabe:
     falsche_optionen: list[str] = field(default_factory=list)
     # Other spellings of the answer that count as correct (gap questions)
     alternativen: list[str] = field(default_factory=list)
+    # Translation of the sentence into the child's language; it shows what a
+    # gap means, so that only one answer fits
+    hilfe: str | None = None
     # Short quote of the text that backs the answer
     stelle: str | None = None
     # Id of the image of the page the question was made from, never sent
@@ -463,6 +466,7 @@ class SachAufgabe:
             kernpunkte=list(data.get("kernpunkte", [])),
             falsche_optionen=list(data.get("falsche_optionen", [])),
             alternativen=list(data.get("alternativen", [])),
+            hilfe=data.get("hilfe"),
             stelle=data.get("stelle"),
             quelle_bild=data.get("quelle_bild"),
             hinweis=data.get("hinweis"),
@@ -491,6 +495,7 @@ class SachAufgabe:
             "kernpunkte": list(self.kernpunkte),
             "falsche_optionen": list(self.falsche_optionen),
             "alternativen": list(self.alternativen),
+            "hilfe": self.hilfe,
             "stelle": self.stelle,
             "quelle_bild": self.quelle_bild,
             "hinweis": self.hinweis,

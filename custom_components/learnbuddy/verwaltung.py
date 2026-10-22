@@ -134,6 +134,7 @@ EXPORT_FELDER: dict[str, tuple[str, ...]] = {
         "kernpunkte",
         "falsche_optionen",
         "alternativen",
+        "hilfe",
         "stelle",
         "hinweis",
         "seite",
@@ -1106,6 +1107,11 @@ class Verwaltung:
             if any(w is not None and len(w) > MAX_OPTION for w in werte):
                 raise _ungueltig(f"{feld}_ungueltig")
             ergebnis[feld] = [w for w in werte if w]
+        if "hilfe" in daten:
+            hilfe = _text(daten["hilfe"], "hilfe_ungueltig")
+            if hilfe is not None and len(hilfe) > MAX_TEXT:
+                raise _ungueltig("hilfe_ungueltig")
+            ergebnis["hilfe"] = hilfe
         if "stelle" in daten:
             stelle = _text(daten["stelle"], "stelle_ungueltig")
             if stelle is not None and len(stelle) > MAX_STELLE:
@@ -2132,6 +2138,7 @@ class Verwaltung:
                     form=vorschlag.form,
                     alternativen=list(vorschlag.alternativen),
                     falsche_optionen=list(vorschlag.falsche_optionen),
+                    hilfe=vorschlag.hilfe,
                     lektion=thema,
                     bereich=ziel,
                     quelle=Quelle.UPLOAD if seiten else Quelle.GENERIERT,

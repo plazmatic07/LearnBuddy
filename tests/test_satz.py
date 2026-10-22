@@ -477,3 +477,74 @@ async def test_erzeugen_haelt_sich_an_die_form(
         "luecke",
         "auswahl",
     ]
+
+
+async def test_hilfe_bei_luecke_und_auswahl(
+    hass: HomeAssistant,
+    mit_vokabeln: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+    client: Client,  # noqa: F811
+) -> None:
+    from unittest.mock import AsyncMock, patch  # noqa: PLC0415
+
+    manager = await _mit_ki(hass, mit_vokabeln)
+    store = manager.task_stores[FACH_ID]
+    bereich = await _satzbereich(client)
+    aufgabe = await client.ok(
+        "tasks/create",
+        fach_id=FACH_ID,
+        aufgabe={
+            "bereich": bereich,
+            "form": "luecke",
+            "frage": "___ is my best friend.",
+            "antwort": "he",
+            "hilfe": "Er ist mein bester Freund.",
+        },
+    )
+    assert aufgabe["hilfe"] == "Er ist mein bester Freund."
+    fehler = await client.fehler(
+        "tasks/create",
+        fach_id=FACH_ID,
+        aufgabe={
+            "bereich": bereich,
+            "form": "luecke",
+            "frage": "x ___",
+            "antwort": "y",
+            "hilfe": "z" * 501,
+        },
+    )
+    assert fehler["message"] == "hilfe_ungueltig"
+
+    # The translation is part of the question
+    await client.ok(
+        "ask", kind_id=KIND_ID, fach_id=FACH_ID, bereiche=[bereich], anzahl=1
+    )
+    await hass.async_block_till_done()
+    assert (
+        notify_calls[-1]
+        .data["message"]
+        .endswith("Setze ein: ___ is my best friend.\n(Er ist mein bester Freund.)")
+    )
+
+    # The AI delivers it with gap and choice tasks, not with translations
+    ki = AsyncMock(
+        return_value={
+            "saetze": [
+                {**LUECKE_SATZ, "hilfe": "Ich bin ein Junge."},
+                {**AUSWAHL_SATZ, "hilfe": "Ihr Name ist Anna."},
+                {**UEBERSETZUNG, "hilfe": "wird ignoriert"},
+            ]
+        }
+    )
+    with patch("custom_components.learnbuddy.ai._async_generate_data", ki):
+        ergebnis = await client.ok(
+            "tasks/generate_sentences",
+            fach_id=FACH_ID,
+            bereich=bereich,
+            anzahl=3,
+            form="gemischt",
+            beschreibung="Pronomen",
+        )
+    assert "hilfe" in ki.await_args.kwargs["instructions"]
+    hilfen = [store.aufgaben[i].hilfe for i in ergebnis["aufgabe_ids"]]  # type: ignore[union-attr]
+    assert hilfen == ["Ich bin ein Junge.", "Ihr Name ist Anna."]

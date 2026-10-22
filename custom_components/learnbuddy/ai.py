@@ -253,6 +253,7 @@ def satzaufgaben_schema(formen: Sequence[SachForm]) -> vol.Schema:
                             },
                         },
                         "antwort": {"required": True, "selector": {"text": {}}},
+                        "hilfe": {"required": True, "selector": {"text": {}}},
                         "alternativen": {
                             "required": True,
                             "selector": {"text": {"multiple": True}},
@@ -491,6 +492,8 @@ class GenerierteSatzaufgabe:
     antwort: str
     alternativen: list[str]
     falsche_optionen: list[str]
+    # Translation of a gap sentence into the student's language
+    hilfe: str | None = None
 
 
 def _satz_text(wert: Any) -> str | None:
@@ -551,6 +554,11 @@ def parse_satzaufgaben(daten: Any) -> list[GenerierteSatzaufgabe] | None:
                 antwort=antwort,
                 alternativen=alternativen,
                 falsche_optionen=falsche,
+                hilfe=(
+                    None
+                    if form is SachForm.UEBERSETZUNG
+                    else bereinige_text(roh.get("hilfe"), MAX_SACHTEXT)
+                ),
             )
         )
     return ergebnis
@@ -1081,8 +1089,15 @@ def baue_satzaufgaben_prompt(
             (
                 "- Every task has exactly one correct answer. Give the "
                 "sentence enough context, for example a name or a noun "
-                "before the gap, so that no other word fits; a bare "
-                "'___ is my friend.' is not allowed."
+                "before the gap, so that no other word fits."
+            ),
+            (
+                f"- hilfe (only luecke and auswahl): the whole sentence "
+                f"translated into {_sprache(ausgangssprache)}, with the "
+                "gap word filled in, for example 'Er ist mein bester Freund.' "
+                "for '___ is my best friend.'. It makes the task unambiguous "
+                "because it tells who or what is meant. With uebersetzung "
+                "hilfe is empty."
             ),
             (
                 "- Check every task before you return it: replace the gap "

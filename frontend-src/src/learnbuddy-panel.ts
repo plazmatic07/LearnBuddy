@@ -71,6 +71,8 @@ interface AufgabeEntwurf {
   seite: string;
   lektion: string;
   geprueft: boolean;
+  // Sentence tasks: translation as a hint
+  hilfe: string;
   // Math only
   rechenweg: string;
   schwierigkeit: string;
@@ -798,6 +800,7 @@ export class LearnBuddyPanel extends LitElement {
       rechenweg: (mathe?.rechenweg ?? []).join("\n"),
       schwierigkeit: mathe?.schwierigkeit?.toString() ?? "",
       hinweis: aufgabe?.hinweis ?? "",
+      hilfe: sach?.hilfe ?? "",
       seite: aufgabe?.seite?.toString() ?? "",
       lektion: aufgabe?.lektion ?? (this._filter.lektion === OHNE_LEKTION ? "" : this._filter.lektion),
       geprueft: aufgabe?.geprueft ?? true,
@@ -844,6 +847,10 @@ export class LearnBuddyPanel extends LitElement {
                 entwurf.form === "luecke" || entwurf.form === "uebersetzung"
                   ? teile(entwurf.altB)
                   : [],
+              hilfe:
+                entwurf.form === "luecke" || entwurf.form === "auswahl"
+                  ? entwurf.hilfe.trim() || null
+                  : null,
             }
           : {
               frage: { [a]: entwurf.a, [b]: entwurf.b },
@@ -2825,6 +2832,7 @@ export class LearnBuddyPanel extends LitElement {
             </button>`
           : nothing}
         ${aufgabe.frage}
+        ${aufgabe.hilfe ? html`<div class="klein">(${aufgabe.hilfe})</div>` : nothing}
         <div class="klein">
           <span class="marke">${t(`form_${aufgabe.form}`)}</span>
           ${aufgabe.stelle && !adresse
@@ -2956,7 +2964,7 @@ export class LearnBuddyPanel extends LitElement {
       ></textarea>
     `;
     const eingabe = (
-      feld: "a" | "b" | "altA" | "altB" | "hinweis",
+      feld: "a" | "b" | "altA" | "altB" | "hinweis" | "hilfe",
       label: string,
       platzhalter = "",
     ): TemplateResult => html`
@@ -3061,6 +3069,15 @@ export class LearnBuddyPanel extends LitElement {
                         ? eingabe("altB", alt, alt)
                         : mehrzeilig("kernpunkte", t("kernpunkte"))}
                   </div>
+                  ${satzEntwurf && (entwurf.form === "luecke" || entwurf.form === "auswahl")
+                    ? html`<div style="margin-top: 4px">
+                        ${eingabe(
+                          "hilfe",
+                          t("hilfe_label", { sprache: sprachname(sprache, a) }),
+                          t("hilfe_label", { sprache: sprachname(sprache, a) }),
+                        )}
+                      </div>`
+                    : nothing}
                 </td>
               `
             : html`

@@ -40,6 +40,7 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
             "Fast richtig, {name}! 👍 Achte auf die Schreibweise: „{loesung}“."
         ),
         "frage_optionen": "\n{optionen}\nAntworte mit dem Buchstaben.",
+        "frage_hilfe": "\n({hilfe})",
         "richtig_sach": "Richtig, {name}! 🎉",
         "teilweise_sach": ("Teilweise richtig, {name}. 👍 Vollständig wäre: {loesung}"),
         "falsch_sach": "Leider nicht richtig, {name}. Richtig ist: {loesung} 💪",
@@ -148,6 +149,7 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
         "frage_uebersetzung_kurz": "Translate into {zielsprache}: {frage}",
         "fast_richtig_sach": "Almost, {name}! 👍 Mind the spelling: “{loesung}”.",
         "frage_optionen": "\n{optionen}\nAnswer with the letter.",
+        "frage_hilfe": "\n({hilfe})",
         "richtig_sach": "Correct, {name}! 🎉",
         "teilweise_sach": "Partly right, {name}. 👍 The complete answer: {loesung}",
         "falsch_sach": "Not quite, {name}. The answer is: {loesung} 💪",

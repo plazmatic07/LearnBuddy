@@ -1179,6 +1179,9 @@ class LearnBuddyManager:
                 if fach.sprachen
                 else "",
             )
+            if aufgabe.hilfe and aufgabe.form in (SachForm.LUECKE, SachForm.AUSWAHL):
+                # The translation tells what the gap means
+                nachricht += text(self.sprache, "frage_hilfe", hilfe=aufgabe.hilfe)
             if optionen:
                 nachricht += text(
                     self.sprache, "frage_optionen", optionen=formatiere(optionen)
@@ -1982,8 +1985,11 @@ class LearnBuddyManager:
                 bild=self.bilder.pfad(aufgabe.bild) if aufgabe.bild else None,
             )
         if aufgabe.form is SachForm.AUSWAHL:
+            frage = aufgabe.frage
+            if aufgabe.hilfe:
+                frage += text(self.sprache, "frage_hilfe", hilfe=aufgabe.hilfe)
             return BlattAufgabe(
-                aufgabe.frage, Art.AUSWAHL, optionen=tuple(eintrag.optionen or ())
+                frage, Art.AUSWAHL, optionen=tuple(eintrag.optionen or ())
             )
         if aufgabe.form is SachForm.UEBERSETZUNG:
             fach = self.faecher[aufgabe.fach_id]
@@ -1996,7 +2002,10 @@ class LearnBuddyManager:
                 ),
                 Art.LINIE,
             )
-        return BlattAufgabe(aufgabe.frage, Art.ZEILEN)
+        frage = aufgabe.frage
+        if aufgabe.hilfe and aufgabe.form is SachForm.LUECKE:
+            frage += text(self.sprache, "frage_hilfe", hilfe=aufgabe.hilfe)
+        return BlattAufgabe(frage, Art.ZEILEN)
 
     def _sim_titel(self, arbeit: Arbeit) -> str:
         return text(self.sprache, f"sim_titel_{arbeit.art.value}")
