@@ -515,7 +515,21 @@ async def test_hilfe_bei_luecke_und_auswahl(
     )
     assert fehler["message"] == "hilfe_ungueltig"
 
-    # The translation is part of the question
+    # The translation is only sent when the task says so
+    assert aufgabe["hilfe_senden"] is False
+    await client.ok(
+        "ask", kind_id=KIND_ID, fach_id=FACH_ID, bereiche=[bereich], anzahl=1
+    )
+    await hass.async_block_till_done()
+    assert (
+        notify_calls[-1].data["message"].endswith("Setze ein: ___ is my best friend.")
+    )
+    await client.ok(
+        "tasks/update",
+        fach_id=FACH_ID,
+        aufgabe_id=aufgabe["id"],
+        aenderungen={"hilfe_senden": True},
+    )
     await client.ok(
         "ask", kind_id=KIND_ID, fach_id=FACH_ID, bereiche=[bereich], anzahl=1
     )
@@ -525,8 +539,15 @@ async def test_hilfe_bei_luecke_und_auswahl(
         .data["message"]
         .endswith("Setze ein: ___ is my best friend.\n(Er ist mein bester Freund.)")
     )
+    fehler = await client.fehler(
+        "tasks/update",
+        fach_id=FACH_ID,
+        aufgabe_id=aufgabe["id"],
+        aenderungen={"hilfe_senden": "ja"},
+    )
+    assert fehler["code"] == "invalid_format"
 
-    # The AI delivers it with gap and choice tasks, not with translations
+    # The AI delivers it with gap tasks only
     ki = AsyncMock(
         return_value={
             "saetze": [
@@ -547,4 +568,27 @@ async def test_hilfe_bei_luecke_und_auswahl(
         )
     assert "hilfe" in ki.await_args.kwargs["instructions"]
     hilfen = [store.aufgaben[i].hilfe for i in ergebnis["aufgabe_ids"]]  # type: ignore[union-attr]
-    assert hilfen == ["Ich bin ein Junge.", "Ihr Name ist Anna."]
+    # Only gap tasks carry a translation
+    assert hilfen == ["Ich bin ein Junge.", None]
+    # Whether it is sent is the parents' choice
+    assert not any(
+        store.aufgaben[i].hilfe_senden  # type: ignore[union-attr]
+        for i in ergebnis["aufgabe_ids"]
+    )
+
+
+def test_hilfe_senden_aus_alten_daten() -> None:
+    from custom_components.learnbuddy.models import aufgabe_from_dict  # noqa: PLC0415
+
+    basis = SachAufgabe(
+        fach_id="f", frage="I ___", antwort="am", form=SachForm.LUECKE
+    ).to_dict()
+    basis.pop("hilfe_senden")
+    # Version 0.9.2 always sent a translation, new tasks do not
+    alt = aufgabe_from_dict({**basis, "hilfe": "Ich bin."})
+    assert isinstance(alt, SachAufgabe)
+    assert alt.hilfe_senden is True
+    ohne = aufgabe_from_dict(basis)
+    assert isinstance(ohne, SachAufgabe)
+    assert ohne.hilfe_senden is False
+    assert SachAufgabe(fach_id="f", frage="x", antwort="y").hilfe_senden is False

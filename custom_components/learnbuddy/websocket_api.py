@@ -36,6 +36,7 @@ AUFGABE_SCHEMA = vol.Schema(
         vol.Optional("falsche_optionen"): [str],
         vol.Optional("stelle"): vol.Any(str, None),
         vol.Optional("hilfe"): vol.Any(str, None),
+        vol.Optional("hilfe_senden"): bool,
         # Vocabulary: per language; math: other spellings of the result
         vol.Optional("alternativen"): vol.Any({str: [str]}, [str]),
         vol.Optional("aufgabe"): vol.Any(str, None),

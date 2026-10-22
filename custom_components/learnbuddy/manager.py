@@ -1179,7 +1179,11 @@ class LearnBuddyManager:
                 if fach.sprachen
                 else "",
             )
-            if aufgabe.hilfe and aufgabe.form in (SachForm.LUECKE, SachForm.AUSWAHL):
+            if (
+                aufgabe.hilfe
+                and aufgabe.hilfe_senden
+                and aufgabe.form is SachForm.LUECKE
+            ):
                 # The translation tells what the gap means
                 nachricht += text(self.sprache, "frage_hilfe", hilfe=aufgabe.hilfe)
             if optionen:
@@ -1985,11 +1989,8 @@ class LearnBuddyManager:
                 bild=self.bilder.pfad(aufgabe.bild) if aufgabe.bild else None,
             )
         if aufgabe.form is SachForm.AUSWAHL:
-            frage = aufgabe.frage
-            if aufgabe.hilfe:
-                frage += text(self.sprache, "frage_hilfe", hilfe=aufgabe.hilfe)
             return BlattAufgabe(
-                frage, Art.AUSWAHL, optionen=tuple(eintrag.optionen or ())
+                aufgabe.frage, Art.AUSWAHL, optionen=tuple(eintrag.optionen or ())
             )
         if aufgabe.form is SachForm.UEBERSETZUNG:
             fach = self.faecher[aufgabe.fach_id]
@@ -2003,7 +2004,7 @@ class LearnBuddyManager:
                 Art.LINIE,
             )
         frage = aufgabe.frage
-        if aufgabe.hilfe and aufgabe.form is SachForm.LUECKE:
+        if aufgabe.hilfe and aufgabe.hilfe_senden and aufgabe.form is SachForm.LUECKE:
             frage += text(self.sprache, "frage_hilfe", hilfe=aufgabe.hilfe)
         return BlattAufgabe(frage, Art.ZEILEN)
 

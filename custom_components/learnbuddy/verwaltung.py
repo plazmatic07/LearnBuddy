@@ -135,6 +135,7 @@ EXPORT_FELDER: dict[str, tuple[str, ...]] = {
         "falsche_optionen",
         "alternativen",
         "hilfe",
+        "hilfe_senden",
         "stelle",
         "hinweis",
         "seite",
@@ -1112,6 +1113,10 @@ class Verwaltung:
             if hilfe is not None and len(hilfe) > MAX_TEXT:
                 raise _ungueltig("hilfe_ungueltig")
             ergebnis["hilfe"] = hilfe
+        if "hilfe_senden" in daten:
+            if not isinstance(daten["hilfe_senden"], bool):
+                raise _ungueltig("hilfe_senden_ungueltig")
+            ergebnis["hilfe_senden"] = daten["hilfe_senden"]
         if "stelle" in daten:
             stelle = _text(daten["stelle"], "stelle_ungueltig")
             if stelle is not None and len(stelle) > MAX_STELLE:

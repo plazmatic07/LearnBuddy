@@ -420,6 +420,8 @@ class SachAufgabe:
     # Translation of the sentence into the child's language; it shows what a
     # gap means, so that only one answer fits
     hilfe: str | None = None
+    # Whether the translation is sent with the question
+    hilfe_senden: bool = False
     # Short quote of the text that backs the answer
     stelle: str | None = None
     # Id of the image of the page the question was made from, never sent
@@ -467,6 +469,8 @@ class SachAufgabe:
             falsche_optionen=list(data.get("falsche_optionen", [])),
             alternativen=list(data.get("alternativen", [])),
             hilfe=data.get("hilfe"),
+            # Translations of version 0.9.2 were always sent
+            hilfe_senden=data.get("hilfe_senden", bool(data.get("hilfe"))),
             stelle=data.get("stelle"),
             quelle_bild=data.get("quelle_bild"),
             hinweis=data.get("hinweis"),
@@ -496,6 +500,7 @@ class SachAufgabe:
             "falsche_optionen": list(self.falsche_optionen),
             "alternativen": list(self.alternativen),
             "hilfe": self.hilfe,
+            "hilfe_senden": self.hilfe_senden,
             "stelle": self.stelle,
             "quelle_bild": self.quelle_bild,
             "hinweis": self.hinweis,

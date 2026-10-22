@@ -71,8 +71,9 @@ interface AufgabeEntwurf {
   seite: string;
   lektion: string;
   geprueft: boolean;
-  // Sentence tasks: translation as a hint
+  // Gap tasks: translation as a hint and whether it is sent
   hilfe: string;
+  hilfeSenden: boolean;
   // Math only
   rechenweg: string;
   schwierigkeit: string;
@@ -728,6 +729,33 @@ export class LearnBuddyPanel extends LitElement {
     }
   }
 
+  /** Send the translation of gap tasks with the question, or leave it out. */
+  private async _setzeHilfeSenden(ids: string[], senden: boolean): Promise<void> {
+    const betroffen = this._aufgaben.filter(
+      (x) =>
+        ids.includes(x.id) &&
+        x.typ === "sach" &&
+        x.form === "luecke" &&
+        x.hilfe &&
+        (x.hilfe_senden ?? false) !== senden,
+    );
+    if (!betroffen.length || !this._fachId) {
+      return;
+    }
+    this._beschaeftigt = true;
+    try {
+      for (const aufgabe of betroffen) {
+        await this._api.aufgabeAendern(this._fachId, aufgabe.id, { hilfe_senden: senden });
+      }
+      this._zeigeErfolg(this._t("hilfe_gesetzt", { n: betroffen.length }));
+      await this._neuLaden();
+    } catch (fehler) {
+      this._zeigeFehler(fehler);
+    } finally {
+      this._beschaeftigt = false;
+    }
+  }
+
   private async _verschiebe(ziel: string): Promise<void> {
     const ids = [...this._auswahl];
     if (!ziel || !ids.length || !this._fachId) {
@@ -801,6 +829,7 @@ export class LearnBuddyPanel extends LitElement {
       schwierigkeit: mathe?.schwierigkeit?.toString() ?? "",
       hinweis: aufgabe?.hinweis ?? "",
       hilfe: sach?.hilfe ?? "",
+      hilfeSenden: sach?.hilfe_senden ?? false,
       seite: aufgabe?.seite?.toString() ?? "",
       lektion: aufgabe?.lektion ?? (this._filter.lektion === OHNE_LEKTION ? "" : this._filter.lektion),
       geprueft: aufgabe?.geprueft ?? true,
@@ -847,10 +876,8 @@ export class LearnBuddyPanel extends LitElement {
                 entwurf.form === "luecke" || entwurf.form === "uebersetzung"
                   ? teile(entwurf.altB)
                   : [],
-              hilfe:
-                entwurf.form === "luecke" || entwurf.form === "auswahl"
-                  ? entwurf.hilfe.trim() || null
-                  : null,
+              hilfe: entwurf.form === "luecke" ? entwurf.hilfe.trim() || null : null,
+              hilfe_senden: entwurf.form === "luecke" && entwurf.hilfeSenden,
             }
           : {
               frage: { [a]: entwurf.a, [b]: entwurf.b },
@@ -2415,6 +2442,24 @@ export class LearnBuddyPanel extends LitElement {
                     ${t("rechenweg_erzeugen")}
                   </button>`
                 : nothing}
+              ${this._aufgaben.some(
+                (x) => this._auswahl.has(x.id) && x.typ === "sach" && x.hilfe,
+              )
+                ? html`
+                    <button
+                      ?disabled=${this._beschaeftigt}
+                      @click=${() => this._setzeHilfeSenden(gewaehlt, true)}
+                    >
+                      ${t("hilfe_alle_an")}
+                    </button>
+                    <button
+                      ?disabled=${this._beschaeftigt}
+                      @click=${() => this._setzeHilfeSenden(gewaehlt, false)}
+                    >
+                      ${t("hilfe_alle_aus")}
+                    </button>
+                  `
+                : nothing}
               ${this._mehrere
                 ? html`<select
                     aria-label=${t("verschieben_nach")}
@@ -2832,7 +2877,20 @@ export class LearnBuddyPanel extends LitElement {
             </button>`
           : nothing}
         ${aufgabe.frage}
-        ${aufgabe.hilfe ? html`<div class="klein">(${aufgabe.hilfe})</div>` : nothing}
+        ${aufgabe.hilfe && aufgabe.form === "luecke"
+          ? html`<div class="klein">
+              (${aufgabe.hilfe})
+              <label class="feld zeile" title=${t("hilfe_senden")}>
+                <input
+                  type="checkbox"
+                  aria-label=${t("hilfe_senden")}
+                  .checked=${aufgabe.hilfe_senden ?? false}
+                  @change=${(e: Event) => this._setzeHilfeSenden([aufgabe.id], angehakt(e))}
+                />
+                ${t("hilfe_senden_kurz")}
+              </label>
+            </div>`
+          : nothing}
         <div class="klein">
           <span class="marke">${t(`form_${aufgabe.form}`)}</span>
           ${aufgabe.stelle && !adresse
@@ -3069,13 +3127,22 @@ export class LearnBuddyPanel extends LitElement {
                         ? eingabe("altB", alt, alt)
                         : mehrzeilig("kernpunkte", t("kernpunkte"))}
                   </div>
-                  ${satzEntwurf && (entwurf.form === "luecke" || entwurf.form === "auswahl")
+                  ${satzEntwurf && entwurf.form === "luecke"
                     ? html`<div style="margin-top: 4px">
                         ${eingabe(
                           "hilfe",
                           t("hilfe_label", { sprache: sprachname(sprache, a) }),
                           t("hilfe_label", { sprache: sprachname(sprache, a) }),
                         )}
+                        <label class="feld zeile" style="margin-top: 4px">
+                          <input
+                            type="checkbox"
+                            .checked=${entwurf.hilfeSenden}
+                            @change=${(e: Event) =>
+                              this._setzeEntwurf("hilfeSenden", angehakt(e))}
+                          />
+                          ${t("hilfe_senden")}
+                        </label>
                       </div>`
                     : nothing}
                 </td>
