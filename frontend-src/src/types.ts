@@ -44,7 +44,8 @@ export interface Fach {
 export interface Bereich {
   id: string;
   name: string | null;
-  art: "vokabel" | "mathe" | "sach";
+  /** "satz" holds gap, choice and short-answer sentences of a language subject. */
+  art: "vokabel" | "mathe" | "sach" | "satz";
   aufgaben: number;
 }
 
@@ -137,7 +138,7 @@ export interface MatheAufgabe extends AufgabeBasis {
   bild: string | null;
 }
 
-export type SachForm = "kurz" | "auswahl";
+export type SachForm = "kurz" | "auswahl" | "luecke";
 
 export interface SachAufgabe extends AufgabeBasis {
   typ: "sach";
@@ -146,6 +147,7 @@ export interface SachAufgabe extends AufgabeBasis {
   form: SachForm;
   kernpunkte: string[];
   falsche_optionen: string[];
+  alternativen: string[];
   stelle: string | null;
   quelle_bild: string | null;
 }

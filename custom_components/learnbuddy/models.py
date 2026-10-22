@@ -58,6 +58,8 @@ from .const import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from homeassistant.config_entries import ConfigSubentry
 
 RICHTUNG_TRENNER = ">"
@@ -90,6 +92,8 @@ class SachForm(StrEnum):
 
     KURZ = "kurz"
     AUSWAHL = "auswahl"
+    # Gap in a sentence, judged locally (foreign language subjects)
+    LUECKE = "luecke"
 
 
 class Quelle(StrEnum):
@@ -409,6 +413,8 @@ class SachAufgabe:
     kernpunkte: list[str] = field(default_factory=list)
     # Wrong options of a choice question
     falsche_optionen: list[str] = field(default_factory=list)
+    # Other spellings of the answer that count as correct (gap questions)
+    alternativen: list[str] = field(default_factory=list)
     # Short quote of the text that backs the answer
     stelle: str | None = None
     # Id of the image of the page the question was made from, never sent
@@ -427,7 +433,7 @@ class SachAufgabe:
         """Return whether the question can be asked."""
         if richtung_key != SACH_RICHTUNG or not (self.frage and self.antwort):
             return False
-        return self.form is SachForm.KURZ or len(self.falsche_optionen) >= 2
+        return self.form is not SachForm.AUSWAHL or len(self.falsche_optionen) >= 2
 
     def frage_text(self, richtung_key: str) -> str:
         """Return what the child is asked."""
@@ -454,6 +460,7 @@ class SachAufgabe:
             form=SachForm(data.get("form", SachForm.KURZ)),
             kernpunkte=list(data.get("kernpunkte", [])),
             falsche_optionen=list(data.get("falsche_optionen", [])),
+            alternativen=list(data.get("alternativen", [])),
             stelle=data.get("stelle"),
             quelle_bild=data.get("quelle_bild"),
             hinweis=data.get("hinweis"),
@@ -481,6 +488,7 @@ class SachAufgabe:
             "form": self.form.value,
             "kernpunkte": list(self.kernpunkte),
             "falsche_optionen": list(self.falsche_optionen),
+            "alternativen": list(self.alternativen),
             "stelle": self.stelle,
             "quelle_bild": self.quelle_bild,
             "hinweis": self.hinweis,
@@ -502,6 +510,14 @@ def aufgabe_from_dict(data: dict[str, Any]) -> Aufgabe | None:
     if typ == AufgabenTyp.SACH.value:
         return SachAufgabe.from_dict(data)
     return None
+
+
+def karten_richtungen(aufgabe: Aufgabe, richtungen: Iterable[str]) -> list[str]:
+    """Return the directions of a subject in which a task is asked at all."""
+    if isinstance(aufgabe, Vokabel):
+        return [r for r in richtungen if RICHTUNG_TRENNER in r]
+    wanted = MATHE_RICHTUNG if isinstance(aufgabe, MatheAufgabe) else SACH_RICHTUNG
+    return [r for r in richtungen if r == wanted]
 
 
 def bereich_id(aufgabe: Aufgabe) -> str:
@@ -619,7 +635,8 @@ class Fach:
         if len(self.sprachen) != 2:
             return ()
         erste, zweite = self.sprachen
-        return richtung(erste, zweite), richtung(zweite, erste)
+        # Sentence tasks (gap, choice) can stand next to the vocabulary
+        return richtung(erste, zweite), richtung(zweite, erste), SACH_RICHTUNG
 
 
 @dataclass(slots=True, frozen=True)

@@ -347,6 +347,7 @@ export class LearnBuddyPanel extends LitElement {
   // Selected section of the subject, empty shows all of them
   @state() private _bereichId = "";
   @state() private _bereichName = "";
+  @state() private _bereichArt: "vokabel" | "satz" = "vokabel";
   @state() private _bereichUmbenennen: { id: string; name: string } | null = null;
 
   @state() private _jsonLektion = "";
@@ -609,10 +610,32 @@ export class LearnBuddyPanel extends LitElement {
     return this._bereiche.length > 1;
   }
 
+  /** Sentence sections have their own columns, so "all" is no view there. */
+  private get _gemischt(): boolean {
+    return this._bereiche.some((b) => b.art === "satz");
+  }
+
   private get _aktiverBereich(): string {
-    return this._hatBereiche && this._bereiche.some((b) => b.id === this._bereichId)
-      ? this._bereichId
-      : "";
+    if (!this._hatBereiche) {
+      return "";
+    }
+    if (this._bereiche.some((b) => b.id === this._bereichId)) {
+      return this._bereichId;
+    }
+    return this._gemischt ? (this._bereiche[0]?.id ?? "") : "";
+  }
+
+  /** The kind of tasks the table shows: columns and editor follow it. */
+  private get _ansicht(): "vokabel" | "mathe" | "sach" {
+    const art = this._bereiche.find((b) => b.id === this._aktiverBereich)?.art;
+    if (art === "satz") {
+      return "sach";
+    }
+    return this._fach?.typ ?? "vokabel";
+  }
+
+  private get _satzAnsicht(): boolean {
+    return this._ansicht === "sach" && this._fach?.typ === "vokabel";
   }
 
   /** The section new tasks go to; null leaves them in the standard section. */
@@ -639,7 +662,11 @@ export class LearnBuddyPanel extends LitElement {
     }
     this._dialogFehler = "";
     try {
-      await this._api.bereichHinzufuegen(this._fachId, name);
+      await this._api.bereichHinzufuegen(
+        this._fachId,
+        name,
+        this._fach?.typ === "vokabel" ? this._bereichArt : null,
+      );
       this._bereichName = "";
       this._zeigeErfolg(this._t("bereich_angelegt", { name }));
       await this._neuLaden();
@@ -733,11 +760,17 @@ export class LearnBuddyPanel extends LitElement {
       // Math: a is the task and b the result; knowledge: question and answer
       a: mathe ? mathe.aufgabe : sach ? sach.frage : (vokabel?.frage[a] ?? ""),
       b: mathe ? mathe.loesung : sach ? sach.antwort : (vokabel?.frage[b] ?? ""),
-      form: sach?.form ?? "kurz",
+      form: sach?.form ?? (this._satzAnsicht ? "luecke" : "kurz"),
       kernpunkte: (sach?.kernpunkte ?? []).join("\n"),
       falsche: (sach?.falsche_optionen ?? []).join("\n"),
       altA: (vokabel?.alternativen[a] ?? []).join(" | "),
-      altB: (mathe ? mathe.alternativen : (vokabel?.alternativen[b] ?? [])).join(" | "),
+      altB: (
+        mathe
+          ? mathe.alternativen
+          : sach
+            ? sach.alternativen
+            : (vokabel?.alternativen[b] ?? [])
+      ).join(" | "),
       rechenweg: (mathe?.rechenweg ?? []).join("\n"),
       schwierigkeit: mathe?.schwierigkeit?.toString() ?? "",
       hinweis: aufgabe?.hinweis ?? "",
@@ -776,13 +809,14 @@ export class LearnBuddyPanel extends LitElement {
             schwierigkeit:
               entwurf.schwierigkeit === "" ? null : Number(entwurf.schwierigkeit),
           }
-        : fach.typ === "sach"
+        : this._ansicht === "sach"
           ? {
               frage: entwurf.a,
               antwort: entwurf.b,
               form: entwurf.form,
               kernpunkte: entwurf.form === "kurz" ? zeilen(entwurf.kernpunkte) : [],
               falsche_optionen: entwurf.form === "auswahl" ? zeilen(entwurf.falsche) : [],
+              alternativen: entwurf.form === "luecke" ? teile(entwurf.altB) : [],
             }
           : {
               frage: { [a]: entwurf.a, [b]: entwurf.b },
@@ -2144,7 +2178,10 @@ export class LearnBuddyPanel extends LitElement {
     const sprache = this.hass?.language ?? "en";
     const filter = this._filter;
     const mathe = fach.typ === "mathe";
-    const sach = fach.typ === "sach";
+    const sach = this._ansicht === "sach";
+    // Only the knowledge subject itself needs the AI for its questions
+    const sachFach = fach.typ === "sach";
+    const satz = this._satzAnsicht;
     const kind = this._uebersicht?.kinder.find((k) => k.id === this._kindId);
     // Older servers only tell whether an AI is selected and reads images
     const ki: KiStatus =
@@ -2168,7 +2205,9 @@ export class LearnBuddyPanel extends LitElement {
               ${t("generieren")}
             </button>`
           : nothing}
-        ${sach
+        ${satz
+          ? nothing
+          : sachFach
           ? html`<button
               ?disabled=${!kiBilder}
               title=${kiGrund}
@@ -2279,10 +2318,10 @@ export class LearnBuddyPanel extends LitElement {
         ? html`<div class="meldung fehler" role="status">
             <span>
               ${t("ki_hinweis_nicht_verfuegbar")}
-              ${sach ? t("ki_hinweis_sach_zusatz") : ""}
+              ${sachFach ? t("ki_hinweis_sach_zusatz") : ""}
             </span>
           </div>`
-        : ki === "keine" && sach
+        : ki === "keine" && sachFach
           ? html`<div class="meldung fehler" role="status">
               <span>${t("sach_ohne_ki")}</span>
             </div>`
@@ -2303,16 +2342,18 @@ export class LearnBuddyPanel extends LitElement {
 
       ${this._hatBereiche
         ? html`<div class="kinder fachwahl" role="group" aria-label=${t("bereich")}>
-            <button
-              class="kindwahl"
-              aria-pressed=${this._aktiverBereich === "" ? "true" : "false"}
-              @click=${() => {
-                this._bereichId = "";
-                this._auswahl = new Set();
-              }}
-            >
-              ${t("alle")} (${this._aufgaben.length})
-            </button>
+            ${this._gemischt
+              ? nothing
+              : html`<button
+                  class="kindwahl"
+                  aria-pressed=${this._aktiverBereich === "" ? "true" : "false"}
+                  @click=${() => {
+                    this._bereichId = "";
+                    this._auswahl = new Set();
+                  }}
+                >
+                  ${t("alle")} (${this._aufgaben.length})
+                </button>`}
             ${this._bereiche.map(
               (bereich) =>
                 html`<button
@@ -2630,6 +2671,9 @@ export class LearnBuddyPanel extends LitElement {
       </td>
       <td data-label=${t("spalte_musterantwort")}>
         ${aufgabe.antwort}
+        ${aufgabe.alternativen?.length
+          ? html`<div class="klein">${aufgabe.alternativen.join(" | ")}</div>`
+          : nothing}
         ${aufgabe.form === "auswahl"
           ? html`<div class="klein">
               ${aufgabe.falsche_optionen.map((option) => html`<div>✗ ${option}</div>`)}
@@ -2725,7 +2769,7 @@ export class LearnBuddyPanel extends LitElement {
   private _editorZeile(entwurf: AufgabeEntwurf, a: string, b: string): TemplateResult {
     const t = this._t;
     const mathe = this._fach?.typ === "mathe";
-    const sach = this._fach?.typ === "sach";
+    const sach = this._ansicht === "sach";
     const sprache = this.hass?.language ?? "en";
     const mehrzeilig = (
       feld: "a" | "b" | "kernpunkte" | "falsche",
@@ -2805,9 +2849,19 @@ export class LearnBuddyPanel extends LitElement {
                     style="margin-top: 4px"
                     aria-label=${t("form")}
                     .value=${entwurf.form}
-                    @change=${(e: Event) =>
-                      this._setzeEntwurf("form", wert(e) === "auswahl" ? "auswahl" : "kurz")}
+                    @change=${(e: Event) => {
+                      const form = wert(e);
+                      this._setzeEntwurf(
+                        "form",
+                        form === "auswahl" || form === "luecke" ? form : "kurz",
+                      );
+                    }}
                   >
+                    ${this._satzAnsicht
+                      ? html`<option value="luecke" ?selected=${entwurf.form === "luecke"}>
+                          ${t("form_luecke")}
+                        </option>`
+                      : nothing}
                     <option value="kurz" ?selected=${entwurf.form === "kurz"}>
                       ${t("form_kurz")}
                     </option>
@@ -2825,7 +2879,9 @@ export class LearnBuddyPanel extends LitElement {
                   <div style="margin-top: 4px">
                     ${entwurf.form === "auswahl"
                       ? mehrzeilig("falsche", t("falsche_optionen"))
-                      : mehrzeilig("kernpunkte", t("kernpunkte"))}
+                      : entwurf.form === "luecke"
+                        ? eingabe("altB", alt, alt)
+                        : mehrzeilig("kernpunkte", t("kernpunkte"))}
                   </div>
                 </td>
               `
@@ -3946,6 +4002,23 @@ export class LearnBuddyPanel extends LitElement {
             }}
           />
         </label>
+        ${this._fach?.typ === "vokabel"
+          ? html`<label class="feld">
+              ${t("bereich_art")}
+              <select
+                @change=${(e: Event) => {
+                  this._bereichArt = wert(e) === "satz" ? "satz" : "vokabel";
+                }}
+              >
+                <option value="vokabel" ?selected=${this._bereichArt === "vokabel"}>
+                  ${t("bereich_art_vokabel")}
+                </option>
+                <option value="satz" ?selected=${this._bereichArt === "satz"}>
+                  ${t("bereich_art_satz")}
+                </option>
+              </select>
+            </label>`
+          : nothing}
         <button
           class="primaer"
           style="align-self: flex-end"

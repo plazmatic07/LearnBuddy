@@ -62,6 +62,7 @@ from .models import (
     Verifikation,
     Vokabel,
     arbeit_titel,
+    karten_richtungen,
 )
 from .panel import panel_version
 from .rechnen import berechne
@@ -107,8 +108,38 @@ MAX_BEISPIELE = 10
 # AI calls that verify generated tasks at the same time
 PARALLEL_PRUEFEN = 4
 MAX_LEKTION = 100
+ART_SATZ = "satz"
 MAX_BEREICH = 60
 MAX_BEREICHE = 12
+
+# Fields of a task that an export carries, by kind of task
+EXPORT_FELDER: dict[str, tuple[str, ...]] = {
+    "mathe": (
+        "aufgabe",
+        "loesung",
+        "alternativen",
+        "rechenweg",
+        "schwierigkeit",
+        "hinweis",
+        "seite",
+        "lektion",
+        "geprueft",
+    ),
+    "sach": (
+        "frage",
+        "antwort",
+        "form",
+        "kernpunkte",
+        "falsche_optionen",
+        "alternativen",
+        "stelle",
+        "hinweis",
+        "seite",
+        "lektion",
+        "geprueft",
+    ),
+    "vokabel": ("frage", "alternativen", "hinweis", "seite", "lektion", "geprueft"),
+}
 MAX_SCHWIERIG = 5
 FORTSCHRITT_ZEITRAEUME = (7, 30, 90)
 REPORT_LEKTIONEN = 3
@@ -362,7 +393,7 @@ class Verwaltung:
                 falsch += stat.falsch
             if not aufgabe.geprueft:
                 continue
-            for richtung_key in richtungen:
+            for richtung_key in karten_richtungen(aufgabe, richtungen):
                 stat_r = aufgabe.statistik.get(richtung_key)
                 box = 1 if stat_r is None else min(max(stat_r.box, 1), MAX_BOX)
                 boxen[box - 1] += 1
@@ -970,12 +1001,13 @@ class Verwaltung:
         *,
         vollstaendig: bool,
         lektionen: TaskStore | None = None,
+        satz: bool = False,
     ) -> dict[str, Any]:
         """Validate the editable fields of a task of the subject's type."""
         ergebnis: dict[str, Any] = {}
         if fach.typ is AufgabenTyp.MATHE:
             self._pruefe_mathe(daten, ergebnis, vollstaendig=vollstaendig)
-        elif fach.typ is AufgabenTyp.SACH:
+        elif fach.typ is AufgabenTyp.SACH or satz:
             self._pruefe_sach(daten, ergebnis, vollstaendig=vollstaendig)
         else:
             self._pruefe_vokabel(fach, daten, ergebnis, vollstaendig=vollstaendig)
@@ -1061,6 +1093,7 @@ class Verwaltung:
         for feld, anzahl in (
             ("kernpunkte", MAX_KERNPUNKTE),
             ("falsche_optionen", MAX_FALSCHE_OPTIONEN),
+            ("alternativen", MAX_SCHRITTE),
         ):
             if feld not in daten:
                 continue
@@ -1130,11 +1163,15 @@ class Verwaltung:
     def aufgabe_anlegen(self, fach_id: str, daten: dict[str, Any]) -> dict[str, Any]:
         """Create a single task."""
         fach, store = self._fach(fach_id)
-        felder = self._pruefe_felder(fach, daten, vollstaendig=True, lektionen=store)
+        bereich = self._bereich_pruefen(store, daten.get("bereich"))
+        satz = self._bereich_art(fach, store, bereich) == ART_SATZ
+        felder = self._pruefe_felder(
+            fach, daten, vollstaendig=True, lektionen=store, satz=satz
+        )
         aufgabe: Aufgabe
         if fach.typ is AufgabenTyp.MATHE:
             aufgabe = MatheAufgabe(fach_id=fach_id, quelle=Quelle.MANUELL, **felder)
-        elif fach.typ is AufgabenTyp.SACH:
+        elif fach.typ is AufgabenTyp.SACH or satz:
             aufgabe = SachAufgabe(fach_id=fach_id, quelle=Quelle.MANUELL, **felder)
             self._pruefe_auswahl(
                 aufgabe.form, aufgabe.antwort, aufgabe.falsche_optionen
@@ -1153,7 +1190,15 @@ class Verwaltung:
         """Change fields of a task."""
         fach, store = self._fach(fach_id)
         aufgabe = self._aufgabe(store, aufgabe_id)
-        felder = self._pruefe_felder(fach, daten, vollstaendig=False, lektionen=store)
+        satz = isinstance(aufgabe, SachAufgabe) and fach.typ is AufgabenTyp.VOKABEL
+        felder = self._pruefe_felder(
+            fach, daten, vollstaendig=False, lektionen=store, satz=satz
+        )
+        if "bereich" in felder and self._bereich_art(
+            fach, store, felder["bereich"]
+        ) != (ART_SATZ if satz else fach.typ.value):
+            # A task only moves to a section for its own kind of tasks
+            raise _ungueltig("bereich_art_ungueltig")
         if isinstance(aufgabe, Vokabel):
             if "frage" in felder:
                 aufgabe.frage = {**aufgabe.frage, **felder.pop("frage")}
@@ -1307,7 +1352,16 @@ class Verwaltung:
     @staticmethod
     def _bereich_arten(fach: Fach) -> tuple[str, ...]:
         """Return the kinds of tasks a section of the subject can hold."""
+        if fach.typ is AufgabenTyp.VOKABEL:
+            # Sentence tasks: gap, choice and short answer
+            return (AufgabenTyp.VOKABEL.value, ART_SATZ)
         return (fach.typ.value,)
+
+    @staticmethod
+    def _bereich_art(fach: Fach, store: TaskStore, bereich: str | None) -> str:
+        """Return the kind of tasks the section holds; None is the standard one."""
+        eintrag = None if bereich is None else store.bereich_finden(bereich)
+        return fach.typ.value if eintrag is None else eintrag["art"]
 
     @staticmethod
     def _standard_anzeige(fach: Fach, store: TaskStore) -> str:
@@ -1393,13 +1447,17 @@ class Verwaltung:
         bereich: str | None = None,
     ) -> dict[str, Any]:
         """Preview a list of tasks or import it."""
-        _, store = self._fach(fach_id)
+        fach, store = self._fach(fach_id)
         if vorschau:
             return self.import_vorschau(fach_id, inhalt, trennzeichen)
         if lektion and lektion.strip():
             lektion = store.lektion_finden(lektion)
             if lektion is None:
                 raise _ungueltig("lektion_unbekannt")
+        ziel = self._bereich_pruefen(store, bereich)
+        if self._bereich_art(fach, store, ziel) == ART_SATZ:
+            # Sentences do not fit into the lines of a vocabulary list
+            raise _ungueltig("import_satz")
         try:
             return self._manager.async_importiere(
                 fach_id,
@@ -1407,7 +1465,7 @@ class Verwaltung:
                 lektion=lektion,
                 trennzeichen=trennzeichen,
                 geprueft=geprueft,
-                bereich=self._bereich_pruefen(store, bereich),
+                bereich=ziel,
             )
         except ServiceValidationError as err:
             raise _ungueltig(err.translation_key or "import_leer") from err
@@ -1472,6 +1530,60 @@ class Verwaltung:
             "aufgaben": aufgaben,
         }
 
+    def _aufgabe_aus_export(
+        self,
+        fach: Fach,
+        store: TaskStore,
+        roh: Any,
+        *,
+        bereich: str | None,
+        lektion: str | None,
+        mit_statistik: bool,
+    ) -> Aufgabe:
+        """Create a task from an entry of an export (raises when it is unusable)."""
+        if not isinstance(roh, dict):
+            raise _ungueltig("export_ungueltig")
+        # A foreign language subject can hold sentence tasks next to vocabulary
+        satz = fach.typ is AufgabenTyp.VOKABEL and roh.get("typ") == AufgabenTyp.SACH
+        art = "satz" if satz else fach.typ.value
+        if self._bereich_art(fach, store, bereich) != art:
+            raise _ungueltig("bereich_art_ungueltig")
+        erlaubt = EXPORT_FELDER["sach" if satz else fach.typ.value]
+        felder = self._pruefe_felder(
+            fach, {k: roh[k] for k in erlaubt if k in roh}, vollstaendig=True, satz=satz
+        )
+        statistik = (
+            {
+                key: Statistik.from_dict(wert)
+                for key, wert in roh.get("statistik", {}).items()
+                if key in fach.richtungen
+            }
+            if mit_statistik
+            else {}
+        )
+        quelle = Quelle(roh.get("quelle", Quelle.MANUELL))
+        # Section ids of the file mean nothing here
+        felder |= {"bereich": bereich} | (
+            {} if lektion is None else {"lektion": lektion}
+        )
+        if fach.typ is AufgabenTyp.MATHE:
+            return MatheAufgabe(
+                fach_id=fach.id,
+                quelle=quelle,
+                statistik=statistik,
+                verifikation=Verifikation(roh.get("verifikation", Verifikation.KEINE)),
+                **felder,
+            )
+        if fach.typ is AufgabenTyp.SACH or satz:
+            aufgabe = SachAufgabe(
+                fach_id=fach.id, quelle=quelle, statistik=statistik, **felder
+            )
+            self._pruefe_auswahl(
+                aufgabe.form, aufgabe.antwort, aufgabe.falsche_optionen
+            )
+            return aufgabe
+        return Vokabel(fach_id=fach.id, quelle=quelle, statistik=statistik, **felder)
+
     def import_json(
         self,
         fach_id: str,
@@ -1501,91 +1613,26 @@ class Verwaltung:
             raise _ungueltig("export_ungueltig")
         if daten.get("version") != EXPORT_VERSION:
             raise _ungueltig("export_version")
-        mathe = fach.typ is AufgabenTyp.MATHE
         if daten.get("typ", AufgabenTyp.VOKABEL.value) != fach.typ.value:
             raise _ungueltig("export_typ")
-        sach = fach.typ is AufgabenTyp.SACH
-        if (
-            not mathe
-            and not sach
-            and sorted(daten.get("sprachen") or []) != sorted(fach.sprachen)
-        ):
+        if fach.typ is AufgabenTyp.VOKABEL and sorted(
+            daten.get("sprachen") or []
+        ) != sorted(fach.sprachen):
             raise _ungueltig("export_sprachen")
 
-        erlaubt = (
-            (
-                "aufgabe",
-                "loesung",
-                "alternativen",
-                "rechenweg",
-                "schwierigkeit",
-                "hinweis",
-                "seite",
-                "lektion",
-                "geprueft",
-            )
-            if mathe
-            else (
-                "frage",
-                "antwort",
-                "form",
-                "kernpunkte",
-                "falsche_optionen",
-                "stelle",
-                "hinweis",
-                "seite",
-                "lektion",
-                "geprueft",
-            )
-            if sach
-            else ("frage", "alternativen", "hinweis", "seite", "lektion", "geprueft")
-        )
         vorhanden = self._schluessel_menge(fach, store)
         importiert = uebersprungen = 0
         fehler: list[int] = []
         for index, roh in enumerate(daten["aufgaben"]):
             try:
-                if not isinstance(roh, dict):
-                    raise _ungueltig("export_ungueltig")
-                felder = self._pruefe_felder(
-                    fach, {k: roh[k] for k in erlaubt if k in roh}, vollstaendig=True
+                aufgabe = self._aufgabe_aus_export(
+                    fach,
+                    store,
+                    roh,
+                    bereich=ziel_bereich,
+                    lektion=ziel_lektion,
+                    mit_statistik=mit_statistik,
                 )
-                statistik = (
-                    {
-                        key: Statistik.from_dict(wert)
-                        for key, wert in roh.get("statistik", {}).items()
-                        if key in fach.richtungen
-                    }
-                    if mit_statistik
-                    else {}
-                )
-                quelle = Quelle(roh.get("quelle", Quelle.MANUELL))
-                # Section ids of the file mean nothing here
-                felder |= {"bereich": ziel_bereich} | (
-                    {} if ziel_lektion is None else {"lektion": ziel_lektion}
-                )
-                aufgabe: Aufgabe
-                if mathe:
-                    aufgabe = MatheAufgabe(
-                        fach_id=fach_id,
-                        quelle=quelle,
-                        statistik=statistik,
-                        verifikation=Verifikation(
-                            roh.get("verifikation", Verifikation.KEINE)
-                        ),
-                        **felder,
-                    )
-                elif sach:
-                    aufgabe = SachAufgabe(
-                        fach_id=fach_id, quelle=quelle, statistik=statistik, **felder
-                    )
-                    self._pruefe_auswahl(
-                        aufgabe.form, aufgabe.antwort, aufgabe.falsche_optionen
-                    )
-                else:
-                    aufgabe = Vokabel(
-                        fach_id=fach_id, quelle=quelle, statistik=statistik, **felder
-                    )
             except VerwaltungError, ValueError, TypeError, AttributeError:
                 fehler.append(index)
                 continue
@@ -1839,6 +1886,8 @@ class Verwaltung:
             if ziel_lektion is None:
                 raise _ungueltig("lektion_unbekannt")
         ziel_bereich = self._bereich_pruefen(store, bereich)
+        if self._bereich_art(fach, store, ziel_bereich) == ART_SATZ:
+            raise _ungueltig("foto_satz")
         mathe = fach.typ is AufgabenTyp.MATHE
         erlaubt = (
             ("aufgabe", "loesung", "seite")
@@ -1919,7 +1968,7 @@ class Verwaltung:
             ki_entity = self._pruefe_seiten(fach, seiten)
             if not 1 <= anzahl <= MAX_SACHFRAGEN:
                 raise _ungueltig("anzahl_ungueltig")
-            if form not in (None, FORM_GEMISCHT, *(f.value for f in SachForm)):
+            if form not in (None, FORM_GEMISCHT, SachForm.KURZ, SachForm.AUSWAHL):
                 raise _ungueltig("form_ungueltig")
             schwerpunkt = _text(schwerpunkt, "beschreibung_ungueltig")
             ziel_bereich = self._bereich_pruefen(store, bereich)

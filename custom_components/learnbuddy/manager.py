@@ -86,6 +86,7 @@ from .models import (
     Simulation,
     Vokabel,
     WunschAngebot,
+    karten_richtungen,
     richtung_teile,
 )
 from .sach import bewerte_auswahl, formatiere, gleiche_antwort, mische
@@ -1164,9 +1165,10 @@ class LearnBuddyManager:
         Follow-up questions of a running conversation need no greeting.
         """
         if isinstance(aufgabe, SachAufgabe):
+            art = "luecke" if aufgabe.form is SachForm.LUECKE else "sach"
             nachricht = text(
                 self.sprache,
-                "frage_sach_kurz" if kurz else "frage_sach",
+                f"frage_{art}_kurz" if kurz else f"frage_{art}",
                 name=kind.name,
                 fach=fach.name,
                 frage=aufgabe.frage,
@@ -1398,6 +1400,18 @@ class LearnBuddyManager:
             if aufgabe.form is SachForm.AUSWAHL:
                 gezeigt = optionen or [aufgabe.antwort, *aufgabe.falsche_optionen]
                 return bewerte_auswahl(antwort, gezeigt, loesung), "lokal", None
+            if aufgabe.form is SachForm.LUECKE:
+                # Judged like a vocabulary answer, in the language to be learned
+                return (
+                    bewerte_vokabel(
+                        antwort,
+                        loesung,
+                        aufgabe.alternativen,
+                        fach.sprachen[-1] if fach.sprachen else "",
+                    ),
+                    "lokal",
+                    None,
+                )
             if gleiche_antwort(antwort, loesung):
                 return Ergebnis.RICHTIG, "lokal", None
             if ki_entity and antwort.strip():
@@ -2405,7 +2419,7 @@ class LearnBuddyManager:
         for aufgabe in self.task_stores[fach.id].aufgaben.values():
             if not aufgabe.geprueft:
                 continue
-            for richtung in fach.richtungen:
+            for richtung in karten_richtungen(aufgabe, fach.richtungen):
                 stat = aufgabe.statistik.get(richtung)
                 karten += 1
                 sicher += stat is not None and stat.box >= SICHER_AB_BOX

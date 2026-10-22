@@ -175,10 +175,15 @@ export class Api {
     return antwort.lektionen;
   }
 
-  async bereichHinzufuegen(fachId: string, name: string): Promise<Bereich[]> {
+  async bereichHinzufuegen(
+    fachId: string,
+    name: string,
+    art: string | null = null,
+  ): Promise<Bereich[]> {
     const antwort = await this.call<{ bereiche: Bereich[] }>("sections/add", {
       fach_id: fachId,
       name,
+      art,
     });
     return antwort.bereiche;
   }

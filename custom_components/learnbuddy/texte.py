@@ -32,6 +32,11 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
         "rechenweg_nein": "Alles klar, {name}!",
         "frage_sach": "Hallo {name}! 📖 {fach}: {frage}",
         "frage_sach_kurz": "{frage}",
+        "frage_luecke": "Hallo {name}! ✏️ {fach}: Setze ein: {frage}",
+        "frage_luecke_kurz": "Setze ein: {frage}",
+        "fast_richtig_sach": (
+            "Fast richtig, {name}! 👍 Achte auf die Schreibweise: „{loesung}“."
+        ),
         "frage_optionen": "\n{optionen}\nAntworte mit dem Buchstaben.",
         "richtig_sach": "Richtig, {name}! 🎉",
         "teilweise_sach": ("Teilweise richtig, {name}. 👍 Vollständig wäre: {loesung}"),
@@ -135,6 +140,9 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
         "rechenweg_nein": "All right, {name}!",
         "frage_sach": "Hi {name}! 📖 {fach}: {frage}",
         "frage_sach_kurz": "{frage}",
+        "frage_luecke": "Hi {name}! ✏️ {fach}: Fill in the gap: {frage}",
+        "frage_luecke_kurz": "Fill in the gap: {frage}",
+        "fast_richtig_sach": "Almost, {name}! 👍 Mind the spelling: “{loesung}”.",
         "frage_optionen": "\n{optionen}\nAnswer with the letter.",
         "richtig_sach": "Correct, {name}! 🎉",
         "teilweise_sach": "Partly right, {name}. 👍 The complete answer: {loesung}",

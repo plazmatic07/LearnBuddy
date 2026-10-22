@@ -201,7 +201,13 @@ SACHFRAGEN_SCHEMA = vol.Schema(
                     "form": {
                         "required": True,
                         "selector": {
-                            "select": {"options": [form.value for form in SachForm]}
+                            "select": {
+                                "options": [
+                                    form.value
+                                    for form in SachForm
+                                    if form is not SachForm.LUECKE
+                                ]
+                            }
                         },
                     },
                     "antwort": {"required": True, "selector": {"text": {}}},
@@ -385,6 +391,9 @@ def parse_sachfragen(daten: Any) -> list[GenerierteSachfrage] | None:
         try:
             form = SachForm(str(roh.get("form")))
         except ValueError:
+            continue
+        if form is SachForm.LUECKE:
+            # Gap questions are written by hand, the AI makes no gaps
             continue
         auswahl = form is SachForm.AUSWAHL
         antwort = bereinige_text(

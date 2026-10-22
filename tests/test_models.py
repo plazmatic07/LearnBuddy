@@ -126,7 +126,7 @@ def test_fach_from_subentry() -> None:
         )
     )
     assert fach.typ is AufgabenTyp.VOKABEL
-    assert fach.richtungen == ("de>en", "en>de")
+    assert fach.richtungen == ("de>en", "en>de", "sach")
     assert Fach(id="f", kind_id="k", name="Mathe").richtungen == ()
 
 
