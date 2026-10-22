@@ -2717,14 +2717,18 @@ export class LearnBuddyPanel extends LitElement {
                 ${mathe
                   ? t("spalte_aufgabe")
                   : sach
-                    ? t("spalte_frage")
+                    ? t(this._fach?.typ === "vokabel" ? "spalte_satz" : "spalte_frage")
                     : sprachname(sprache, a)}
               </th>
               <th>
                 ${mathe
                   ? t("spalte_loesung")
                   : sach
-                    ? t("spalte_musterantwort")
+                    ? t(
+                        this._fach?.typ === "vokabel"
+                          ? "spalte_satz_loesung"
+                          : "spalte_musterantwort",
+                      )
                     : sprachname(sprache, b)}
               </th>
               ${mathe
@@ -2860,8 +2864,10 @@ export class LearnBuddyPanel extends LitElement {
     const adresse = aufgabe.quelle_bild
       ? this._bildAdressen[aufgabe.quelle_bild]
       : undefined;
+    // Sentences of a language subject: sentence and solution
+    const satz = this._fach?.typ === "vokabel";
     return html`
-      <td data-label=${t("spalte_frage")}>
+      <td data-label=${t(satz ? "spalte_satz" : "spalte_frage")}>
         ${adresse
           ? html`<button
               class="vorschaubild"
@@ -2908,7 +2914,7 @@ export class LearnBuddyPanel extends LitElement {
             : nothing}
         </div>
       </td>
-      <td data-label=${t("spalte_musterantwort")}>
+      <td data-label=${t(satz ? "spalte_satz_loesung" : "spalte_musterantwort")}>
         ${aufgabe.antwort}
         ${aufgabe.alternativen?.length
           ? html`<div class="klein">${aufgabe.alternativen.join(" | ")}</div>`
@@ -3083,8 +3089,8 @@ export class LearnBuddyPanel extends LitElement {
             `
           : sach
             ? html`
-                <td data-label=${t("spalte_frage")}>
-                  ${mehrzeilig("a", t("spalte_frage"))}
+                <td data-label=${t(satzEntwurf ? "spalte_satz" : "spalte_frage")}>
+                  ${mehrzeilig("a", t(satzEntwurf ? "spalte_satz" : "spalte_frage"))}
                   <select
                     style="margin-top: 4px"
                     aria-label=${t("form")}
@@ -3118,10 +3124,18 @@ export class LearnBuddyPanel extends LitElement {
                     </option>
                   </select>
                 </td>
-                <td data-label=${t("spalte_musterantwort")}>
+                <td
+                  data-label=${t(satzEntwurf ? "spalte_satz_loesung" : "spalte_musterantwort")}
+                >
                   ${mehrzeilig(
                     "b",
-                    t(entwurf.form === "auswahl" ? "richtige_antwort" : "spalte_musterantwort"),
+                    t(
+                      entwurf.form === "auswahl"
+                        ? "richtige_antwort"
+                        : satzEntwurf
+                          ? "spalte_satz_loesung"
+                          : "spalte_musterantwort",
+                    ),
                     entwurf.form === "auswahl" ? 32 : 64,
                   )}
                   <div style="margin-top: 4px">
