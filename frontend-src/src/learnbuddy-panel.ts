@@ -85,8 +85,6 @@ interface AufgabeEntwurf {
 }
 
 interface SaetzeEntwurf {
-  // With photos of book pages instead of a description
-  foto: boolean;
   bereich: string;
   dateien: File[];
   vorschauen: string[];
@@ -1560,11 +1558,10 @@ export class LearnBuddyPanel extends LitElement {
 
   // --------------------------------------------- sentence tasks from the AI
 
-  private _oeffneSaetze(foto: boolean): void {
+  private _oeffneSaetze(): void {
     const satzBereiche = this._bereiche.filter((b) => b.art === "satz");
     const aktiv = satzBereiche.find((b) => b.id === this._aktiverBereich);
     this._saetze = {
-      foto,
       bereich: (aktiv ?? satzBereiche[0])?.id ?? "",
       dateien: [],
       vorschauen: [],
@@ -1607,10 +1604,8 @@ export class LearnBuddyPanel extends LitElement {
     this._dialogFehler = "";
     try {
       const seiten: string[] = [];
-      if (entwurf.foto) {
-        for (const datei of entwurf.dateien) {
-          seiten.push(await this._api.bildHochladen(datei, true));
-        }
+      for (const datei of entwurf.dateien) {
+        seiten.push(await this._api.bildHochladen(datei, true));
       }
       const ergebnis = await this._api.satzaufgabenErzeugen(this._fachId, {
         bereich: entwurf.bereich,
@@ -1618,7 +1613,7 @@ export class LearnBuddyPanel extends LitElement {
         form: entwurf.form,
         beschreibung: entwurf.beschreibung.trim() || null,
         seiten,
-        uebernehmen: entwurf.foto && entwurf.uebernehmen,
+        uebernehmen: seiten.length > 0 && entwurf.uebernehmen,
         lektion: entwurf.lektion || null,
       });
       this._schliesseDialog();
@@ -2450,22 +2445,13 @@ export class LearnBuddyPanel extends LitElement {
             </button>`
           : nothing}
         ${this._bereiche.some((b) => b.art === "satz")
-          ? html`
-              <button
-                ?disabled=${!kiAn}
-                title=${kiAn ? "" : kiGrund}
-                @click=${() => this._oeffneSaetze(false)}
-              >
-                ${t("saetze_generieren")}
-              </button>
-              <button
-                ?disabled=${!kiBilder}
-                title=${kiGrund}
-                @click=${() => this._oeffneSaetze(true)}
-              >
-                ${t("saetze_foto")}
-              </button>
-            `
+          ? html`<button
+              ?disabled=${!kiAn}
+              title=${kiAn ? "" : kiGrund}
+              @click=${() => this._oeffneSaetze()}
+            >
+              ${t("saetze_erzeugen")}
+            </button>`
           : nothing}
         ${satz
           ? nothing
@@ -3855,37 +3841,38 @@ export class LearnBuddyPanel extends LitElement {
       "uebersetzung",
     ];
     const satzBereiche = this._bereiche.filter((b) => b.art === "satz");
-    const ohneEingabe = entwurf.foto
-      ? !entwurf.dateien.length
-      : !entwurf.beschreibung.trim();
+    const fach = this._fach;
+    const ki: KiStatus =
+      fach?.ki_status ?? (fach?.ki ? (fach.ki_bilder ? "ok" : "ohne_bilder") : "keine");
+    const kiBilder = ki === "ok";
+    const ohneEingabe = !entwurf.dateien.length && !entwurf.beschreibung.trim();
     return html`
-      <h2>${t(entwurf.foto ? "saetze_foto" : "saetze_generieren")}</h2>
-      <p class="klein">${t(entwurf.foto ? "saetze_hilfe_foto" : "saetze_hilfe_text")}</p>
-      ${entwurf.foto
-        ? html`
-            <label class="feld">
-              ${t("seiten_waehlen", { n: MAX_SEITEN })} *
-              <input
-                type="file"
-                multiple
-                accept="image/png,image/jpeg,image/webp"
-                aria-label=${t("seiten_waehlen", { n: MAX_SEITEN })}
-                @change=${this._saetzeSeitenGewaehlt}
-              />
-            </label>
-            ${entwurf.vorschauen.length
-              ? html`<div class="leiste" style="margin: 12px 0 0">
-                  ${entwurf.vorschauen.map(
-                    (adresse, index) =>
-                      html`<img
-                        class="grossbild"
-                        style="max-height: 140px; margin: 0"
-                        src=${adresse}
-                        alt=${`${t("spalte_seite")} ${index + 1}`}
-                      />`,
-                  )}
-                </div>`
-              : nothing}
+      <h2>${t("saetze_erzeugen")}</h2>
+      <p class="klein">${t("saetze_hilfe")}</p>
+      <label class="feld">
+        ${t("saetze_fotos", { n: MAX_SEITEN })}
+        <input
+          type="file"
+          multiple
+          ?disabled=${!kiBilder}
+          accept="image/png,image/jpeg,image/webp"
+          aria-label=${t("saetze_fotos", { n: MAX_SEITEN })}
+          @change=${this._saetzeSeitenGewaehlt}
+        />
+      </label>
+      ${kiBilder ? nothing : html`<p class="klein" role="note">${t(`ki_${ki}`)}</p>`}
+      ${entwurf.vorschauen.length
+        ? html`<div class="leiste" style="margin: 12px 0 0">
+              ${entwurf.vorschauen.map(
+                (adresse, index) =>
+                  html`<img
+                    class="grossbild"
+                    style="max-height: 140px; margin: 0"
+                    src=${adresse}
+                    alt=${`${t("spalte_seite")} ${index + 1}`}
+                  />`,
+              )}
+            </div>
             <div class="chips" style="margin: 12px 0">
               ${[false, true].map(
                 (uebernehmen) => html`
@@ -3900,11 +3887,10 @@ export class LearnBuddyPanel extends LitElement {
                   </label>
                 `,
               )}
-            </div>
-          `
+            </div>`
         : nothing}
       <label class="feld" style="margin-top: 12px">
-        ${t("saetze_beschreibung")}${entwurf.foto ? "" : " *"}
+        ${t("saetze_beschreibung")}
         <textarea
           maxlength="500"
           placeholder=${t("saetze_beschreibung_hilfe")}

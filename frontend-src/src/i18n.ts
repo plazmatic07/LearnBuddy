@@ -163,12 +163,10 @@ const de = {
   err_hilfe_senden_ungueltig: "Ungültige Angabe.",
   err_hilfe_ungueltig: "Die Übersetzung ist zu lang.",
   form_uebersetzung: "Übersetzung",
-  saetze_generieren: "Sätze generieren",
-  saetze_foto: "Sätze aus Foto",
-  saetze_hilfe_text:
-    "Die KI schreibt kurze Sätze mit einer Lücke, die das Kind ausfüllt. Die Aufgaben warten danach auf deine Freigabe (Filter „Geprüft: nein“).",
-  saetze_hilfe_foto:
-    "Die KI liest Übungen von Buchseiten oder schreibt ähnliche neue. Die Aufgaben warten danach auf deine Freigabe.",
+  saetze_erzeugen: "Sätze erzeugen",
+  saetze_hilfe:
+    "Die KI schreibt kurze Sätze für das Thema. Beschreibe, was geübt werden soll, und/oder lade Fotos von Buchseiten hoch (die KI übernimmt die Übungen oder erfindet ähnliche). Die Aufgaben warten danach auf deine Freigabe.",
+  saetze_fotos: "Fotos von Buchseiten (optional, bis zu {n})",
   saetze_beschreibung: "Beschreibung und Wünsche",
   saetze_beschreibung_hilfe: "z. B. Personalpronomen in kurzen Sätzen",
   saetze_uebernehmen: "Übungen von der Seite übernehmen",
@@ -772,12 +770,10 @@ const en: Record<Schluessel, string> = {
   err_hilfe_senden_ungueltig: "Invalid value.",
   err_hilfe_ungueltig: "The translation is too long.",
   form_uebersetzung: "Translation",
-  saetze_generieren: "Generate sentences",
-  saetze_foto: "Sentences from photo",
-  saetze_hilfe_text:
-    "The AI writes short sentences with a gap for the child to fill in. The tasks then wait for your approval (filter “Checked: no”).",
-  saetze_hilfe_foto:
-    "The AI reads exercises from book pages or writes similar new ones. The tasks then wait for your approval.",
+  saetze_erzeugen: "Generate sentences",
+  saetze_hilfe:
+    "The AI writes short sentences for the topic. Describe what to practise and/or upload photos of book pages (the AI takes over the exercises or invents similar ones). The tasks then wait for your approval.",
+  saetze_fotos: "Photos of book pages (optional, up to {n})",
   saetze_beschreibung: "Description and wishes",
   saetze_beschreibung_hilfe: "e.g. personal pronouns in short sentences",
   saetze_uebernehmen: "Take over the exercises of the page",
