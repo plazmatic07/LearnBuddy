@@ -179,6 +179,8 @@ STORAGE_MINOR_VERSION: Final = 15
 
 # Most extra questions a child can ask for at once
 MAX_ZUSATZAUFGABEN: Final = 20
+# Questions in a row that parents start with "Jetzt abfragen"
+MAX_ABFRAGE_ANZAHL: Final = 100
 # A series of extra questions ends when this many scheduled slots found a question open
 SERIE_VERPASSTE_TERMINE: Final = 2
 # How long the question for the amount of a wish waits for its reply

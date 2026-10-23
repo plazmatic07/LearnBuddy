@@ -27,7 +27,7 @@ const BOX_FARBEN_DUNKEL = ["#184f95", "#256abf", "#3987e5", "#6da7ec", "#b7d3f6"
 
 const AKTUALISIEREN_MS = 60_000;
 // Most questions that can be asked in a row (as in the integration)
-const MAX_ABFRAGE = 20;
+const MAX_ABFRAGE = 100;
 const ABFRAGE_STANDARD = 5;
 
 /** What the dialog "Ask now" is about to send. */
@@ -191,6 +191,11 @@ export class LhUebersicht extends LitElement {
       .zeile:first-of-type {
         border-top: none;
         padding-top: 0;
+      }
+      /* Ticks in the selection of a request are no list rows */
+      .chips .zeile {
+        border-top: none;
+        padding: 0;
       }
       h2.abstand {
         margin-top: 20px;

@@ -681,3 +681,15 @@ async def test_abfrage_auswahl_wie_bei_der_arbeit(
     assert AbfrageFilter.from_dict(filter_.to_dict()) == filter_
     assert filter_.aktiv
     assert AbfrageFilter.from_dict({"lektionen": ["A"]}).aufgabe_ids == ()
+
+
+async def test_abfrage_hat_hoechstens_hundert_fragen(
+    mit_vokabeln: MockConfigEntry,
+    client: Client,  # noqa: F811
+) -> None:
+    manager: LearnBuddyManager = mit_vokabeln.runtime_data
+    # Parents may start a long series, more than the 20 a child can ask for
+    await client.ok("ask", kind_id=KIND_ID, fach_id=FACH_ID, anzahl=60)
+    assert manager.zustand(KIND_ID).zusatz_offen == 59
+    fehler = await client.fehler("ask", kind_id=KIND_ID, fach_id=FACH_ID, anzahl=101)
+    assert fehler["code"] == "invalid_format"

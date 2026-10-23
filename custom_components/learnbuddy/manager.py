@@ -51,6 +51,7 @@ from .const import (
     EVENT_SIMULATION_FINISHED,
     KALENDER_TAGE_VORAUS,
     LOGGER,
+    MAX_ABFRAGE_ANZAHL,
     MAX_ZUSATZAUFGABEN,
     SENDE_WIEDERHOLUNGEN,
     SERIE_VERPASSTE_TERMINE,
@@ -1088,7 +1089,7 @@ class LearnBuddyManager:
                 )
             if fach_id is None or auswahl_filter is None:
                 auswahl_filter = AbfrageFilter()
-            anzahl = max(1, min(anzahl, MAX_ZUSATZAUFGABEN))
+            anzahl = max(1, min(anzahl, MAX_ABFRAGE_ANZAHL))
             if anzahl == 1:
                 await self._async_frage(
                     kind_id,

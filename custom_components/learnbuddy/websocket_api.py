@@ -16,7 +16,7 @@ from homeassistant.components.websocket_api.decorators import (
 from homeassistant.core import HomeAssistant, callback
 import voluptuous as vol
 
-from .const import DOMAIN, MAX_TIMEOUT_MINUTEN, MAX_ZUSATZAUFGABEN
+from .const import DOMAIN, MAX_ABFRAGE_ANZAHL, MAX_TIMEOUT_MINUTEN
 from .verwaltung import Verwaltung, VerwaltungError
 
 if TYPE_CHECKING:
@@ -182,7 +182,7 @@ def ws_ask_count(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
         vol.Optional("fach_id"): vol.Any(str, None),
         **_ABFRAGE_AUSWAHL,
         vol.Optional("anzahl", default=1): vol.All(
-            int, vol.Range(min=1, max=MAX_ZUSATZAUFGABEN)
+            int, vol.Range(min=1, max=MAX_ABFRAGE_ANZAHL)
         ),
         vol.Optional("frist_minuten"): vol.All(
             int, vol.Range(min=0, max=MAX_TIMEOUT_MINUTEN)
