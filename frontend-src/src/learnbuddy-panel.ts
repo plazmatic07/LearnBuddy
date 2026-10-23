@@ -2444,7 +2444,7 @@ export class LearnBuddyPanel extends LitElement {
               ${t("generieren")}
             </button>`
           : nothing}
-        ${this._bereiche.some((b) => b.art === "satz")
+        ${satz
           ? html`<button
               ?disabled=${!kiAn}
               title=${kiAn ? "" : kiGrund}
