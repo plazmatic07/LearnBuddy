@@ -36,6 +36,7 @@ type Dialog =
   | "arbeit"
   | "lektion"
   | "bereiche"
+  | "faecher"
   | "generieren"
   | "nachrechnen"
   | "aufgabenart"
@@ -2281,6 +2282,7 @@ export class LearnBuddyPanel extends LitElement {
             </button>`,
         )}
       </div>
+      ${this._tab === "aufgaben" && this._fach ? this._werkzeuge() : nothing}
       ${this._tab === "uebersicht"
         ? html`<lh-uebersicht
             .hass=${this.hass}
@@ -2296,10 +2298,11 @@ export class LearnBuddyPanel extends LitElement {
   private _fachBereich(): TemplateResult {
     const t = this._t;
     const faecher = this._faecherDesKindes;
-    if (!this._fach) {
-      return html`<div class="card leer">${t("keine_faecher")}</div>`;
-    }
     return html`
+      <div class="abschnittskopf">
+        <h3 class="abschnitt">${t("faecher_titel")}</h3>
+        <button @click=${this._oeffneFaecher}>${t("faecher_verwalten")}</button>
+      </div>
       ${faecher.length > 0
         ? html`<div class="kinder fachwahl" role="group" aria-label=${t("fach")}>
             ${faecher.map(
@@ -2313,8 +2316,103 @@ export class LearnBuddyPanel extends LitElement {
                 </button>`,
             )}
           </div>`
+        : html`<div class="card leer">${t("keine_faecher")}</div>`}
+      ${this._fach
+        ? html`${this._tab === "aufgaben" ? this._themenBereich() : nothing}
+          ${this._tab === "aufgaben" ? this._aufgabenAnsicht() : this._arbeitenAnsicht()}`
         : nothing}
-      ${this._tab === "aufgaben" ? this._aufgabenAnsicht() : this._arbeitenAnsicht()}
+    `;
+  }
+
+  /** Rarely needed actions as icons below the tabs: text import, JSON export and import. */
+  private _werkzeuge(): TemplateResult {
+    const t = this._t;
+    const textImport = this._fach?.typ !== "sach" && !this._satzAnsicht;
+    const symbol = (
+      icon: string,
+      titel: string,
+      aktion: () => void,
+      gesperrt = false,
+    ): TemplateResult => html`<button
+      class="icon"
+      title=${titel}
+      aria-label=${titel}
+      ?disabled=${gesperrt}
+      @click=${aktion}
+    >
+      <ha-icon icon=${icon}></ha-icon>
+    </button>`;
+    return html`
+      <div class="werkzeuge">
+        ${textImport
+          ? symbol("mdi:text-box-plus-outline", t("import_aus_text"), () =>
+              this._oeffneImport(),
+            )
+          : nothing}
+        ${symbol(
+          "mdi:file-export-outline",
+          t("export_json"),
+          () => {
+            this._mitStatistik = false;
+            this._dialogFehler = "";
+            this._dialog = "export";
+          },
+          !this._aufgaben.length,
+        )}
+        ${symbol("mdi:file-import-outline", t("import_json"), () => {
+          this.renderRoot.querySelector<HTMLInputElement>("#datei")?.click();
+        })}
+        <input
+          id="datei"
+          type="file"
+          accept="application/json,.json"
+          hidden
+          @change=${this._dateiGewaehlt}
+        />
+      </div>
+    `;
+  }
+
+  /** The topics (tabs) of the subject with their own heading. */
+  private _themenBereich(): TemplateResult {
+    const t = this._t;
+    const verwaltung = html`<h3 class="abschnitt trenner">${t("aufgabenverwaltung")}</h3>`;
+    if (!this._hatBereiche) {
+      return verwaltung;
+    }
+    return html`
+      <div class="abschnittskopf trenner">
+        <h3 class="abschnitt">${t("themen_titel")}</h3>
+        <button @click=${this._oeffneBereiche}>${t("bereiche_verwalten")}</button>
+      </div>
+      <div class="kinder fachwahl" role="group" aria-label=${t("bereich")}>
+            ${this._mehrere
+              ? html`<button
+                  class="kindwahl"
+                  aria-pressed=${this._aktiverBereich === "" ? "true" : "false"}
+                  @click=${() => {
+                    this._bereichId = "";
+                    this._auswahl = new Set();
+                  }}
+                >
+                  ${t("alle")} (${this._aufgaben.length})
+                </button>`
+              : nothing}
+            ${this._bereiche.map(
+              (bereich) =>
+                html`<button
+                  class="kindwahl"
+                  aria-pressed=${this._aktiverBereich === bereich.id ? "true" : "false"}
+                  @click=${() => {
+                    this._bereichId = bereich.id;
+                    this._auswahl = new Set();
+                  }}
+                >
+                  ${this._bereichName_(bereich)} (${bereich.aufgaben})
+                </button>`,
+            )}
+          </div>
+      ${verwaltung}
     `;
   }
 
@@ -2342,7 +2440,6 @@ export class LearnBuddyPanel extends LitElement {
           ${t(sachFach ? "neue_frage" : "neue_aufgabe")}
         </button>
         <button @click=${this._oeffneLektionen}>${t("lektion_hinzufuegen")}</button>
-        <button @click=${this._oeffneBereiche}>${t("bereiche_verwalten")}</button>
         ${mathe
           ? html`<button
               ?disabled=${!kiAn}
@@ -2381,7 +2478,6 @@ export class LearnBuddyPanel extends LitElement {
               ${t("seiten")}
             </button>`
           : html`
-              <button @click=${this._oeffneImport}>${t("importieren")}</button>
               <button
                 ?disabled=${!kiBilder}
                 title=${kiGrund}
@@ -2390,30 +2486,6 @@ export class LearnBuddyPanel extends LitElement {
                 ${t("foto_import")}
               </button>
             `}
-        <button
-          ?disabled=${!this._aufgaben.length}
-          @click=${() => {
-            this._mitStatistik = false;
-            this._dialogFehler = "";
-            this._dialog = "export";
-          }}
-        >
-          ${t("export_json")}
-        </button>
-        <button
-          @click=${() => {
-            this.renderRoot.querySelector<HTMLInputElement>("#datei")?.click();
-          }}
-        >
-          ${t("import_json")}
-        </button>
-        <input
-          id="datei"
-          type="file"
-          accept="application/json,.json"
-          hidden
-          @change=${this._dateiGewaehlt}
-        />
         <span class="abstand"></span>
         ${gewaehlt.length
           ? html`
@@ -2520,36 +2592,6 @@ export class LearnBuddyPanel extends LitElement {
       this._aufgaben.some((x) => x.typ === "mathe" && x.bild)
         ? html`<div class="meldung fehler" role="status">
             <span>${t("keine_bilder", { name: kind.name })}</span>
-          </div>`
-        : nothing}
-
-      ${this._hatBereiche
-        ? html`<div class="kinder fachwahl" role="group" aria-label=${t("bereich")}>
-            ${this._mehrere
-              ? html`<button
-                  class="kindwahl"
-                  aria-pressed=${this._aktiverBereich === "" ? "true" : "false"}
-                  @click=${() => {
-                    this._bereichId = "";
-                    this._auswahl = new Set();
-                  }}
-                >
-                  ${t("alle")} (${this._aufgaben.length})
-                </button>`
-              : nothing}
-            ${this._bereiche.map(
-              (bereich) =>
-                html`<button
-                  class="kindwahl"
-                  aria-pressed=${this._aktiverBereich === bereich.id ? "true" : "false"}
-                  @click=${() => {
-                    this._bereichId = bereich.id;
-                    this._auswahl = new Set();
-                  }}
-                >
-                  ${this._bereichName_(bereich)} (${bereich.aufgaben})
-                </button>`,
-            )}
           </div>`
         : nothing}
 
@@ -3363,6 +3405,9 @@ export class LearnBuddyPanel extends LitElement {
         break;
       case "bereiche":
         inhalt = this._bereicheDialog();
+        break;
+      case "faecher":
+        inhalt = this._faecherDialog();
         break;
       default:
         inhalt = this._arbeitDialog();
@@ -4584,18 +4629,158 @@ export class LearnBuddyPanel extends LitElement {
     `;
   }
 
-  /** Subject of an exam entered from the calendar, with a form for a new one. */
-  private _fachWahl(): TemplateResult {
+  /** Form for a new subject; shared by the exam dialog and the subject management. */
+  private _fachFormular(
+    neu: NeuesFach,
+    abbrechen: boolean,
+    anlegen: () => void,
+  ): TemplateResult {
     const t = this._t;
     const sprache = this.hass?.language ?? "en";
-    const neu = this._neuesFach;
-    const faecher = this._faecherDesKindes;
-    const offen = this._arbeit?.fachOffen ?? false;
     const setze = (teil: Partial<NeuesFach>): void => {
       if (this._neuesFach) {
         this._neuesFach = { ...this._neuesFach, ...teil };
       }
     };
+    return html`<fieldset style="margin-bottom: 12px">
+      <legend>${t("fach_neu_titel")}</legend>
+      <div class="raster">
+        <label class="feld">
+          ${t("fach_neu_art")}
+          <select .value=${neu.typ} @change=${(e: Event) => setze({ typ: wert(e) as Fachart })}>
+            ${FACHARTEN.map(
+              (art) =>
+                html`<option value=${art} ?selected=${art === neu.typ}>
+                  ${t(`fachart_${art}`)}
+                </option>`,
+            )}
+          </select>
+        </label>
+        ${neu.typ === "fremdsprache"
+          ? html`<label class="feld">
+              ${t("fach_neu_sprache")}
+              <select .value=${neu.sprache} @change=${(e: Event) => setze({ sprache: wert(e) })}>
+                ${SPRACH_CODES.map(
+                  (code) =>
+                    html`<option value=${code} ?selected=${code === neu.sprache}>
+                      ${sprachname(sprache, code)}
+                    </option>`,
+                )}
+              </select>
+            </label>`
+          : nothing}
+        <label class="feld">
+          ${t(neu.typ === "sach" ? "fach_neu_name" : "fach_neu_name_optional")}
+          <input
+            type="text"
+            maxlength="60"
+            .value=${neu.name}
+            @input=${(e: Event) => setze({ name: wert(e) })}
+          />
+        </label>
+      </div>
+      <div class="zeile" style="margin-top: 8px">
+        <button
+          class="primaer"
+          ?disabled=${this._beschaeftigt || (neu.typ === "sach" && !neu.name.trim())}
+          @click=${anlegen}
+        >
+          ${t("fach_neu_anlegen")}
+        </button>
+        ${abbrechen
+          ? html`<button
+              @click=${() => {
+                this._neuesFach = null;
+              }}
+            >
+              ${t("abbrechen")}
+            </button>`
+          : nothing}
+      </div>
+    </fieldset>`;
+  }
+
+  private _oeffneFaecher(): void {
+    this._neuesFach = null;
+    this._dialogFehler = "";
+    this._dialog = "faecher";
+  }
+
+  /** Add a subject from the subject management and switch to it. */
+  private async _legeFachNeuAn(): Promise<void> {
+    const neu = this._neuesFach;
+    if (!neu) {
+      return;
+    }
+    this._beschaeftigt = true;
+    this._dialogFehler = "";
+    try {
+      const fachId = await this._api.fachAnlegen(
+        this._kindId,
+        neu.typ,
+        neu.name.trim(),
+        neu.typ === "fremdsprache" ? neu.sprache : null,
+      );
+      this._uebersicht = await this._api.uebersicht();
+      this._neuesFach = null;
+      await this._waehleFach(fachId);
+      this._zeigeErfolg(this._t("fach_angelegt"));
+    } catch (fehler) {
+      this._dialogFehler = fehlertext(this._t, fehler);
+    } finally {
+      this._beschaeftigt = false;
+    }
+  }
+
+  private _faecherDialog(): TemplateResult {
+    const t = this._t;
+    const faecher = this._faecherDesKindes;
+    const neu = this._neuesFach;
+    return html`
+      <h2>${t("faecher_verwalten")}</h2>
+      <p class="klein">${t("faecher_hilfe")}</p>
+      ${faecher.length
+        ? html`<div class="liste">
+            ${faecher.map(
+              (fach) => html`
+                <div class="eintrag">
+                  <span style="flex: 1">${fach.name}</span>
+                  <span class="klein">
+                    ${t(`fachart_${fach.typ === "vokabel" ? "fremdsprache" : fach.typ}`)} ·
+                    ${t("lektion_anzahl", { n: fach.anzahl_aufgaben })}
+                  </span>
+                </div>
+              `,
+            )}
+          </div>`
+        : html`<div class="leer">${t("keine_faecher")}</div>`}
+      ${neu
+        ? this._fachFormular(neu, true, this._legeFachNeuAn)
+        : html`<div class="zeile" style="margin: 12px 0">
+            <button
+              class="primaer"
+              @click=${() => {
+                this._neuesFach = { ...LEERES_FACH };
+              }}
+            >
+              + ${t("fach_neu")}
+            </button>
+          </div>`}
+      <p class="klein">
+        <a href="/config/integrations/integration/learnbuddy">${t("faecher_einstellungen")}</a>
+      </p>
+      <div class="aktionen">
+        <button class="primaer" @click=${this._schliesseDialog}>${t("schliessen")}</button>
+      </div>
+    `;
+  }
+
+  /** Subject of an exam entered from the calendar, with a form for a new one. */
+  private _fachWahl(): TemplateResult {
+    const t = this._t;
+    const neu = this._neuesFach;
+    const faecher = this._faecherDesKindes;
+    const offen = this._arbeit?.fachOffen ?? false;
     return html`
       ${faecher.length
         ? html`<div class="zeile" style="align-items: end; margin-bottom: 12px">
@@ -4631,71 +4816,7 @@ export class LearnBuddyPanel extends LitElement {
             </button>
           </div>`
         : nothing}
-      ${neu
-        ? html`<fieldset style="margin-bottom: 12px">
-            <legend>${t("fach_neu_titel")}</legend>
-            <div class="raster">
-              <label class="feld">
-                ${t("fach_neu_art")}
-                <select
-                  .value=${neu.typ}
-                  @change=${(e: Event) => setze({ typ: wert(e) as Fachart })}
-                >
-                  ${FACHARTEN.map(
-                    (art) =>
-                      html`<option value=${art} ?selected=${art === neu.typ}>
-                        ${t(`fachart_${art}`)}
-                      </option>`,
-                  )}
-                </select>
-              </label>
-              ${neu.typ === "fremdsprache"
-                ? html`<label class="feld">
-                    ${t("fach_neu_sprache")}
-                    <select
-                      .value=${neu.sprache}
-                      @change=${(e: Event) => setze({ sprache: wert(e) })}
-                    >
-                      ${SPRACH_CODES.map(
-                        (code) =>
-                          html`<option value=${code} ?selected=${code === neu.sprache}>
-                            ${sprachname(sprache, code)}
-                          </option>`,
-                      )}
-                    </select>
-                  </label>`
-                : nothing}
-              <label class="feld">
-                ${t(neu.typ === "sach" ? "fach_neu_name" : "fach_neu_name_optional")}
-                <input
-                  type="text"
-                  maxlength="60"
-                  .value=${neu.name}
-                  @input=${(e: Event) => setze({ name: wert(e) })}
-                />
-              </label>
-            </div>
-            <div class="zeile" style="margin-top: 8px">
-              <button
-                class="primaer"
-                ?disabled=${this._beschaeftigt ||
-                (neu.typ === "sach" && !neu.name.trim())}
-                @click=${this._legeFachAn}
-              >
-                ${t("fach_neu_anlegen")}
-              </button>
-              ${faecher.length
-                ? html`<button
-                    @click=${() => {
-                      this._neuesFach = null;
-                    }}
-                  >
-                    ${t("abbrechen")}
-                  </button>`
-                : nothing}
-            </div>
-          </fieldset>`
-        : nothing}
+      ${neu ? this._fachFormular(neu, faecher.length > 0, this._legeFachAn) : nothing}
     `;
   }
 

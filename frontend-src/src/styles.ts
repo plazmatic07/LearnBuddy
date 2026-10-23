@@ -106,6 +106,31 @@ export const styles = css`
     color: var(--lh-accent);
     border-bottom-color: var(--lh-accent);
   }
+  .abschnittskopf {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .abschnittskopf.trenner,
+  h3.abschnitt.trenner {
+    margin-top: 24px;
+  }
+  h3.abschnitt {
+    margin: 0 4px 8px;
+    font-size: 1.05em;
+    font-weight: 600;
+  }
+  .abschnittskopf h3.abschnitt {
+    margin: 0 4px;
+  }
+  .werkzeuge {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    margin: -8px 0 8px;
+  }
   .leiste {
     display: flex;
     flex-wrap: wrap;

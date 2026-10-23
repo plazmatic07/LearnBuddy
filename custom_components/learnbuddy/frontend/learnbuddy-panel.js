@@ -1,6 +1,6 @@
-var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e,t)=>{for(var i=t>1?void 0:t?dt(s,e):s,n=d.length-1,a;n>=0;n--)(a=d[n])&&(i=(t?a(s,e,i):a(i))||i);return t&&i&&ut(s,e,i),i};var ue=globalThis,de=ue.ShadowRoot&&(ue.ShadyCSS===void 0||ue.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,me=Symbol(),De=new WeakMap,ee=class{constructor(s,e,t){if(this._$cssResult$=!0,t!==me)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=s,this.t=e}get styleSheet(){let s=this.o,e=this.t;if(de&&s===void 0){let t=e!==void 0&&e.length===1;t&&(s=De.get(e)),s===void 0&&((this.o=s=new CSSStyleSheet).replaceSync(this.cssText),t&&De.set(e,s))}return s}toString(){return this.cssText}},Re=d=>new ee(typeof d=="string"?d:d+"",void 0,me),U=(d,...s)=>{let e=d.length===1?d[0]:s.reduce((t,i,n)=>t+(a=>{if(a._$cssResult$===!0)return a.cssText;if(typeof a=="number")return a;throw Error("Value passed to 'css' function must be a 'css' function result: "+a+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+d[n+1],d[0]);return new ee(e,d,me)},Ne=(d,s)=>{if(de)d.adoptedStyleSheets=s.map(e=>e instanceof CSSStyleSheet?e:e.styleSheet);else for(let e of s){let t=document.createElement("style"),i=ue.litNonce;i!==void 0&&t.setAttribute("nonce",i),t.textContent=e.cssText,d.appendChild(t)}},ve=de?d=>d:d=>d instanceof CSSStyleSheet?(s=>{let e="";for(let t of s.cssRules)e+=t.cssText;return Re(e)})(d):d;var{is:_t,defineProperty:gt,getOwnPropertyDescriptor:ft,getOwnPropertyNames:bt,getOwnPropertySymbols:pt,getPrototypeOf:mt}=Object,_e=globalThis,Be=_e.trustedTypes,vt=Be?Be.emptyScript:"",kt=_e.reactiveElementPolyfillSupport,te=(d,s)=>d,ie={toAttribute(d,s){switch(s){case Boolean:d=d?vt:null;break;case Object:case Array:d=d==null?d:JSON.stringify(d)}return d},fromAttribute(d,s){let e=d;switch(s){case Boolean:e=d!==null;break;case Number:e=d===null?null:Number(d);break;case Object:case Array:try{e=JSON.parse(d)}catch{e=null}}return e}},ge=(d,s)=>!_t(d,s),Le={attribute:!0,type:String,converter:ie,reflect:!1,useDefault:!1,hasChanged:ge};Symbol.metadata??=Symbol("metadata"),_e.litPropertyMetadata??=new WeakMap;var L=class extends HTMLElement{static addInitializer(s){this._$Ei(),(this.l??=[]).push(s)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(s,e=Le){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(s)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(s,e),!e.noAccessor){let t=Symbol(),i=this.getPropertyDescriptor(s,t,e);i!==void 0&&gt(this.prototype,s,i)}}static getPropertyDescriptor(s,e,t){let{get:i,set:n}=ft(this.prototype,s)??{get(){return this[e]},set(a){this[e]=a}};return{get:i,set(a){let o=i?.call(this);n?.call(this,a),this.requestUpdate(s,o,t)},configurable:!0,enumerable:!0}}static getPropertyOptions(s){return this.elementProperties.get(s)??Le}static _$Ei(){if(this.hasOwnProperty(te("elementProperties")))return;let s=mt(this);s.finalize(),s.l!==void 0&&(this.l=[...s.l]),this.elementProperties=new Map(s.elementProperties)}static finalize(){if(this.hasOwnProperty(te("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(te("properties"))){let e=this.properties,t=[...bt(e),...pt(e)];for(let i of t)this.createProperty(i,e[i])}let s=this[Symbol.metadata];if(s!==null){let e=litPropertyMetadata.get(s);if(e!==void 0)for(let[t,i]of e)this.elementProperties.set(t,i)}this._$Eh=new Map;for(let[e,t]of this.elementProperties){let i=this._$Eu(e,t);i!==void 0&&this._$Eh.set(i,e)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(s){let e=[];if(Array.isArray(s)){let t=new Set(s.flat(1/0).reverse());for(let i of t)e.unshift(ve(i))}else s!==void 0&&e.push(ve(s));return e}static _$Eu(s,e){let t=e.attribute;return t===!1?void 0:typeof t=="string"?t:typeof s=="string"?s.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(s=>this.enableUpdating=s),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(s=>s(this))}addController(s){(this._$EO??=new Set).add(s),this.renderRoot!==void 0&&this.isConnected&&s.hostConnected?.()}removeController(s){this._$EO?.delete(s)}_$E_(){let s=new Map,e=this.constructor.elementProperties;for(let t of e.keys())this.hasOwnProperty(t)&&(s.set(t,this[t]),delete this[t]);s.size>0&&(this._$Ep=s)}createRenderRoot(){let s=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return Ne(s,this.constructor.elementStyles),s}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(s=>s.hostConnected?.())}enableUpdating(s){}disconnectedCallback(){this._$EO?.forEach(s=>s.hostDisconnected?.())}attributeChangedCallback(s,e,t){this._$AK(s,t)}_$ET(s,e){let t=this.constructor.elementProperties.get(s),i=this.constructor._$Eu(s,t);if(i!==void 0&&t.reflect===!0){let n=(t.converter?.toAttribute!==void 0?t.converter:ie).toAttribute(e,t.type);this._$Em=s,n==null?this.removeAttribute(i):this.setAttribute(i,n),this._$Em=null}}_$AK(s,e){let t=this.constructor,i=t._$Eh.get(s);if(i!==void 0&&this._$Em!==i){let n=t.getPropertyOptions(i),a=typeof n.converter=="function"?{fromAttribute:n.converter}:n.converter?.fromAttribute!==void 0?n.converter:ie;this._$Em=i;let o=a.fromAttribute(e,n.type);this[i]=o??this._$Ej?.get(i)??o,this._$Em=null}}requestUpdate(s,e,t,i=!1,n){if(s!==void 0){let a=this.constructor;if(i===!1&&(n=this[s]),t??=a.getPropertyOptions(s),!((t.hasChanged??ge)(n,e)||t.useDefault&&t.reflect&&n===this._$Ej?.get(s)&&!this.hasAttribute(a._$Eu(s,t))))return;this.C(s,e,t)}this.isUpdatePending===!1&&(this._$ES=this._$EP())}C(s,e,{useDefault:t,reflect:i,wrapped:n},a){t&&!(this._$Ej??=new Map).has(s)&&(this._$Ej.set(s,a??e??this[s]),n!==!0||a!==void 0)||(this._$AL.has(s)||(this.hasUpdated||t||(e=void 0),this._$AL.set(s,e)),i===!0&&this._$Em!==s&&(this._$Eq??=new Set).add(s))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(e){Promise.reject(e)}let s=this.scheduleUpdate();return s!=null&&await s,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(let[i,n]of this._$Ep)this[i]=n;this._$Ep=void 0}let t=this.constructor.elementProperties;if(t.size>0)for(let[i,n]of t){let{wrapped:a}=n,o=this[i];a!==!0||this._$AL.has(i)||o===void 0||this.C(i,void 0,n,o)}}let s=!1,e=this._$AL;try{s=this.shouldUpdate(e),s?(this.willUpdate(e),this._$EO?.forEach(t=>t.hostUpdate?.()),this.update(e)):this._$EM()}catch(t){throw s=!1,this._$EM(),t}s&&this._$AE(e)}willUpdate(s){}_$AE(s){this._$EO?.forEach(e=>e.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(s)),this.updated(s)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(s){return!0}update(s){this._$Eq&&=this._$Eq.forEach(e=>this._$ET(e,this[e])),this._$EM()}updated(s){}firstUpdated(s){}};L.elementStyles=[],L.shadowRootOptions={mode:"open"},L[te("elementProperties")]=new Map,L[te("finalized")]=new Map,kt?.({ReactiveElement:L}),(_e.reactiveElementVersions??=[]).push("2.1.2");var Ae=globalThis,Pe=d=>d,fe=Ae.trustedTypes,qe=fe?fe.createPolicy("lit-html",{createHTML:d=>d}):void 0,He="$lit$",q=`lit$${Math.random().toFixed(9).slice(2)}$`,Ve="?"+q,$t=`<${Ve}>`,H=document,se=()=>H.createComment(""),ae=d=>d===null||typeof d!="object"&&typeof d!="function",Ee=Array.isArray,wt=d=>Ee(d)||typeof d?.[Symbol.iterator]=="function",ke=`[ 	
-\f\r]`,ne=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,je=/-->/g,Me=/>/g,K=RegExp(`>|${ke}(?:([^\\s"'>=/]+)(${ke}*=${ke}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`,"g"),Ue=/'/g,Ke=/"/g,Oe=/^(?:script|style|textarea|title)$/i,Se=d=>(s,...e)=>({_$litType$:d,strings:s,values:e}),r=Se(1),R=Se(2),Zt=Se(3),V=Symbol.for("lit-noChange"),u=Symbol.for("lit-nothing"),Ce=new WeakMap,C=H.createTreeWalker(H,129);function Ge(d,s){if(!Ee(d)||!d.hasOwnProperty("raw"))throw Error("invalid template strings array");return qe!==void 0?qe.createHTML(s):s}var xt=(d,s)=>{let e=d.length-1,t=[],i,n=s===2?"<svg>":s===3?"<math>":"",a=ne;for(let o=0;o<e;o++){let l=d[o],h,_,c=-1,f=0;for(;f<l.length&&(a.lastIndex=f,_=a.exec(l),_!==null);)f=a.lastIndex,a===ne?_[1]==="!--"?a=je:_[1]!==void 0?a=Me:_[2]!==void 0?(Oe.test(_[2])&&(i=RegExp("</"+_[2],"g")),a=K):_[3]!==void 0&&(a=K):a===K?_[0]===">"?(a=i??ne,c=-1):_[1]===void 0?c=-2:(c=a.lastIndex-_[2].length,h=_[1],a=_[3]===void 0?K:_[3]==='"'?Ke:Ue):a===Ke||a===Ue?a=K:a===je||a===Me?a=ne:(a=K,i=void 0);let g=a===K&&d[o+1].startsWith("/>")?" ":"";n+=a===ne?l+$t:c>=0?(t.push(h),l.slice(0,c)+He+l.slice(c)+q+g):l+q+(c===-2?o:g)}return[Ge(d,n+(d[e]||"<?>")+(s===2?"</svg>":s===3?"</math>":"")),t]},re=class d{constructor({strings:s,_$litType$:e},t){let i;this.parts=[];let n=0,a=0,o=s.length-1,l=this.parts,[h,_]=xt(s,e);if(this.el=d.createElement(h,t),C.currentNode=this.el.content,e===2||e===3){let c=this.el.content.firstChild;c.replaceWith(...c.childNodes)}for(;(i=C.nextNode())!==null&&l.length<o;){if(i.nodeType===1){if(i.hasAttributes())for(let c of i.getAttributeNames())if(c.endsWith(He)){let f=_[a++],g=i.getAttribute(c).split(q),v=/([.?@])?(.*)/.exec(f);l.push({type:1,index:n,name:v[2],strings:g,ctor:v[1]==="."?we:v[1]==="?"?xe:v[1]==="@"?ye:W}),i.removeAttribute(c)}else c.startsWith(q)&&(l.push({type:6,index:n}),i.removeAttribute(c));if(Oe.test(i.tagName)){let c=i.textContent.split(q),f=c.length-1;if(f>0){i.textContent=fe?fe.emptyScript:"";for(let g=0;g<f;g++)i.append(c[g],se()),C.nextNode(),l.push({type:2,index:++n});i.append(c[f],se())}}}else if(i.nodeType===8)if(i.data===Ve)l.push({type:2,index:n});else{let c=-1;for(;(c=i.data.indexOf(q,c+1))!==-1;)l.push({type:7,index:n}),c+=q.length-1}n++}}static createElement(s,e){let t=H.createElement("template");return t.innerHTML=s,t}};function G(d,s,e=d,t){if(s===V)return s;let i=t!==void 0?e._$Co?.[t]:e._$Cl,n=ae(s)?void 0:s._$litDirective$;return i?.constructor!==n&&(i?._$AO?.(!1),n===void 0?i=void 0:(i=new n(d),i._$AT(d,e,t)),t!==void 0?(e._$Co??=[])[t]=i:e._$Cl=i),i!==void 0&&(s=G(d,i._$AS(d,s.values),i,t)),s}var $e=class{constructor(s,e){this._$AV=[],this._$AN=void 0,this._$AD=s,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(s){let{el:{content:e},parts:t}=this._$AD,i=(s?.creationScope??H).importNode(e,!0);C.currentNode=i;let n=C.nextNode(),a=0,o=0,l=t[0];for(;l!==void 0;){if(a===l.index){let h;l.type===2?h=new le(n,n.nextSibling,this,s):l.type===1?h=new l.ctor(n,l.name,l.strings,this,s):l.type===6&&(h=new ze(n,this,s)),this._$AV.push(h),l=t[++o]}a!==l?.index&&(n=C.nextNode(),a++)}return C.currentNode=H,i}p(s){let e=0;for(let t of this._$AV)t!==void 0&&(t.strings!==void 0?(t._$AI(s,t,e),e+=t.strings.length-2):t._$AI(s[e])),e++}},le=class d{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(s,e,t,i){this.type=2,this._$AH=u,this._$AN=void 0,this._$AA=s,this._$AB=e,this._$AM=t,this.options=i,this._$Cv=i?.isConnected??!0}get parentNode(){let s=this._$AA.parentNode,e=this._$AM;return e!==void 0&&s?.nodeType===11&&(s=e.parentNode),s}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(s,e=this){s=G(this,s,e),ae(s)?s===u||s==null||s===""?(this._$AH!==u&&this._$AR(),this._$AH=u):s!==this._$AH&&s!==V&&this._(s):s._$litType$!==void 0?this.$(s):s.nodeType!==void 0?this.T(s):wt(s)?this.k(s):this._(s)}O(s){return this._$AA.parentNode.insertBefore(s,this._$AB)}T(s){this._$AH!==s&&(this._$AR(),this._$AH=this.O(s))}_(s){this._$AH!==u&&ae(this._$AH)?this._$AA.nextSibling.data=s:this.T(H.createTextNode(s)),this._$AH=s}$(s){let{values:e,_$litType$:t}=s,i=typeof t=="number"?this._$AC(s):(t.el===void 0&&(t.el=re.createElement(Ge(t.h,t.h[0]),this.options)),t);if(this._$AH?._$AD===i)this._$AH.p(e);else{let n=new $e(i,this),a=n.u(this.options);n.p(e),this.T(a),this._$AH=n}}_$AC(s){let e=Ce.get(s.strings);return e===void 0&&Ce.set(s.strings,e=new re(s)),e}k(s){Ee(this._$AH)||(this._$AH=[],this._$AR());let e=this._$AH,t,i=0;for(let n of s)i===e.length?e.push(t=new d(this.O(se()),this.O(se()),this,this.options)):t=e[i],t._$AI(n),i++;i<e.length&&(this._$AR(t&&t._$AB.nextSibling,i),e.length=i)}_$AR(s=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);s!==this._$AB;){let t=Pe(s).nextSibling;Pe(s).remove(),s=t}}setConnected(s){this._$AM===void 0&&(this._$Cv=s,this._$AP?.(s))}},W=class{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(s,e,t,i,n){this.type=1,this._$AH=u,this._$AN=void 0,this.element=s,this.name=e,this._$AM=i,this.options=n,t.length>2||t[0]!==""||t[1]!==""?(this._$AH=Array(t.length-1).fill(new String),this.strings=t):this._$AH=u}_$AI(s,e=this,t,i){let n=this.strings,a=!1;if(n===void 0)s=G(this,s,e,0),a=!ae(s)||s!==this._$AH&&s!==V,a&&(this._$AH=s);else{let o=s,l,h;for(s=n[0],l=0;l<n.length-1;l++)h=G(this,o[t+l],e,l),h===V&&(h=this._$AH[l]),a||=!ae(h)||h!==this._$AH[l],h===u?s=u:s!==u&&(s+=(h??"")+n[l+1]),this._$AH[l]=h}a&&!i&&this.j(s)}j(s){s===u?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,s??"")}},we=class extends W{constructor(){super(...arguments),this.type=3}j(s){this.element[this.name]=s===u?void 0:s}},xe=class extends W{constructor(){super(...arguments),this.type=4}j(s){this.element.toggleAttribute(this.name,!!s&&s!==u)}},ye=class extends W{constructor(s,e,t,i,n){super(s,e,t,i,n),this.type=5}_$AI(s,e=this){if((s=G(this,s,e,0)??u)===V)return;let t=this._$AH,i=s===u&&t!==u||s.capture!==t.capture||s.once!==t.once||s.passive!==t.passive,n=s!==u&&(t===u||i);i&&this.element.removeEventListener(this.name,this,t),n&&this.element.addEventListener(this.name,this,s),this._$AH=s}handleEvent(s){typeof this._$AH=="function"?this._$AH.call(this.options?.host??this.element,s):this._$AH.handleEvent(s)}},ze=class{constructor(s,e,t){this.element=s,this.type=6,this._$AN=void 0,this._$AM=e,this.options=t}get _$AU(){return this._$AM._$AU}_$AI(s){G(this,s)}};var yt=Ae.litHtmlPolyfillSupport;yt?.(re,le),(Ae.litHtmlVersions??=[]).push("3.3.3");var We=(d,s,e)=>{let t=e?.renderBefore??s,i=t._$litPart$;if(i===void 0){let n=e?.renderBefore??null;t._$litPart$=i=new le(s.insertBefore(se(),n),n,void 0,e??{})}return i._$AI(d),i};var Te=globalThis,I=class extends L{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){let s=super.createRenderRoot();return this.renderOptions.renderBefore??=s.firstChild,s}update(s){let e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(s),this._$Do=We(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return V}};I._$litElement$=!0,I.finalized=!0,Te.litElementHydrateSupport?.({LitElement:I});var zt=Te.litElementPolyfillSupport;zt?.({LitElement:I});(Te.litElementVersions??=[]).push("4.2.2");var At={attribute:!0,type:String,converter:ie,reflect:!1,hasChanged:ge},Et=(d=At,s,e)=>{let{kind:t,metadata:i}=e,n=globalThis.litPropertyMetadata.get(i);if(n===void 0&&globalThis.litPropertyMetadata.set(i,n=new Map),t==="setter"&&((d=Object.create(d)).wrapped=!0),n.set(e.name,d),t==="accessor"){let{name:a}=e;return{set(o){let l=s.get.call(this);s.set.call(this,o),this.requestUpdate(a,l,d,!0,o)},init(o){return o!==void 0&&this.C(a,void 0,d,o),o}}}if(t==="setter"){let{name:a}=e;return function(o){let l=this[a];s.call(this,o),this.requestUpdate(a,l,d,!0,o)}}throw Error("Unsupported decorator location: "+t)};function E(d){return(s,e)=>typeof e=="object"?Et(d,s,e):((t,i,n)=>{let a=i.hasOwnProperty(n);return i.constructor.createProperty(n,t),a?Object.getOwnPropertyDescriptor(i,n):void 0})(d,s,e)}function k(d){return E({...d,state:!0,attribute:!1})}var j=class{constructor(s){this.hass=s}call(s,e={}){return this.hass.callWS({type:`learnbuddy/${s}`,...e})}uebersicht(){return this.call("overview")}dashboard(s){return this.call("dashboard",{kind_id:s})}frageStellen(s,e,t={},i=1){return this.call("ask",{kind_id:s,fach_id:e,...t,anzahl:i})}async abfrageUmfang(s,e,t){return(await this.call("ask_count",{kind_id:s,fach_id:e,...t})).aufgaben}async frageAbbrechen(s){return(await this.call("cancel_question",{kind_id:s})).abgebrochen}setzeAktiv(s,e){return this.call("set_active",{kind_id:s,aktiv:e})}fortschritt(s,e){return this.call("progress",{kind_id:s,tage:e})}wochenreport(s,e){return this.call("weekly_report",{kind_id:s,versatz:e})}async kalenderPruefen(s){return(await this.call("calendar/refresh",{kind_id:s})).gelesen}kalenderIgnorieren(s,e){return this.call("calendar/ignore",{kind_id:s,uid:e})}kalenderWiederherstellen(s){return this.call("calendar/restore",{kind_id:s})}async fachAnlegen(s,e,t,i){return(await this.call("subjects/create",{kind_id:s,typ:e,name:t||null,sprache:i})).fach_id}absenderZuordnen(s,e){return this.call("sender/assign",{kind_id:s,kennung:e})}absenderVerwerfen(s){return this.call("sender/dismiss",{kennung:s})}async aufgaben(s){return(await this.call("tasks/list",{fach_id:s})).aufgaben}aufgabeAnlegen(s,e){return this.call("tasks/create",{fach_id:s,aufgabe:e})}aufgabeAendern(s,e,t){return this.call("tasks/update",{fach_id:s,aufgabe_id:e,aenderungen:t})}aufgabenLoeschen(s,e,t){return this.call("tasks/delete",{fach_id:s,aufgabe_ids:e,bestaetigt:t})}async lektionHinzufuegen(s,e){return(await this.call("lessons/add",{fach_id:s,name:e})).lektionen}async lektionLoeschen(s,e){return(await this.call("lessons/delete",{fach_id:s,name:e})).lektionen}async bereichHinzufuegen(s,e,t=null){return(await this.call("sections/add",{fach_id:s,name:e,art:t})).bereiche}async bereichUmbenennen(s,e,t){return(await this.call("sections/rename",{fach_id:s,bereich:e,name:t})).bereiche}async bereichLoeschen(s,e){return(await this.call("sections/delete",{fach_id:s,bereich:e})).bereiche}importVorschau(s,e,t){return this.call("tasks/import_text",{fach_id:s,inhalt:e,trennzeichen:t,vorschau:!0})}importText(s,e,t,i,n,a=null){return this.call("tasks/import_text",{fach_id:s,inhalt:e,lektion:t,trennzeichen:i,geprueft:n,bereich:a})}generieren(s,e){return this.call("tasks/generate",{fach_id:s,...e})}satzaufgabenErzeugen(s,e){return this.call("tasks/generate_sentences",{fach_id:s,...e})}fragenAusSeiten(s,e){return this.call("tasks/generate_from_pages",{fach_id:s,...e})}fotoAuslesen(s,e){return this.call("tasks/photo_extract",{fach_id:s,seiten:e})}fotoUebernehmen(s,e,t,i=null){return this.call("tasks/photo_accept",{fach_id:s,zeilen:e,lektion:t,bereich:i})}nachrechnen(s,e){return this.call("tasks/verify",{fach_id:s,aufgabe_ids:e})}rechenwegeErzeugen(s,e){return this.call("tasks/generate_steps",{fach_id:s,aufgabe_ids:e})}async bildHochladen(s,e=!1){let t=new FormData;t.append("file",s);let i=`/api/learnbuddy/bilder${e?"?zweck=seite":""}`,n=await this.hass.fetchWithAuth(i,{method:"POST",body:t}),a=await n.json().catch(()=>({}));if(!n.ok||!a.bild)throw{code:String(n.status),message:a.message??"bild_ungueltig"};return a.bild}async bildAdresse(s){return(await this.hass.callWS({type:"auth/sign_path",path:`/api/learnbuddy/bilder/${s}`,expires:3600})).path}async vorschlagUebernehmen(s,e){return(await this.call("tasks/accept_suggestion",{fach_id:s,aufgabe_ids:e})).uebernommen}async alsGeprueftMarkieren(s,e){return(await this.call("tasks/mark_verified",{fach_id:s,aufgabe_ids:e})).markiert}export(s,e){return this.call("tasks/export",{fach_id:s,mit_statistik:e})}importJson(s,e,t,i,n=null){return this.call("tasks/import_json",{fach_id:s,daten:e,mit_statistik:t,lektion:i,bereich:n})}async arbeitSpeichern(s,e){return(await this.call("exams/save",{arbeit_id:s,arbeit:e})).arbeit_id}simulieren(s,e,t){return this.call("exams/simulate",{arbeit_id:s,anzahl:e,weg:t})}async simulationAbbrechen(s){return(await this.call("exams/simulate_stop",{kind_id:s})).abgebrochen}arbeitLoeschen(s){return this.call("exams/delete",{arbeit_id:s})}};var Ze={titel:"LearnBuddy",kind:"Kind",fach:"Fach",keine_kinder:"Es ist noch kein Kind angelegt. Lege unter Einstellungen \u2192 Ger\xE4te & Dienste \u2192 LearnBuddy zuerst ein Kind und ein Fach an.",keine_faecher:"F\xFCr dieses Kind gibt es noch kein Fach.",tab_uebersicht:"\xDCbersicht",status_aktiv:"Abfragen aktiv",status_pausiert:"Abfragen pausiert",status_pausiert_bis:"Pausiert bis {zeit}",status_nichts_geplant:"Keine Abfrage geplant",pausieren:"Pausieren",fortsetzen:"Fortsetzen",offene_frage:"Offene Frage",offene_frage_text:"{fach}, gestellt um {von}, l\xE4uft bis {bis}",offene_frage_ohne_frist:"{fach}, gestellt um {von}, ohne Zeitlimit",offene_frage_angehalten:"{fach}, gestellt um {von}, Zeit angehalten (pausiert)",keine_offene_frage:"Keine offene Frage",naechste_abfrage:"N\xE4chste Abfrage",keine_geplant:"Keine geplant",nach_offener_frage:"Nach der offenen Frage",letzte_frage:"Letzte Frage",noch_nie:"Noch nie",jetzt_fragen_kurz:"Jetzt abfragen",egal_welches:"Egal welches Fach",frage_gesendet:"Die Frage wurde gesendet.",fragen_gesendet:"Die Abfrage wurde gestartet.",abfrage_titel:"Jetzt abfragen",abfrage_fach:"Fach",abfrage_lektionen:"Lektion",abfrage_seite_kurz:"S.",abfrage_ohne_lektion:"{n} Aufgaben ohne Lektion sind nur dabei, wenn alles angehakt ist.",abfrage_laeuft:"Laufende Abfrage",abfrage_laeuft_text:"{ort} \xB7 noch {n} weitere",abfrage_seiten:"S. {von}\u2013{bis}",abfrage_ab_seite:"ab S. {n}",abfrage_bis_seite:"bis S. {n}",abfrage_ab_fehlerquote:"Fehlerquote ab {n} %",abfrage_seite_von:"Buchseite von",abfrage_seite_bis:"Buchseite bis",abfrage_fehlerquote:"Fehlerquote mindestens (%)",abfrage_filter_hinweis:"Leere Felder schr\xE4nken nicht ein. Die Buchseiten gelten je Lektion; mit Seitenangabe z\xE4hlen dort nur Aufgaben mit Buchseite. Mit Fehlerquote z\xE4hlen nur schon beantwortete Aufgaben. Ungepr\xFCfte Aufgaben werden nie abgefragt.",abfrage_anzahl:"Anzahl der Aufgaben (1 bis 20)",abfrage_frist:"Ablaufzeit je Frage (Minuten)",abfrage_frist_hinweis:"Leer = allgemeine Einstellung, 0 = l\xE4uft nie ab. Gilt nur f\xFCr diese Abfrage.",abfrage_umfang:"Zur Auswahl stehen {n} Aufgaben. Sie kommen nacheinander, die n\xE4chste nach jeder Antwort.",abfrage_umfang_laedt:"Die Auswahl wird gez\xE4hlt \u2026",err_seiten_verdreht:"Die erste Buchseite liegt hinter der letzten.",abfrage_senden:"Abfrage starten",kz_gefragt:"Gestellte Fragen",kz_richtig:"Richtig",kz_falsch:"Falsch",kz_unbeantwortet:"Unbeantwortet",ki_keine:"F\xFCr dieses Fach ist keine KI-Entit\xE4t gew\xE4hlt.",ki_nicht_verfuegbar:"Die gew\xE4hlte KI-Entit\xE4t ist gerade nicht verf\xFCgbar.",ki_ohne_bilder:"Die gew\xE4hlte KI-Entit\xE4t kann keine Bilder lesen.",ki_hinweis_keine:"F\xFCr dieses Fach ist keine KI-Entit\xE4t gew\xE4hlt. Aufgaben erzeugen, Rechenwege schreiben und der Import aus Fotos sind deshalb ausgeschaltet; Antworten werden nur lokal bewertet. Einrichten unter Einstellungen \u2192 Ger\xE4te & Dienste \u2192 LearnBuddy \u2192 Zahnrad.",ki_hinweis_ohne_bilder:"Die gew\xE4hlte KI-Entit\xE4t kann keine Bilder lesen. Funktionen mit Fotos sind deshalb ausgeschaltet.",ki_hinweis_nicht_verfuegbar:"Die gew\xE4hlte KI-Entit\xE4t ist gerade nicht verf\xFCgbar. Die KI-Funktionen sind ausgeschaltet und Antworten werden nur lokal bewertet. Pr\xFCfe die KI-Integration in Home Assistant.",ki_hinweis_sach_zusatz:" Kurzantworten werden so lange nicht gestellt, nur Auswahlfragen.",err_ki_nicht_verfuegbar:"Die gew\xE4hlte KI-Entit\xE4t ist gerade nicht verf\xFCgbar.",err_ki_nicht_erreichbar:"Die KI war nicht erreichbar oder hat den Auftrag abgelehnt (Verbindung, Konto, Guthaben). Bitte sp\xE4ter erneut versuchen.",neue_version:"LearnBuddy wurde aktualisiert. Diese Seite zeigt noch die alte Version; lade sie neu, damit alle Funktionen sichtbar sind.",neu_laden:"Seite neu laden",absender_unbekannt:"Eine Nachricht von einem unbekannten Absender ist eingegangen: {kennung} ({quelle}). Sie konnte keinem Kind zugeordnet werden.",absender_uebernehmen:"Als Absenderkennung f\xFCr {name} \xFCbernehmen",absender_verwerfen:"Verwerfen",absender_uebernommen:"Absenderkennung \xFCbernommen. Die n\xE4chste Antwort wird zugeordnet.",quelle_telegram:"Telegram",quelle_whatsapp:"WhatsApp",quelle_event:"eigenes Ereignis",err_absender_leer:"Die Absenderkennung ist leer.",err_absender_vergeben:"Diese Absenderkennung geh\xF6rt schon zu einem anderen Kind.",absender_fehlt:"Bei diesem Kind fehlt die Absenderkennung (Chat-ID oder Telefonnummer). Fragen gehen raus, aber Antworten k\xF6nnen nicht zugeordnet werden. Eintragen unter Einstellungen \u2192 Ger\xE4te & Dienste \u2192 LearnBuddy \u2192 Kind bearbeiten.",sim_plan:"Simulation einplanen (optional)",sim_plan_aktiv:"Zu einem festen Zeitpunkt automatisch eine Simulation schicken",sim_plan_hilfe:"Zum gew\xE4hlten Zeitpunkt bekommt das Kind automatisch eine Simulation dieser Arbeit per Messenger: das Aufgabenblatt als Bild, dann die Aufgaben nacheinander, am Ende die Auswertung. Ist das Kind dann pausiert oder l\xE4uft schon eine Simulation, entf\xE4llt sie.",sim_plan_um:"Datum und Uhrzeit",sim_plan_offen:"Simulation geplant f\xFCr {zeit} ({n} Aufgaben)",sim_plan_erledigt:"Geplante Simulation vom {zeit} ist erledigt",err_simulation_um_vergangen:"Der Zeitpunkt der Simulation liegt in der Vergangenheit.",err_simulation_um_ungueltig:"Bitte Datum und Uhrzeit der Simulation pr\xFCfen.",sim_knopf_arbeit:"Klassenarbeit simulieren",sim_knopf_hue:"H\xDC simulieren",sim_hilfe:"Aus den freigegebenen Aufgaben dieser Arbeit wird zuf\xE4llig ein Aufgabenblatt zusammengestellt. Die Lernstatistik bleibt davon unber\xFChrt.",sim_weg_ausdruck:"Per Ausdruck",sim_weg_ausdruck_hilfe:"Das Aufgabenblatt entsteht als Bild zum Herunterladen und Drucken. Es wird nichts verschickt.",sim_weg_messenger:"Per Messenger",sim_weg_messenger_hilfe:"{name} bekommt das Blatt als Bild und danach die Aufgaben nacheinander. R\xFCckmeldung gibt es erst am Ende: Punkte, Prozent und die L\xF6sungen zu den Fehlern.",sim_anzahl:"Anzahl der Aufgaben",sim_verfuegbar:"Auf diesem Weg verf\xFCgbar: {n}",sim_keine_aufgaben:"F\xFCr diese Arbeit gibt es keine freigegebenen Aufgaben.",sim_start_ausdruck:"Blatt erzeugen",sim_start_messenger:"Simulation starten",sim_gestartet:"Die Simulation mit {n} Aufgaben l\xE4uft. Die Auswertung geht am Ende ans Kind.",sim_blatt_hilfe:"Das Blatt mit {n} Aufgaben ist fertig. Die Bilder werden nach 24 Stunden gel\xF6scht; lade sie herunter, wenn du sie behalten willst.",sim_herunterladen:"Seite {n} herunterladen",sim_drucken:"Drucken",sim_druck_blockiert:"Der Browser hat das Druckfenster blockiert. Lade die Seiten herunter und drucke sie von dort.",sim_laeuft:"Simulation",sim_laeuft_text:"l\xE4uft: Aufgabe {nr} von {n}",sim_abbrechen:"Simulation abbrechen",frage_abbrechen:"Frage abbrechen",frage_abbrechen_frage:"Die offene Frage zur\xFCckziehen? Sie wird nicht gez\xE4hlt, und das Kind bekommt eine kurze Nachricht.",sim_abbrechen_frage:"Die laufende Simulation ohne Auswertung beenden?",err_simulation_laeuft:"F\xFCr dieses Kind l\xE4uft gerade eine Simulation.",err_weg_ungueltig:"Unbekannter Weg f\xFCr die Simulation.",foto_import:"Aus Foto importieren",foto_titel:"Aufgaben aus Fotos auslesen",foto_hilfe:"Fotografiere die Vokabelseiten m\xF6glichst gerade und gut lesbar. Die KI liest Wort, \xDCbersetzung, Seitenzahl und den Verweis auf die Unit-Seite aus. Beispiels\xE4tze und Lautschrift l\xE4sst sie weg. Danach pr\xFCfst du die Vorschau. Die Fotos gehen an den KI-Dienst und werden anschlie\xDFend gel\xF6scht.",foto_hilfe_mathe:"Fotografiere Buchseite oder Arbeitsblatt m\xF6glichst gerade und gut lesbar. Die KI liest die Aufgaben aus und l\xF6st sie; die L\xF6sungen werden nachgerechnet. Danach pr\xFCfst du die Vorschau. Die Fotos gehen an den KI-Dienst und werden anschlie\xDFend gel\xF6scht.",foto_auslesen:"Auslesen",foto_leer:"Auf den Fotos wurde nichts Verwertbares gefunden.",foto_vorschau_titel:"Vorschau pr\xFCfen",foto_vorschau_hilfe:"Vergleiche die Zeilen mit dem Buch, korrigiere sie bei Bedarf und entferne das H\xE4kchen bei allem, was nicht \xFCbernommen werden soll. Gespeichert wird erst mit \u201E\xDCbernehmen\u201C.",foto_vorhanden:"schon vorhanden",foto_braucht_bild:"braucht eine Abbildung \u2013 als \u201EAufgabe mit Bild\u201C anlegen",foto_unbestaetigt:"L\xF6sung nicht best\xE4tigt",foto_uebernehmen:"{n} \xFCbernehmen",foto_fertig:"{n} \xFCbernommen, {doppelt} schon vorhanden, {fehler} fehlerhaft.",foto_fehler:"{n} Zeilen sind fehlerhaft (leere oder zu lange Felder). Bitte korrigieren.",err_foto_sachfach:"F\xFCr Sachf\xE4cher gibt es \u201EFragen aus Buchseite\u201C.",kz_teilweise:"Teilweise richtig",neue_frage:"Neue Frage",spalte_frage:"Frage",spalte_musterantwort:"Musterantwort",spalte_satz:"Satz",spalte_satz_loesung:"L\xF6sung",richtige_antwort:"Richtige Antwort",form:"Frageform",form_kurz:"Kurzantwort",form_auswahl:"Auswahl",form_gemischt:"Gemischt",form_luecke:"L\xFCckentext",hilfe_label:"\xDCbersetzung als Hilfe ({sprache})",hilfe_senden:"\xDCbersetzung mitsenden",hilfe_senden_kurz:"\xDCbersetzung mitsenden",hilfe_alle_an:"\xDCbersetzung mitsenden",hilfe_alle_aus:"Ohne \xDCbersetzung senden",hilfe_gesetzt:"{n} Aufgaben ge\xE4ndert.",err_hilfe_senden_ungueltig:"Ung\xFCltige Angabe.",err_hilfe_ungueltig:"Die \xDCbersetzung ist zu lang.",form_uebersetzung:"\xDCbersetzung",saetze_generieren:"S\xE4tze generieren",saetze_foto:"S\xE4tze aus Foto",saetze_hilfe_text:"Die KI schreibt kurze S\xE4tze mit einer L\xFCcke, die das Kind ausf\xFCllt. Die Aufgaben warten danach auf deine Freigabe (Filter \u201EGepr\xFCft: nein\u201C).",saetze_hilfe_foto:"Die KI liest \xDCbungen von Buchseiten oder schreibt \xE4hnliche neue. Die Aufgaben warten danach auf deine Freigabe.",saetze_beschreibung:"Beschreibung und W\xFCnsche",saetze_beschreibung_hilfe:"z. B. Personalpronomen in kurzen S\xE4tzen",saetze_uebernehmen:"\xDCbungen von der Seite \xFCbernehmen",saetze_aehnliche:"\xC4hnliche neue Aufgaben erfinden",saetze_laeuft:"Die KI schreibt die S\xE4tze. Das kann eine Minute dauern \u2026",saetze_start:"Erzeugen",saetze_fertig:"{erzeugt} Aufgaben erzeugt, {verworfen} unbrauchbar, {doppelt} doppelt. Sie warten auf deine Freigabe.",err_saetze_nur_satzbereich:"Das geht nur in einem Thema f\xFCr S\xE4tze.",bereich_art:"Art der Aufgaben",bereich_art_vokabel:"Vokabeln (Wortpaare)",bereich_art_satz:"S\xE4tze (L\xFCckentext, Auswahl, Kurzantwort)",err_import_satz:"In ein Satz-Thema l\xE4sst sich nur per JSON-Import oder von Hand eintragen.",err_foto_satz:"Das Foto-Import kennt nur Vokabeln.",kernpunkte:"Kernpunkte (einer je Zeile, optional): was eine vollst\xE4ndige Antwort enth\xE4lt",falsche_optionen:"Falsche Antworten (eine je Zeile, 2 bis 3)",belegstelle:"Belegstelle",quellseite_anzeigen:"Buchseite anzeigen",sach_ohne_ki:"F\xFCr dieses Fach ist keine KI-Entit\xE4t gew\xE4hlt. Deshalb werden nur Auswahlfragen gestellt; Kurzantworten kann nur die KI bewerten.",seiten:"Fragen aus Buchseite",seiten_titel:"Fragen aus Buchseiten erzeugen",seiten_hilfe:"Fotografiere die Seiten m\xF6glichst gerade und gut lesbar. Die KI liest sie und schl\xE4gt Fragen mit Musterantwort vor. Die Fragen warten danach auf deine Freigabe. Die Fotos gehen an den KI-Dienst.",seiten_waehlen:"Fotos der Seiten (bis zu {n})",seiten_zu_viele:"Es werden nur die ersten {n} Fotos verwendet.",seiten_anzahl:"Anzahl Fragen",seiten_schwerpunkt:"Schwerpunkt (optional)",seiten_schwerpunkt_hilfe:"z. B. nur der Abschnitt \xFCber die Zellatmung",seiten_start:"Fragen erzeugen",seiten_laeuft:"Die KI liest die Seiten. Das kann eine Minute dauern \u2026",seiten_fertig:"{erzeugt} Fragen erzeugt, {verworfen} unbrauchbar, {doppelt} doppelt. Bitte pr\xFCfen und freigeben.",err_sach_frage_ungueltig:"Bitte eine Frage eingeben (h\xF6chstens 500 Zeichen).",err_sach_antwort_ungueltig:"Bitte eine Antwort eingeben (h\xF6chstens 500 Zeichen).",err_form_ungueltig:"Unbekannte Frageform.",err_kernpunkte_ungueltig:"H\xF6chstens 6 Kernpunkte mit je 200 Zeichen.",err_falsche_optionen_ungueltig:"Eine Auswahlfrage braucht 2 bis 3 falsche Antworten, die sich untereinander und von der richtigen unterscheiden.",err_stelle_ungueltig:"Die Belegstelle darf h\xF6chstens 300 Zeichen lang sein.",err_import_sachfach:"In Sachf\xE4cher lassen sich keine Listen importieren.",err_seiten_nur_sachfach:"Fragen aus Buchseiten gibt es nur f\xFCr Sachf\xE4cher.",err_seiten_ungueltig:"Bitte 1 bis 4 Fotos w\xE4hlen.",err_ki_ohne_bilder:"Die gew\xE4hlte KI-Entit\xE4t kann keine Bilder lesen.",kz_trefferquote:"Trefferquote",kz_aufgaben:"Aufgaben",fortschritt:"Fortschritt",fortschritt_zeitraum:"Zeitraum",fortschritt_tage:"{n} Tage",fortschritt_seit:"Der Verlauf wird seit dem {datum} aufgezeichnet.",fortschritt_leer:"Noch nichts aufgezeichnet. Sobald Fragen gestellt und beantwortet werden, erscheint hier der Verlauf.",fortschritt_antworten:"Antworten je Tag",fortschritt_quote:"Trefferquote",fortschritt_quote_hilfe:"\xDCber die jeweils letzten 7 Tage gerechnet.",fortschritt_lernstand:"Lernstand je Fach",fortschritt_lernstand_hilfe:"Anteil der Karten ab Box 3.",fortschritt_schwach:"Schwachstellen",fortschritt_lektionen:"Lektionen mit den meisten Fehlern",fortschritt_aufgaben:"Aufgaben mit den meisten Fehlern",fortschritt_keine_schwach:"Keine auff\xE4lligen Lektionen oder Aufgaben im Zeitraum.",fortschritt_simulationen:"Simulationen",fortschritt_keine_sim:"Keine Simulation im Zeitraum.",fortschritt_tabelle:"Als Tabelle",fortschritt_diagramm:"Als Diagramm",fortschritt_keine_daten:"Keine Antworten im Zeitraum.",reihe_tag:"Tag",reihe_gefragt:"Gestellt",reihe_richtig:"Richtig",reihe_teilweise:"Teilweise",reihe_falsch:"Falsch",reihe_unbeantwortet:"Unbeantwortet",fehler_n:"{n}\xD7 falsch",fehlerquote_n:"{n} % falsch ({f} von {g})",sim_punkte:"{p} von {m} Punkten ({proz} %)",sim_unvollstaendig:"Zeit abgelaufen",wochenreport:"Wochenreport",report_woche:"Woche vom {von} bis {bis}",report_laufend:"laufende Woche",report_frueher:"Vorige Woche",report_spaeter:"N\xE4chste Woche",report_kennzahlen:"Kennzahlen der Woche",report_tage_aktiv:"Tage mit Antworten",report_vergleich:"Vergleich zur Vorwoche",report_antworten:"Antworten",report_vorwoche:"Vorwoche: {wert}",report_lernstand:"Lernstand {fach}",report_keine_vorwoche:"keine Daten",report_schwach:"Schwachstellen",report_anstehend:"Anstehende Arbeiten (n\xE4chste 14 Tage)",report_keine_arbeiten:"Keine Arbeit in den n\xE4chsten 14 Tagen.",report_in_tagen:"in {n} Tagen",report_heute:"heute",report_morgen:"morgen",report_sicher:"{n} % sicher",report_vorschlaege:"Noch nicht eingetragen (aus dem Kalender)",report_simulationen:"Simulationen",report_loesung:"L\xF6sung: {loesung}",report_drucken:"Drucken",report_kopieren:"Als Text kopieren",report_kopiert:"In die Zwischenablage kopiert.",report_kopieren_fehler:"Kopieren wurde vom Browser nicht erlaubt.",report_druck_blockiert:"Der Browser hat das Druckfenster blockiert.",err_verlauf_aus:"Der Verlauf ist in den Optionen ausgeschaltet.",err_wochenreport_aus:"Der Wochenreport ist in den Optionen ausgeschaltet.",err_zeitraum_ungueltig:"Dieser Zeitraum ist nicht m\xF6glich.",anstehend:"Anstehende Arbeiten und H\xDCs",vorschlaege:"Vorschl\xE4ge aus dem Kalender",vorschlag_eintragen:"Eintragen",vorschlag_ignorieren:"Ignorieren",vorschlag_gleicher_tag:"Am selben Tag gibt es schon: {arbeiten}",keine_vorschlaege:"Keine neuen Termine im Kalender.",kalender_pruefen:"Jetzt pr\xFCfen",kalender_geprueft:"Zuletzt gepr\xFCft: {zeit}",kalender_nie:"Der Kalender wurde noch nicht gelesen.",kalender_fehler:"Der Kalender konnte zuletzt nicht gelesen werden. Angezeigt wird der Stand davor.",kalender_ignorierte:"{n} ignorierte wieder anzeigen",arbeit_fach:"Fach",arbeit_fach_waehlen:"\u2013 bitte w\xE4hlen \u2013",arbeit_fehlt_fach:"Zum Speichern fehlt noch das Fach.",fach_neu:"Neues Fach",fach_neu_titel:"Neues Fach anlegen",fach_neu_art:"Art des Fachs",fach_neu_sprache:"Sprache",fach_neu_name:"Name",fach_neu_name_optional:"Name (leer: wie die Sprache bzw. \u201EMathe\u201C)",fach_neu_anlegen:"Fach anlegen",fach_neu_fehlt:"F\xFCr dieses Kind gibt es noch kein Fach. Lege zuerst eines an.",fachart_fremdsprache:"Fremdsprache",err_kalender_aus:"F\xFCr dieses Kind ist kein Pr\xFCfungskalender eingeschaltet.",err_termin_unbekannt:"Der Termin steht nicht mehr im Kalender.",err_sprache_ungueltig:"Bitte eine Fremdsprache w\xE4hlen, die nicht die Muttersprache ist.",err_fachart_ungueltig:"Bitte die Art des Fachs w\xE4hlen.",err_fach_vorhanden:"Ein Fach mit diesem Namen gibt es schon.",err_name_leer:"Bitte einen Namen eingeben.",keine_anstehend:"Keine Arbeit oder H\xDC geplant.",heute:"heute",morgen:"morgen",in_tagen:"in {n} Tagen",heute_abfragen:"heute {n} Abfragen",sicher:"{n} % sicher",sicher_hinweis:"Anteil der Karten in Box 3 bis 5",faecher_titel:"F\xE4cher",fach_aufgaben:"{n} Aufgaben in {l} Lektionen",ungeprueft:"{n} ungepr\xFCft",aufgaben_oeffnen:"Aufgaben",lernstand:"Lernstand",lernstand_hinweis:"Karten je Leitner-Box: Box 1 ist neu oder zuletzt falsch, Box 5 sitzt sicher.",box:"Box {n}",karten:"{n} Karten",keine_karten:"Noch keine Aufgaben vorhanden.",schwierig:"Schwierigste Vokabeln",keine_schwierig:"Noch keine falschen Antworten.",fehler_mal:"{n} \xD7 falsch",arbeiten_oeffnen:"Arbeiten verwalten",tab_aufgaben:"Aufgaben",tab_arbeiten:"Arbeiten",laden:"Lade \u2026",neue_aufgabe:"Neue Aufgabe",importieren:"Importieren",lektion_hinzufuegen:"Lektion hinzuf\xFCgen",lektion_titel:"Lektionen",lektion_hilfe:"Lektionen werden hier angelegt und stehen danach beim Anlegen, Importieren und in Arbeiten zur Auswahl.",lektion_name:"Name der Lektion",lektion_keine:"Noch keine Lektion angelegt.",lektion_anzahl:"{n} Aufgaben",lektion_loeschen_hinweis:"Nur leere Lektionen lassen sich l\xF6schen",lektion_angelegt:"\u201E{name}\u201C angelegt.",keine_lektion:"\u2013 keine \u2013",export_json:"JSON exportieren",import_json:"JSON importieren",ausgewaehlt:"{n} ausgew\xE4hlt",loeschen:"L\xF6schen",arbeit_aus_auswahl:"Arbeit aus Auswahl",filter_suche:"Suche",filter_lektion:"Lektion",filter_quelle:"Quelle",filter_geprueft:"Gepr\xFCft",filter_fehlerquote:"Fehlerquote ab %",filter_von:"Erstellt ab",filter_bis:"Erstellt bis",filter_seite_von:"Buchseite von",filter_seite_bis:"Buchseite bis",filter_zuruecksetzen:"Filter zur\xFCcksetzen",alle:"Alle",ohne_lektion:"Ohne Lektion",ja:"Ja",nein:"Nein",quelle_manuell:"Manuell",quelle_upload:"Upload",quelle_generiert:"Generiert",spalte_alternativen:"Alternativen",spalte_hinweis:"Hinweis",aufgabenart_titel:"Was f\xFCr eine Aufgabe?",aufgabenart_rechnen:"Rechenaufgabe",aufgabenart_rechnen_hilfe:"Nur Text, zum Beispiel 3/4 + 1/8 oder eine Textaufgabe.",aufgabenart_bild:"Aufgabe mit Bild",aufgabenart_bild_hilfe:"Ein Diagramm, eine Kurve oder eine Zeichnung ist die Grundlage. Das Bild wird mit der Aufgabe verschickt.",bildaufgabe_titel:"Aufgabe mit Bild",bild:"Bild",bild_waehlen:"Bild ausw\xE4hlen",bild_hilfe:"PNG, JPEG, WebP oder GIF, h\xF6chstens 10 MB. Das Bild wird verkleinert gespeichert, Zusatzdaten wie der Aufnahmeort werden entfernt.",bild_vorschau:"Vorschau des Bildes",bild_anzeigen:"Bild anzeigen",einleitung:"Einleitung (optional)",einleitung_hilfe:"Steht vor jeder Teilaufgabe, z. B. \u201EIn anderen L\xE4ndern sind die Schulferien \u2026\u201C",teilaufgaben:"Teilaufgaben",teilaufgaben_hilfe:"Jede Zeile wird eine eigene Aufgabe mit demselben Bild und wird einzeln abgefragt.",teilaufgabe:"Teilaufgabe {n}",teilaufgabe_hinzufuegen:"Teilaufgabe hinzuf\xFCgen",teilaufgabe_entfernen:"Teilaufgabe entfernen",bildaufgaben_gespeichert:"Aufgaben mit Bild angelegt: {n}",bild_fehlt:"Bitte ein Bild ausw\xE4hlen.",teil_fehlt:"Bitte mindestens eine Teilaufgabe mit L\xF6sung eintragen.",keine_bilder:"{name} kann im Moment keine Bilder empfangen. Aufgaben mit Bild werden deshalb nicht gestellt. Bilder gehen automatisch \xFCber Telegram; f\xFCr andere Messenger tr\xE4gst du beim Kind eine \u201EAktion f\xFCr Bilder\u201C ein.",export_ohne_bild:"Exportiert. Aufgaben mit Bild sind nicht enthalten: {n}",spalte_aufgabe:"Aufgabe",spalte_loesung:"L\xF6sung",spalte_schwierigkeit:"Stufe",schwierigkeit:"Schwierigkeit",schwierigkeit_hinweis:"1 = leicht, 5 = schwer",schwierigkeit_beliebig:"beliebig",rechenweg:"Rechenweg (ein Schritt je Zeile, optional)",rechenweg_vorhanden:"Rechenweg hinterlegt",verifikation_rechnerisch:"nachgerechnet",verifikation_ki:"von der KI gegengepr\xFCft",verifikation_manuell:"selbst nachgerechnet",selbst_nachgerechnet:"Selbst nachgerechnet",selbst_nachgerechnet_hinweis:"Markiert die L\xF6sungen der Auswahl als von dir gepr\xFCft. Ein abweichender Vorschlag wird verworfen.",selbst_nachgerechnet_fertig:"Als selbst nachgerechnet markiert: {n}",verifikation_abweichung:"L\xF6sung weicht ab",nachrechnen:"Auswahl nachrechnen",nachrechnen_laeuft:"Die Aufgaben werden nachgerechnet \u2026",nachgerechnet:"{bestaetigt} best\xE4tigt, {abweichend} abweichend, {offen} nicht pr\xFCfbar.",nachrechnen_titel:"Ergebnis des Nachrechnens",nachrechnen_zusammenfassung:"{bestaetigt} L\xF6sungen wurden best\xE4tigt, {offen} Aufgaben lie\xDFen sich nicht pr\xFCfen. Bei diesen Aufgaben kommt ein anderes Ergebnis heraus. Ge\xE4ndert wurde nichts. Du kannst den gefundenen Wert je Aufgabe \xFCbernehmen oder die Aufgabe sp\xE4ter in der Tabelle bearbeiten. Ein Ergebnis der KI kann auch selbst falsch sein oder die Aufgabe ist mehrdeutig gestellt.",nachrechnen_eingetragen:"eingetragen",nachrechnen_berechnet:"berechnet",nachrechnen_ki:"die KI kommt auf",nur_abweichende:"Diese Aufgaben anzeigen",rechenweg_erzeugen:"Rechenweg erzeugen",rechenweg_erzeugen_laeuft:"Die KI schreibt die Rechenwege \u2026",rechenwege_erzeugt:"Rechenwege erzeugt: {erzeugt}. Schon vorhanden: {vorhanden}. \xDCbersprungen, weil die L\xF6sung abweicht: {abweichend}. Fehlgeschlagen: {fehlgeschlagen}.",vorschlag:"Vorschlag",vorschlag_ki:"Vorschlag der KI",uebernehmen_loesung:"\xDCbernehmen",uebernehmen_titel:"Ersetzt die eingetragene L\xF6sung durch diesen Wert. Der gespeicherte Rechenweg und die bisherige Statistik der Aufgabe werden dabei gel\xF6scht.",alle_uebernehmen:"Alle \xFCbernehmen",alle_uebernehmen_frage:"{n} L\xF6sungen ersetzen? {ki} davon stammen von der KI und k\xF6nnen selbst falsch sein.",uebernommen:"L\xF6sungen \xFCbernommen: {n}",schliessen:"Schlie\xDFen",fachart_mathe:"Mathematik",fachart_sach:"Sachfach",generieren:"Aufgaben generieren",generieren_titel:"Aufgaben von der KI erzeugen lassen",generieren_hilfe:"Die KI erzeugt Aufgaben, die den vorhandenen \xE4hneln. Gespeichert werden nur Aufgaben, deren L\xF6sung nachgerechnet oder gegengepr\xFCft werden konnte. Sie warten danach auf deine Freigabe. Der Name des Kindes wird nicht \xFCbertragen.",generieren_beispiele_auswahl:"Als Beispiele dienen die {n} markierten Aufgaben.",generieren_beispiele_thema:"Als Beispiele dienen die Aufgaben der gew\xE4hlten Lektion.",generieren_anzahl:"Anzahl (1\u201320)",generieren_beschreibung:"Beschreibung (optional)",generieren_beschreibung_hilfe:"z. B. Br\xFCche mit gleichem Nenner addieren",generieren_start:"Erzeugen",generieren_laeuft:"Die KI arbeitet, das kann bis zu zwei Minuten dauern \u2026",generieren_ohne_ki:"F\xFCr dieses Fach ist keine KI-Entit\xE4t gew\xE4hlt (Einstellungen der Integration).",generiert:"{erzeugt} erzeugt, {verworfen} verworfen, {doppelt} doppelt.",freigeben:"Auswahl freigeben",freigegeben:"{n} Aufgaben freigegeben.",import_titel_mathe:"Aufgaben importieren",import_hilfe_mathe:"Eine Aufgabe pro Zeile: Aufgabe; L\xF6sung; optionaler Hinweis. Weitere g\xFCltige Schreibweisen der L\xF6sung mit | trennen.",schwierig_aufgaben:"Schwierigste Aufgaben",spalte_seite:"Seite",spalte_lektion:"Lektion",spalte_box:"Box",spalte_fehler:"Fehler",spalte_geprueft:"Gepr\xFCft",spalte_erstellt:"Erstellt",box_hinweis:"Leitner-Box je Abfragerichtung (1 = neu oder falsch, 5 = sicher)",alternativen_hinweis:"Mehrere mit | trennen",keine_aufgaben:"Keine Aufgaben vorhanden.",keine_treffer:"Keine Aufgabe passt zu den Filtern.",anzahl:"{n} von {gesamt} Aufgaben",bearbeiten:"Bearbeiten",speichern:"Speichern",abbrechen:"Abbrechen",alle_auswaehlen:"Alle sichtbaren ausw\xE4hlen",loeschen_frage:"{n} Aufgabe(n) wirklich l\xF6schen?",loeschen_warnung:"{n} der ausgew\xE4hlten Aufgaben geh\xF6ren zu anstehenden Arbeiten: {arbeiten}. Trotzdem l\xF6schen?",geloescht:"{n} Aufgabe(n) gel\xF6scht.",geloescht_arbeit:"Arbeit gel\xF6scht.",gespeichert:"Gespeichert.",import_titel:"Vokabeln importieren",import_hilfe:"Eine Vokabel pro Zeile: {a}; {b}; optionaler Hinweis. Alternativen mit | trennen.",import_inhalt:"Inhalt",import_trennzeichen:"Trennzeichen (leer = automatisch)",import_geprueft:"Als gepr\xFCft \xFCbernehmen",vorschau:"Vorschau",uebernehmen:"\xDCbernehmen",vorschau_neu:"neu",vorschau_vorhanden:"bereits vorhanden",vorschau_fehler:"Nicht lesbare Zeilen: {zeilen}",import_ergebnis:"{n} importiert, {u} \xFCbersprungen.",import_fehler:"{n} fehlerhafte Eintr\xE4ge.",export_titel:"Aufgaben exportieren",mit_statistik:"Lernstatistik einschlie\xDFen",herunterladen:"Herunterladen",import_json_titel:"JSON importieren",import_json_hilfe:"Vorhandene Aufgaben bleiben erhalten, gleiche Vokabeln werden \xFCbersprungen.",datei_ungueltig:"Die Datei enth\xE4lt kein g\xFCltiges JSON.",import_json_lektion:"Lektion der importierten Aufgaben",import_json_aus_datei:"Lektionen aus der Datei \xFCbernehmen",import_json_lektion_hilfe:"Mit einer gew\xE4hlten Lektion landen alle importierten Aufgaben dort, egal was in der Datei steht.",neue_arbeit:"Neue Arbeit / H\xDC",keine_arbeiten:"F\xFCr dieses Fach ist keine Arbeit angelegt.",art:"Art",art_arbeit:"Klassenarbeit",art_hue:"H\xDC",datum:"Datum",thema:"Titel",abfragen_pro_tag:"Abfragen pro Tag",start_tage_vorher:"Beginn (Tage vorher)",intensivierung:"Frequenz zum Termin hin steigern",antwortfrist:"Antwortfrist (Minuten)",antwortfrist_leer:"wie allgemein eingestellt",antwortfrist_hinweis:"Leer: Es gilt die allgemeine Einstellung. Bei mehreren laufenden Arbeiten gilt die k\xFCrzeste Frist.",aufgaben_der_arbeit:"Aufgaben der Arbeit",auswahl_alle:"Alle Aufgaben des Fachs",auswahl_gezielt:"Gezielte Auswahl",schnell_lektionen:"Ganze Lektionen",schnell_bereiche:"Ganze Themen",bereich:"Thema",bereiche_verwalten:"Themen verwalten",bereiche_titel:"Themen",bereiche_hilfe:"Themen sind Reiter eines Fachs, z. B. \u201EVokabeln\u201C und \u201EPersonalpronomen\u201C. Neue Aufgaben, Importe und Fotos landen im gew\xE4hlten Thema.",bereich_name:"Name des neuen Themas",bereich_angelegt:"\u201E{name}\u201C angelegt.",bereich_standard_vokabel:"Vokabeln",bereich_standard_mathe:"Aufgaben",bereich_standard_sach:"Fragen",bereich_standard_satz:"S\xE4tze",bereich_standard_hinweis:"Das erste Thema bleibt immer bestehen",bereich_loeschen_hinweis:"Nur leere Themen lassen sich l\xF6schen",verschieben_nach:"Verschieben nach \u2026",verschoben:"{n} Aufgaben verschoben.",umbenennen:"Umbenennen",err_bereich_leer:"Bitte einen Namen eingeben.",err_bereich_ungueltig:"Der Name ist zu lang.",err_bereich_zu_viele:"Mehr Themen sind nicht m\xF6glich.",err_bereich_vorhanden:"Dieses Thema gibt es schon.",err_bereich_art_ungueltig:"Diese Aufgabenart ist hier nicht m\xF6glich.",err_bereich_unbekannt:"Dieses Thema gibt es nicht.",err_bereich_standard:"Das erste Thema l\xE4sst sich nicht l\xF6schen.",err_bereich_verwendet:"Das Thema enth\xE4lt noch Aufgaben.",arbeit_fehlt_beides:"Zum Speichern fehlen noch Titel und Datum.",arbeit_fehlt_thema:"Zum Speichern fehlt noch der Titel.",arbeit_fehlt_datum:"Zum Speichern fehlt noch das Datum.",schnell_seit:"Alle Aufgaben seit",schnell_seiten:"Alle Aufgaben von Buchseite",schnell_seiten_bis:"bis Buchseite",hinzufuegen:"Hinzuf\xFCgen",einzelne_aufgaben:"Einzelne Aufgaben",auswahl_leeren:"Auswahl leeren",arbeit_umfang:"{n} Aufgaben",arbeit_alle:"alle Aufgaben",arbeit_loeschen_frage:"Arbeit \u201E{thema}\u201C wirklich l\xF6schen?",arbeit_titel_neu:"Arbeit / H\xDC anlegen",arbeit_titel_bearbeiten:"Arbeit / H\xDC bearbeiten",vergangen:"vorbei",fehler_allgemein:"Das hat nicht geklappt: {fehler}",err_nicht_geladen:"LearnBuddy ist gerade nicht geladen.",err_fach_unbekannt:"Das Fach wurde nicht gefunden.",err_aufgabe_unbekannt:"Die Aufgabe wurde nicht gefunden.",err_arbeit_unbekannt:"Die Arbeit wurde nicht gefunden.",err_frage_ungueltig:"Bitte beide W\xF6rter ausf\xFCllen (h\xF6chstens 500 Zeichen).",err_alternativen_ungueltig:"Die Alternativen sind ung\xFCltig.",err_hinweis_ungueltig:"Der Hinweis ist zu lang.",err_aufgabe_ungueltig:"Bitte eine Aufgabe eingeben (h\xF6chstens 500 Zeichen).",err_loesung_ungueltig:"Bitte eine L\xF6sung eingeben (h\xF6chstens 100 Zeichen).",err_rechenweg_ungueltig:"Der Rechenweg darf h\xF6chstens 8 Schritte haben.",err_schwierigkeit_ungueltig:"Die Schwierigkeit muss zwischen 1 und 5 liegen.",err_anzahl_ungueltig:"Die Anzahl muss zwischen 1 und 20 liegen.",err_beschreibung_ungueltig:"Die Beschreibung ist zu lang.",err_ki_fehlt:"F\xFCr dieses Fach ist keine KI-Entit\xE4t gew\xE4hlt.",err_ki_fehler:"Die KI hat keine brauchbaren Aufgaben geliefert. Bitte sp\xE4ter erneut versuchen.",err_generieren_nur_mathe:"Aufgaben lassen sich nur f\xFCr Mathe-F\xE4cher generieren.",err_generieren_ohne_vorgabe:"Bitte eine Lektion oder eine Beschreibung angeben oder zuerst Beispielaufgaben anlegen.",err_export_typ:"Die Datei geh\xF6rt zu einer anderen Art von Fach.",err_bild_ungueltig:"Das ist kein Bild in einem unterst\xFCtzten Format (PNG, JPEG, WebP, GIF).",err_bild_zu_gross:"Das Bild ist gr\xF6\xDFer als 10 MB.",err_bild_unbekannt:"Das Bild wurde nicht gefunden. Bitte erneut hochladen.",err_nachrechnen_nur_mathe:"Nachrechnen gibt es nur f\xFCr Mathe-F\xE4cher.",err_rechenweg_nur_mathe:"Rechenwege gibt es nur f\xFCr Mathe-F\xE4cher.",err_auswahl_ungueltig:"Bitte 1 bis 100 Aufgaben ausw\xE4hlen.",err_seite_ungueltig:"Die Seite muss eine Zahl zwischen 1 und 9999 sein.",err_lektion_ungueltig:"Der Name ist zu lang (h\xF6chstens 100 Zeichen).",err_lektion_leer:"Bitte einen Namen eingeben.",err_lektion_vorhanden:"Diese Lektion gibt es schon.",err_lektion_unbekannt:"Diese Lektion gibt es nicht. Bitte zuerst anlegen.",err_lektion_verwendet:"Die Lektion enth\xE4lt noch Aufgaben.",err_import_leer:"Der Inhalt enth\xE4lt keine g\xFCltige Zeile.",err_export_ungueltig:"Die Datei ist kein LearnBuddy-Export.",err_export_version:"Diese Export-Version wird nicht unterst\xFCtzt.",err_export_sprachen:"Die Sprachen des Exports passen nicht zu diesem Fach.",err_thema_leer:"Bitte einen Titel eingeben.",err_datum_vergangen:"Das Datum liegt in der Vergangenheit.",err_arbeit_ungueltig:"Bitte die Angaben zur Arbeit pr\xFCfen.",err_unauthorized:"Daf\xFCr sind Administratorrechte n\xF6tig.",err_kind_unbekannt:"Das Kind wurde nicht gefunden.",err_keine_aufgaben:"Es gibt keine gepr\xFCften Aufgaben, die abgefragt werden k\xF6nnten.",err_senden_fehlgeschlagen:"Die Nachricht konnte nicht zugestellt werden. Bitte das Messenger-Ziel des Kindes pr\xFCfen."},St={titel:"LearnBuddy",kind:"Child",fach:"Subject",keine_kinder:"No child has been added yet. Add a child and a subject under Settings \u2192 Devices & services \u2192 LearnBuddy first.",keine_faecher:"This child has no subject yet.",tab_uebersicht:"Overview",status_aktiv:"Questions enabled",status_pausiert:"Questions paused",status_pausiert_bis:"Paused until {zeit}",status_nichts_geplant:"No question scheduled",pausieren:"Pause",fortsetzen:"Resume",offene_frage:"Open question",offene_frage_text:"{fach}, asked at {von}, expires at {bis}",offene_frage_ohne_frist:"{fach}, asked at {von}, no time limit",offene_frage_angehalten:"{fach}, asked at {von}, clock stopped (paused)",keine_offene_frage:"No open question",naechste_abfrage:"Next question",keine_geplant:"None scheduled",nach_offener_frage:"After the open question",letzte_frage:"Last question",noch_nie:"Never",jetzt_fragen_kurz:"Ask now",egal_welches:"Any subject",frage_gesendet:"The question was sent.",fragen_gesendet:"The questions were started.",abfrage_titel:"Ask now",abfrage_fach:"Subject",abfrage_lektionen:"Lesson",abfrage_seite_kurz:"p.",abfrage_ohne_lektion:"{n} tasks without a lesson are only included if all lessons are selected.",abfrage_laeuft:"Running questions",abfrage_laeuft_text:"{ort} \xB7 {n} more to come",abfrage_seiten:"p. {von}\u2013{bis}",abfrage_ab_seite:"from p. {n}",abfrage_bis_seite:"up to p. {n}",abfrage_ab_fehlerquote:"error rate from {n} %",abfrage_seite_von:"Book page from",abfrage_seite_bis:"Book page to",abfrage_fehlerquote:"Error rate at least (%)",abfrage_filter_hinweis:"Empty fields do not limit anything. Book pages apply per lesson; with pages only tasks with a book page count there. With an error rate only tasks that were answered before count. Tasks that wait for approval are never asked.",abfrage_anzahl:"Number of questions (1 to 20)",abfrage_frist:"Time to answer each question (minutes)",abfrage_frist_hinweis:"Empty = general setting, 0 = never expires. Applies to this request only.",abfrage_umfang:"{n} tasks are available. They come one after another, the next one after each answer.",abfrage_umfang_laedt:"Counting the selection \u2026",err_seiten_verdreht:"The first book page is behind the last one.",abfrage_senden:"Start asking",kz_gefragt:"Questions asked",kz_richtig:"Correct",kz_falsch:"Wrong",kz_unbeantwortet:"Unanswered",ki_keine:"No AI entity is selected for this subject.",ki_nicht_verfuegbar:"The selected AI entity is not available right now.",ki_ohne_bilder:"The selected AI entity cannot read images.",ki_hinweis_keine:"No AI entity is selected for this subject. Creating tasks, writing solution steps and the import from photos are switched off; answers are only judged locally. Set it up under Settings \u2192 Devices & services \u2192 LearnBuddy \u2192 gear.",ki_hinweis_ohne_bilder:"The selected AI entity cannot read images. Features that use photos are switched off.",ki_hinweis_nicht_verfuegbar:"The selected AI entity is not available right now. The AI features are switched off and answers are only judged locally. Check the AI integration in Home Assistant.",ki_hinweis_sach_zusatz:" Short answers are not asked meanwhile, only multiple-choice questions.",err_ki_nicht_verfuegbar:"The selected AI entity is not available right now.",err_ki_nicht_erreichbar:"The AI could not be reached or refused the request (connection, account, credit). Please try again later.",neue_version:"LearnBuddy was updated. This page still shows the old version; reload it to see all features.",neu_laden:"Reload the page",absender_unbekannt:"A message from an unknown sender arrived: {kennung} ({quelle}). It could not be assigned to a child.",absender_uebernehmen:"Use as sender ID for {name}",absender_verwerfen:"Dismiss",absender_uebernommen:"Sender ID saved. The next answer will be assigned.",quelle_telegram:"Telegram",quelle_whatsapp:"WhatsApp",quelle_event:"custom event",err_absender_leer:"The sender ID is empty.",err_absender_vergeben:"This sender ID already belongs to another child.",absender_fehlt:"This child has no sender ID (chat ID or phone number). Questions are sent, but answers cannot be assigned. Set it under Settings \u2192 Devices & services \u2192 LearnBuddy \u2192 edit the child.",sim_plan:"Plan a simulation (optional)",sim_plan_aktiv:"Send a simulation automatically at a fixed time",sim_plan_hilfe:"At the chosen time the child automatically gets a simulation of this exam in the messenger: the sheet as an image, then the tasks one after the other, the result at the end. If the child is paused or a simulation is already running then, it is skipped.",sim_plan_um:"Date and time",sim_plan_offen:"Simulation planned for {zeit} ({n} tasks)",sim_plan_erledigt:"The simulation planned for {zeit} is done",err_simulation_um_vergangen:"The time of the simulation is in the past.",err_simulation_um_ungueltig:"Please check date and time of the simulation.",sim_knopf_arbeit:"Simulate the exam",sim_knopf_hue:"Simulate the homework check",sim_hilfe:"A sheet is put together at random from the approved tasks of this exam. The learning statistics stay untouched.",sim_weg_ausdruck:"As a printout",sim_weg_ausdruck_hilfe:"The sheet is made as an image to download and print. Nothing is sent.",sim_weg_messenger:"In the messenger",sim_weg_messenger_hilfe:"{name} gets the sheet as an image and then the tasks one after the other. Feedback only comes at the end: points, percent and the solutions to the mistakes.",sim_anzahl:"Number of tasks",sim_verfuegbar:"Available this way: {n}",sim_keine_aufgaben:"There are no approved tasks for this exam.",sim_start_ausdruck:"Create the sheet",sim_start_messenger:"Start the simulation",sim_gestartet:"The simulation with {n} tasks is running. The child gets the result at the end.",sim_blatt_hilfe:"The sheet with {n} tasks is ready. The images are deleted after 24 hours; download them if you want to keep them.",sim_herunterladen:"Download page {n}",sim_drucken:"Print",sim_druck_blockiert:"The browser blocked the print window. Download the pages and print them from there.",sim_laeuft:"Simulation",sim_laeuft_text:"running: task {nr} of {n}",sim_abbrechen:"Stop the simulation",frage_abbrechen:"Cancel question",frage_abbrechen_frage:"Withdraw the open question? It is not counted, and the child gets a short message.",sim_abbrechen_frage:"Stop the running simulation without a result?",err_simulation_laeuft:"A simulation is running for this child.",err_weg_ungueltig:"Unknown way of simulating.",foto_import:"Import from photo",foto_titel:"Read tasks from photos",foto_hilfe:"Take the photos of the vocabulary pages straight and legible. The AI reads word, translation, page number and the reference to the unit page. It leaves out example sentences and phonetic transcriptions. Then you check the preview. The photos are sent to the AI service and deleted afterwards.",foto_hilfe_mathe:"Take the photo of the book page or worksheet straight and legible. The AI reads the tasks and solves them; the results are recalculated. Then you check the preview. The photos are sent to the AI service and deleted afterwards.",foto_auslesen:"Read",foto_leer:"Nothing usable was found on the photos.",foto_vorschau_titel:"Check the preview",foto_vorschau_hilfe:"Compare the lines with the book, correct them if needed and untick everything that should not be imported. Nothing is stored before you click the button.",foto_vorhanden:"already there",foto_braucht_bild:"needs a figure \u2013 create it as a task with an image",foto_unbestaetigt:"result not confirmed",foto_uebernehmen:"Import {n}",foto_fertig:"{n} imported, {doppelt} already there, {fehler} faulty.",foto_fehler:"{n} lines are faulty (empty or too long fields). Please correct them.",err_foto_sachfach:"Knowledge subjects have their own way to create questions from pages.",kz_teilweise:"Partly right",neue_frage:"New question",spalte_frage:"Question",spalte_musterantwort:"Model answer",spalte_satz:"Sentence",spalte_satz_loesung:"Solution",richtige_antwort:"Correct answer",form:"Form",form_kurz:"Short answer",form_auswahl:"Multiple choice",form_gemischt:"Mixed",form_luecke:"Gap text",hilfe_label:"Translation as a hint ({sprache})",hilfe_senden:"Send the translation",hilfe_senden_kurz:"Send the translation",hilfe_alle_an:"Send the translation",hilfe_alle_aus:"Send without translation",hilfe_gesetzt:"{n} tasks changed.",err_hilfe_senden_ungueltig:"Invalid value.",err_hilfe_ungueltig:"The translation is too long.",form_uebersetzung:"Translation",saetze_generieren:"Generate sentences",saetze_foto:"Sentences from photo",saetze_hilfe_text:"The AI writes short sentences with a gap for the child to fill in. The tasks then wait for your approval (filter \u201CChecked: no\u201D).",saetze_hilfe_foto:"The AI reads exercises from book pages or writes similar new ones. The tasks then wait for your approval.",saetze_beschreibung:"Description and wishes",saetze_beschreibung_hilfe:"e.g. personal pronouns in short sentences",saetze_uebernehmen:"Take over the exercises of the page",saetze_aehnliche:"Invent similar new tasks",saetze_laeuft:"The AI is writing the sentences. This can take a minute \u2026",saetze_start:"Create",saetze_fertig:"{erzeugt} tasks created, {verworfen} unusable, {doppelt} duplicates. They wait for your approval.",err_saetze_nur_satzbereich:"This only works in a topic for sentences.",bereich_art:"Kind of tasks",bereich_art_vokabel:"Vocabulary (word pairs)",bereich_art_satz:"Sentences (gap, choice, short answer)",err_import_satz:"A sentence topic only takes tasks by JSON import or by hand.",err_foto_satz:"The photo import only knows vocabulary.",kernpunkte:"Key points (one per line, optional): what a complete answer contains",falsche_optionen:"Wrong answers (one per line, 2 to 3)",belegstelle:"Source passage",quellseite_anzeigen:"Show the book page",sach_ohne_ki:"No AI entity is selected for this subject. Therefore only multiple-choice questions are asked; short answers can only be judged by the AI.",seiten:"Questions from a book page",seiten_titel:"Create questions from book pages",seiten_hilfe:"Take the photos straight and legible. The AI reads the pages and suggests questions with a model answer. The questions then wait for your approval. The photos are sent to the AI service.",seiten_waehlen:"Photos of the pages (up to {n})",seiten_zu_viele:"Only the first {n} photos are used.",seiten_anzahl:"Number of questions",seiten_schwerpunkt:"Focus (optional)",seiten_schwerpunkt_hilfe:"e.g. only the part about cellular respiration",seiten_start:"Create questions",seiten_laeuft:"The AI is reading the pages. This can take a minute \u2026",seiten_fertig:"{erzeugt} questions created, {verworfen} unusable, {doppelt} duplicates. Please check and approve them.",err_sach_frage_ungueltig:"Please enter a question (at most 500 characters).",err_sach_antwort_ungueltig:"Please enter an answer (at most 500 characters).",err_form_ungueltig:"Unknown form of question.",err_kernpunkte_ungueltig:"At most 6 key points with 200 characters each.",err_falsche_optionen_ungueltig:"A multiple-choice question needs 2 to 3 wrong answers that differ from each other and from the correct one.",err_stelle_ungueltig:"The source passage may be 300 characters long at most.",err_import_sachfach:"Lists cannot be imported into knowledge subjects.",err_seiten_nur_sachfach:"Questions from book pages only exist for knowledge subjects.",err_seiten_ungueltig:"Please choose 1 to 4 photos.",err_ki_ohne_bilder:"The selected AI entity cannot read images.",kz_trefferquote:"Success rate",kz_aufgaben:"Tasks",fortschritt:"Progress",fortschritt_zeitraum:"Period",fortschritt_tage:"{n} days",fortschritt_seit:"The history is recorded since {datum}.",fortschritt_leer:"Nothing recorded yet. As soon as questions are asked and answered, the history shows up here.",fortschritt_antworten:"Answers per day",fortschritt_quote:"Hit rate",fortschritt_quote_hilfe:"Calculated over the last 7 days each.",fortschritt_lernstand:"Level per subject",fortschritt_lernstand_hilfe:"Share of cards in box 3 or higher.",fortschritt_schwach:"Weak spots",fortschritt_lektionen:"Lessons with the most mistakes",fortschritt_aufgaben:"Tasks with the most mistakes",fortschritt_keine_schwach:"No conspicuous lessons or tasks in the period.",fortschritt_simulationen:"Simulations",fortschritt_keine_sim:"No simulation in the period.",fortschritt_tabelle:"As a table",fortschritt_diagramm:"As a chart",fortschritt_keine_daten:"No answers in the period.",reihe_tag:"Day",reihe_gefragt:"Asked",reihe_richtig:"Right",reihe_teilweise:"Partly",reihe_falsch:"Wrong",reihe_unbeantwortet:"Unanswered",fehler_n:"{n}\xD7 wrong",fehlerquote_n:"{n} % wrong ({f} of {g})",sim_punkte:"{p} of {m} points ({proz} %)",sim_unvollstaendig:"time ran out",wochenreport:"Weekly report",report_woche:"Week from {von} to {bis}",report_laufend:"running week",report_frueher:"Previous week",report_spaeter:"Next week",report_kennzahlen:"Figures of the week",report_tage_aktiv:"Days with answers",report_vergleich:"Compared to the week before",report_antworten:"Answers",report_vorwoche:"week before: {wert}",report_lernstand:"Level {fach}",report_keine_vorwoche:"no data",report_schwach:"Weak spots",report_anstehend:"Upcoming exams (next 14 days)",report_keine_arbeiten:"No exam in the next 14 days.",report_in_tagen:"in {n} days",report_heute:"today",report_morgen:"tomorrow",report_sicher:"{n} % safe",report_vorschlaege:"Not entered yet (from the calendar)",report_simulationen:"Simulations",report_loesung:"Solution: {loesung}",report_drucken:"Print",report_kopieren:"Copy as text",report_kopiert:"Copied to the clipboard.",report_kopieren_fehler:"The browser did not allow copying.",report_druck_blockiert:"The browser blocked the print window.",err_verlauf_aus:"The history is switched off in the options.",err_wochenreport_aus:"The weekly report is switched off in the options.",err_zeitraum_ungueltig:"This period is not possible.",anstehend:"Upcoming exams",vorschlaege:"Suggestions from the calendar",vorschlag_eintragen:"Enter",vorschlag_ignorieren:"Ignore",vorschlag_gleicher_tag:"Already on the same day: {arbeiten}",keine_vorschlaege:"No new dates in the calendar.",kalender_pruefen:"Check now",kalender_geprueft:"Last checked: {zeit}",kalender_nie:"The calendar has not been read yet.",kalender_fehler:"The calendar could not be read last time. Shown is what was read before.",kalender_ignorierte:"Show {n} ignored again",arbeit_fach:"Subject",arbeit_fach_waehlen:"\u2013 please choose \u2013",arbeit_fehlt_fach:"Choose the subject before saving.",fach_neu:"New subject",fach_neu_titel:"Add a subject",fach_neu_art:"Kind of subject",fach_neu_sprache:"Language",fach_neu_name:"Name",fach_neu_name_optional:"Name (empty: like the language or \u201CMath\u201D)",fach_neu_anlegen:"Add subject",fach_neu_fehlt:"This child has no subject yet. Add one first.",fachart_fremdsprache:"Foreign language",err_kalender_aus:"No exam calendar is switched on for this child.",err_termin_unbekannt:"The date is no longer in the calendar.",err_sprache_ungueltig:"Please choose a foreign language other than the native language.",err_fachart_ungueltig:"Please choose the kind of subject.",err_fach_vorhanden:"A subject with this name already exists.",err_name_leer:"Please enter a name.",keine_anstehend:"No exam is planned.",heute:"today",morgen:"tomorrow",in_tagen:"in {n} days",heute_abfragen:"{n} questions today",sicher:"{n} % mastered",sicher_hinweis:"Share of cards in boxes 3 to 5",faecher_titel:"Subjects",fach_aufgaben:"{n} tasks in {l} lessons",ungeprueft:"{n} not approved",aufgaben_oeffnen:"Tasks",lernstand:"Progress",lernstand_hinweis:"Cards per Leitner box: box 1 is new or was wrong last time, box 5 is mastered.",box:"Box {n}",karten:"{n} cards",keine_karten:"There are no tasks yet.",schwierig:"Hardest words",keine_schwierig:"No wrong answers yet.",fehler_mal:"{n} \xD7 wrong",arbeiten_oeffnen:"Manage exams",tab_aufgaben:"Tasks",tab_arbeiten:"Exams",laden:"Loading \u2026",neue_aufgabe:"New task",importieren:"Import",lektion_hinzufuegen:"Add lesson",lektion_titel:"Lessons",lektion_hilfe:"Lessons are created here and can then be selected when adding or importing tasks and in exams.",lektion_name:"Name of the lesson",lektion_keine:"No lesson has been created yet.",lektion_anzahl:"{n} tasks",lektion_loeschen_hinweis:"Only empty lessons can be deleted",lektion_angelegt:"\u201C{name}\u201D created.",keine_lektion:"\u2013 none \u2013",export_json:"Export JSON",import_json:"Import JSON",ausgewaehlt:"{n} selected",loeschen:"Delete",arbeit_aus_auswahl:"Exam from selection",filter_suche:"Search",filter_lektion:"Lesson",filter_quelle:"Source",filter_geprueft:"Approved",filter_fehlerquote:"Error rate from %",filter_von:"Created from",filter_bis:"Created until",filter_seite_von:"Book page from",filter_seite_bis:"Book page to",filter_zuruecksetzen:"Reset filters",alle:"All",ohne_lektion:"Without lesson",ja:"Yes",nein:"No",quelle_manuell:"Manual",quelle_upload:"Upload",quelle_generiert:"Generated",spalte_alternativen:"Alternatives",spalte_hinweis:"Hint",aufgabenart_titel:"What kind of task?",aufgabenart_rechnen:"Calculation",aufgabenart_rechnen_hilfe:"Text only, for example 3/4 + 1/8 or a word problem.",aufgabenart_bild:"Task with an image",aufgabenart_bild_hilfe:"A diagram, a graph or a drawing is the basis. The image is sent with the task.",bildaufgabe_titel:"Task with an image",bild:"Image",bild_waehlen:"Choose an image",bild_hilfe:"PNG, JPEG, WebP or GIF, at most 10 MB. The image is stored smaller, extra data such as the location is removed.",bild_vorschau:"Preview of the image",bild_anzeigen:"Show the image",einleitung:"Introduction (optional)",einleitung_hilfe:"Is put in front of every part, e.g. \u201CIn other countries the holidays \u2026\u201D",teilaufgaben:"Parts",teilaufgaben_hilfe:"Every row becomes a task of its own with the same image and is asked separately.",teilaufgabe:"Part {n}",teilaufgabe_hinzufuegen:"Add a part",teilaufgabe_entfernen:"Remove the part",bildaufgaben_gespeichert:"Tasks with an image created: {n}",bild_fehlt:"Please choose an image.",teil_fehlt:"Please enter at least one part with its result.",keine_bilder:"{name} cannot receive images at the moment, so tasks with an image are not asked. Images are sent automatically through Telegram; for other messengers enter an \u201Caction for images\u201D at the child.",export_ohne_bild:"Exported. Tasks with an image are not included: {n}",spalte_aufgabe:"Task",spalte_loesung:"Result",spalte_schwierigkeit:"Level",schwierigkeit:"Difficulty",schwierigkeit_hinweis:"1 = easy, 5 = hard",schwierigkeit_beliebig:"any",rechenweg:"Steps of the solution (one per line, optional)",rechenweg_vorhanden:"Steps of the solution are stored",verifikation_rechnerisch:"recalculated",verifikation_ki:"double-checked by the AI",verifikation_manuell:"checked by yourself",selbst_nachgerechnet:"Checked by myself",selbst_nachgerechnet_hinweis:"Marks the solutions of the selection as checked by you. A differing suggestion is dropped.",selbst_nachgerechnet_fertig:"Marked as checked by yourself: {n}",verifikation_abweichung:"result differs",nachrechnen:"Recalculate selection",nachrechnen_laeuft:"The tasks are being recalculated \u2026",nachgerechnet:"{bestaetigt} confirmed, {abweichend} differing, {offen} not checkable.",nachrechnen_titel:"Result of recalculating",nachrechnen_zusammenfassung:"{bestaetigt} results were confirmed, {offen} tasks could not be checked. These tasks give another result. Nothing was changed. You can apply the value that was found per task or edit the task in the table later. A result of the AI can be wrong itself, or the task is ambiguous.",nachrechnen_eingetragen:"stored",nachrechnen_berechnet:"calculated",nachrechnen_ki:"the AI gets",nur_abweichende:"Show these tasks",rechenweg_erzeugen:"Create solution steps",rechenweg_erzeugen_laeuft:"The AI is writing the solution steps \u2026",rechenwege_erzeugt:"Solution steps created: {erzeugt}. Already there: {vorhanden}. Skipped because the result differs: {abweichend}. Failed: {fehlgeschlagen}.",vorschlag:"Suggestion",vorschlag_ki:"Suggestion of the AI",uebernehmen_loesung:"Apply",uebernehmen_titel:"Replaces the stored result with this value. The stored solution steps and the statistics of the task are deleted.",alle_uebernehmen:"Apply all",alle_uebernehmen_frage:"Replace {n} results? {ki} of them come from the AI and can be wrong themselves.",uebernommen:"Results applied: {n}",schliessen:"Close",fachart_mathe:"Mathematics",fachart_sach:"Knowledge subject",generieren:"Generate tasks",generieren_titel:"Let the AI create tasks",generieren_hilfe:"The AI creates tasks similar to the existing ones. Only tasks whose solution could be recalculated or double-checked are stored. They wait for your approval afterwards. The name of the child is not sent.",generieren_beispiele_auswahl:"The {n} selected tasks serve as examples.",generieren_beispiele_thema:"The tasks of the chosen lesson serve as examples.",generieren_anzahl:"Number (1\u201320)",generieren_beschreibung:"Description (optional)",generieren_beschreibung_hilfe:"e.g. adding fractions with the same denominator",generieren_start:"Create",generieren_laeuft:"The AI is working, this can take up to two minutes \u2026",generieren_ohne_ki:"No AI entity is selected for this subject (settings of the integration).",generiert:"{erzeugt} created, {verworfen} discarded, {doppelt} duplicates.",freigeben:"Approve selection",freigegeben:"{n} tasks approved.",import_titel_mathe:"Import tasks",import_hilfe_mathe:"One task per line: task; result; optional hint. Separate other accepted spellings of the result with |.",schwierig_aufgaben:"Hardest tasks",spalte_seite:"Page",spalte_lektion:"Lesson",spalte_box:"Box",spalte_fehler:"Errors",spalte_geprueft:"Approved",spalte_erstellt:"Created",box_hinweis:"Leitner box per direction (1 = new or wrong, 5 = mastered)",alternativen_hinweis:"Separate several with |",keine_aufgaben:"There are no tasks yet.",keine_treffer:"No task matches the filters.",anzahl:"{n} of {gesamt} tasks",bearbeiten:"Edit",speichern:"Save",abbrechen:"Cancel",alle_auswaehlen:"Select all visible",loeschen_frage:"Really delete {n} task(s)?",loeschen_warnung:"{n} of the selected tasks belong to upcoming exams: {arbeiten}. Delete anyway?",geloescht:"{n} task(s) deleted.",geloescht_arbeit:"Exam deleted.",gespeichert:"Saved.",import_titel:"Import vocabulary",import_hilfe:"One word per line: {a}; {b}; optional hint. Separate alternatives with |.",import_inhalt:"Content",import_trennzeichen:"Separator (empty = automatic)",import_geprueft:"Import as approved",vorschau:"Preview",uebernehmen:"Import",vorschau_neu:"new",vorschau_vorhanden:"already exists",vorschau_fehler:"Unreadable lines: {zeilen}",import_ergebnis:"{n} imported, {u} skipped.",import_fehler:"{n} invalid entries.",export_titel:"Export tasks",mit_statistik:"Include learning statistics",herunterladen:"Download",import_json_titel:"Import JSON",import_json_hilfe:"Existing tasks are kept, identical words are skipped.",datei_ungueltig:"The file does not contain valid JSON.",import_json_lektion:"Lesson of the imported tasks",import_json_aus_datei:"Keep the lessons from the file",import_json_lektion_hilfe:"With a selected lesson all imported tasks go there, whatever the file says.",neue_arbeit:"New exam",keine_arbeiten:"There is no exam for this subject.",art:"Type",art_arbeit:"Exam",art_hue:"Homework check",datum:"Date",thema:"Title",abfragen_pro_tag:"Questions per day",start_tage_vorher:"Start (days before)",intensivierung:"Increase frequency towards the date",antwortfrist:"Time to answer (minutes)",antwortfrist_leer:"as set in general",antwortfrist_hinweis:"Empty: the general setting applies. With several running exams the shortest time wins.",aufgaben_der_arbeit:"Tasks of the exam",auswahl_alle:"All tasks of the subject",auswahl_gezielt:"Specific selection",schnell_lektionen:"Whole lessons",schnell_bereiche:"Whole topics",bereich:"Topic",bereiche_verwalten:"Manage topics",bereiche_titel:"Topics",bereiche_hilfe:"Topics are tabs of a subject, e.g. \u201CVocabulary\u201D and \u201CPersonal pronouns\u201D. New tasks, imports and photos go to the selected topic.",bereich_name:"Name of the new topic",bereich_angelegt:"\u201C{name}\u201D created.",bereich_standard_vokabel:"Vocabulary",bereich_standard_mathe:"Tasks",bereich_standard_sach:"Questions",bereich_standard_satz:"Sentences",bereich_standard_hinweis:"The first topic always stays",bereich_loeschen_hinweis:"Only empty topics can be deleted",verschieben_nach:"Move to \u2026",verschoben:"{n} tasks moved.",umbenennen:"Rename",err_bereich_leer:"Please enter a name.",err_bereich_ungueltig:"The name is too long.",err_bereich_zu_viele:"No more topics are possible.",err_bereich_vorhanden:"This topic already exists.",err_bereich_art_ungueltig:"This kind of task is not possible here.",err_bereich_unbekannt:"This topic does not exist.",err_bereich_standard:"The first topic cannot be deleted.",err_bereich_verwendet:"The topic still contains tasks.",arbeit_fehlt_beides:"Title and date are still missing.",arbeit_fehlt_thema:"The title is still missing.",arbeit_fehlt_datum:"The date is still missing.",schnell_seit:"All tasks since",schnell_seiten:"All tasks from book page",schnell_seiten_bis:"to book page",hinzufuegen:"Add",einzelne_aufgaben:"Single tasks",auswahl_leeren:"Clear selection",arbeit_umfang:"{n} tasks",arbeit_alle:"all tasks",arbeit_loeschen_frage:"Really delete the exam \u201C{thema}\u201D?",arbeit_titel_neu:"Add exam",arbeit_titel_bearbeiten:"Edit exam",vergangen:"past",fehler_allgemein:"That did not work: {fehler}",err_nicht_geladen:"LearnBuddy is not loaded right now.",err_fach_unbekannt:"The subject was not found.",err_aufgabe_unbekannt:"The task was not found.",err_arbeit_unbekannt:"The exam was not found.",err_frage_ungueltig:"Please fill in both words (500 characters at most).",err_alternativen_ungueltig:"The alternatives are invalid.",err_hinweis_ungueltig:"The hint is too long.",err_aufgabe_ungueltig:"Please enter a task (at most 500 characters).",err_loesung_ungueltig:"Please enter a result (at most 100 characters).",err_rechenweg_ungueltig:"The solution may have at most 8 steps.",err_schwierigkeit_ungueltig:"The difficulty must be between 1 and 5.",err_anzahl_ungueltig:"The number must be between 1 and 20.",err_beschreibung_ungueltig:"The description is too long.",err_ki_fehlt:"No AI entity is selected for this subject.",err_ki_fehler:"The AI did not return usable tasks. Please try again later.",err_generieren_nur_mathe:"Tasks can only be generated for math subjects.",err_generieren_ohne_vorgabe:"Enter a lesson or a description, or add example tasks first.",err_export_typ:"The file belongs to another kind of subject.",err_bild_ungueltig:"This is not an image in a supported format (PNG, JPEG, WebP, GIF).",err_bild_zu_gross:"The image is larger than 10 MB.",err_bild_unbekannt:"The image was not found. Please upload it again.",err_nachrechnen_nur_mathe:"Only math subjects can be recalculated.",err_rechenweg_nur_mathe:"Only math subjects have solution steps.",err_auswahl_ungueltig:"Please select 1 to 100 tasks.",err_seite_ungueltig:"The page must be a number between 1 and 9999.",err_lektion_ungueltig:"The name is too long (100 characters at most).",err_lektion_leer:"Please enter a name.",err_lektion_vorhanden:"This lesson already exists.",err_lektion_unbekannt:"This lesson does not exist. Please create it first.",err_lektion_verwendet:"The lesson still contains tasks.",err_import_leer:"The content does not contain any valid line.",err_export_ungueltig:"The file is not a LearnBuddy export.",err_export_version:"This export version is not supported.",err_export_sprachen:"The languages of the export do not match this subject.",err_thema_leer:"Please enter a title.",err_datum_vergangen:"The date is in the past.",err_arbeit_ungueltig:"Please check the details of the exam.",err_unauthorized:"Administrator rights are required.",err_kind_unbekannt:"The child was not found.",err_keine_aufgaben:"There are no approved tasks that could be asked.",err_senden_fehlgeschlagen:"The message could not be delivered. Please check the messenger target of the child."},Tt={de:{de:"Deutsch",en:"Englisch",fr:"Franz\xF6sisch",es:"Spanisch",it:"Italienisch",la:"Latein"},en:{de:"German",en:"English",fr:"French",es:"Spanish",it:"Italian",la:"Latin"}};function Je(d){return d.toLowerCase().startsWith("de")?"de":"en"}function Z(d){let s=Je(d)==="de"?Ze:St;return(e,t={})=>s[e].replace(/\{(\w+)\}/g,(i,n)=>String(t[n]??""))}function z(d,s){return Tt[Je(d)]?.[s]??s}function y(d,s){let e=s,t=[`err_${e?.message??""}`,`err_${e?.code??""}`];for(let i of t)if(i in Ze)return d(i);return d("fehler_allgemein",{fehler:e?.message??String(s)})}var J=U`
+var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e,t)=>{for(var i=t>1?void 0:t?dt(s,e):s,n=d.length-1,a;n>=0;n--)(a=d[n])&&(i=(t?a(s,e,i):a(i))||i);return t&&i&&ut(s,e,i),i};var ue=globalThis,de=ue.ShadowRoot&&(ue.ShadyCSS===void 0||ue.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,me=Symbol(),Re=new WeakMap,ee=class{constructor(s,e,t){if(this._$cssResult$=!0,t!==me)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=s,this.t=e}get styleSheet(){let s=this.o,e=this.t;if(de&&s===void 0){let t=e!==void 0&&e.length===1;t&&(s=Re.get(e)),s===void 0&&((this.o=s=new CSSStyleSheet).replaceSync(this.cssText),t&&Re.set(e,s))}return s}toString(){return this.cssText}},Ne=d=>new ee(typeof d=="string"?d:d+"",void 0,me),U=(d,...s)=>{let e=d.length===1?d[0]:s.reduce((t,i,n)=>t+(a=>{if(a._$cssResult$===!0)return a.cssText;if(typeof a=="number")return a;throw Error("Value passed to 'css' function must be a 'css' function result: "+a+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+d[n+1],d[0]);return new ee(e,d,me)},Be=(d,s)=>{if(de)d.adoptedStyleSheets=s.map(e=>e instanceof CSSStyleSheet?e:e.styleSheet);else for(let e of s){let t=document.createElement("style"),i=ue.litNonce;i!==void 0&&t.setAttribute("nonce",i),t.textContent=e.cssText,d.appendChild(t)}},ve=de?d=>d:d=>d instanceof CSSStyleSheet?(s=>{let e="";for(let t of s.cssRules)e+=t.cssText;return Ne(e)})(d):d;var{is:_t,defineProperty:gt,getOwnPropertyDescriptor:ft,getOwnPropertyNames:bt,getOwnPropertySymbols:pt,getPrototypeOf:mt}=Object,_e=globalThis,Le=_e.trustedTypes,vt=Le?Le.emptyScript:"",kt=_e.reactiveElementPolyfillSupport,te=(d,s)=>d,ie={toAttribute(d,s){switch(s){case Boolean:d=d?vt:null;break;case Object:case Array:d=d==null?d:JSON.stringify(d)}return d},fromAttribute(d,s){let e=d;switch(s){case Boolean:e=d!==null;break;case Number:e=d===null?null:Number(d);break;case Object:case Array:try{e=JSON.parse(d)}catch{e=null}}return e}},ge=(d,s)=>!_t(d,s),Pe={attribute:!0,type:String,converter:ie,reflect:!1,useDefault:!1,hasChanged:ge};Symbol.metadata??=Symbol("metadata"),_e.litPropertyMetadata??=new WeakMap;var L=class extends HTMLElement{static addInitializer(s){this._$Ei(),(this.l??=[]).push(s)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(s,e=Pe){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(s)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(s,e),!e.noAccessor){let t=Symbol(),i=this.getPropertyDescriptor(s,t,e);i!==void 0&&gt(this.prototype,s,i)}}static getPropertyDescriptor(s,e,t){let{get:i,set:n}=ft(this.prototype,s)??{get(){return this[e]},set(a){this[e]=a}};return{get:i,set(a){let o=i?.call(this);n?.call(this,a),this.requestUpdate(s,o,t)},configurable:!0,enumerable:!0}}static getPropertyOptions(s){return this.elementProperties.get(s)??Pe}static _$Ei(){if(this.hasOwnProperty(te("elementProperties")))return;let s=mt(this);s.finalize(),s.l!==void 0&&(this.l=[...s.l]),this.elementProperties=new Map(s.elementProperties)}static finalize(){if(this.hasOwnProperty(te("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(te("properties"))){let e=this.properties,t=[...bt(e),...pt(e)];for(let i of t)this.createProperty(i,e[i])}let s=this[Symbol.metadata];if(s!==null){let e=litPropertyMetadata.get(s);if(e!==void 0)for(let[t,i]of e)this.elementProperties.set(t,i)}this._$Eh=new Map;for(let[e,t]of this.elementProperties){let i=this._$Eu(e,t);i!==void 0&&this._$Eh.set(i,e)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(s){let e=[];if(Array.isArray(s)){let t=new Set(s.flat(1/0).reverse());for(let i of t)e.unshift(ve(i))}else s!==void 0&&e.push(ve(s));return e}static _$Eu(s,e){let t=e.attribute;return t===!1?void 0:typeof t=="string"?t:typeof s=="string"?s.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(s=>this.enableUpdating=s),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(s=>s(this))}addController(s){(this._$EO??=new Set).add(s),this.renderRoot!==void 0&&this.isConnected&&s.hostConnected?.()}removeController(s){this._$EO?.delete(s)}_$E_(){let s=new Map,e=this.constructor.elementProperties;for(let t of e.keys())this.hasOwnProperty(t)&&(s.set(t,this[t]),delete this[t]);s.size>0&&(this._$Ep=s)}createRenderRoot(){let s=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return Be(s,this.constructor.elementStyles),s}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(s=>s.hostConnected?.())}enableUpdating(s){}disconnectedCallback(){this._$EO?.forEach(s=>s.hostDisconnected?.())}attributeChangedCallback(s,e,t){this._$AK(s,t)}_$ET(s,e){let t=this.constructor.elementProperties.get(s),i=this.constructor._$Eu(s,t);if(i!==void 0&&t.reflect===!0){let n=(t.converter?.toAttribute!==void 0?t.converter:ie).toAttribute(e,t.type);this._$Em=s,n==null?this.removeAttribute(i):this.setAttribute(i,n),this._$Em=null}}_$AK(s,e){let t=this.constructor,i=t._$Eh.get(s);if(i!==void 0&&this._$Em!==i){let n=t.getPropertyOptions(i),a=typeof n.converter=="function"?{fromAttribute:n.converter}:n.converter?.fromAttribute!==void 0?n.converter:ie;this._$Em=i;let o=a.fromAttribute(e,n.type);this[i]=o??this._$Ej?.get(i)??o,this._$Em=null}}requestUpdate(s,e,t,i=!1,n){if(s!==void 0){let a=this.constructor;if(i===!1&&(n=this[s]),t??=a.getPropertyOptions(s),!((t.hasChanged??ge)(n,e)||t.useDefault&&t.reflect&&n===this._$Ej?.get(s)&&!this.hasAttribute(a._$Eu(s,t))))return;this.C(s,e,t)}this.isUpdatePending===!1&&(this._$ES=this._$EP())}C(s,e,{useDefault:t,reflect:i,wrapped:n},a){t&&!(this._$Ej??=new Map).has(s)&&(this._$Ej.set(s,a??e??this[s]),n!==!0||a!==void 0)||(this._$AL.has(s)||(this.hasUpdated||t||(e=void 0),this._$AL.set(s,e)),i===!0&&this._$Em!==s&&(this._$Eq??=new Set).add(s))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(e){Promise.reject(e)}let s=this.scheduleUpdate();return s!=null&&await s,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(let[i,n]of this._$Ep)this[i]=n;this._$Ep=void 0}let t=this.constructor.elementProperties;if(t.size>0)for(let[i,n]of t){let{wrapped:a}=n,o=this[i];a!==!0||this._$AL.has(i)||o===void 0||this.C(i,void 0,n,o)}}let s=!1,e=this._$AL;try{s=this.shouldUpdate(e),s?(this.willUpdate(e),this._$EO?.forEach(t=>t.hostUpdate?.()),this.update(e)):this._$EM()}catch(t){throw s=!1,this._$EM(),t}s&&this._$AE(e)}willUpdate(s){}_$AE(s){this._$EO?.forEach(e=>e.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(s)),this.updated(s)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(s){return!0}update(s){this._$Eq&&=this._$Eq.forEach(e=>this._$ET(e,this[e])),this._$EM()}updated(s){}firstUpdated(s){}};L.elementStyles=[],L.shadowRootOptions={mode:"open"},L[te("elementProperties")]=new Map,L[te("finalized")]=new Map,kt?.({ReactiveElement:L}),(_e.reactiveElementVersions??=[]).push("2.1.2");var Ae=globalThis,je=d=>d,fe=Ae.trustedTypes,qe=fe?fe.createPolicy("lit-html",{createHTML:d=>d}):void 0,Ve="$lit$",j=`lit$${Math.random().toFixed(9).slice(2)}$`,Oe="?"+j,$t=`<${Oe}>`,H=document,se=()=>H.createComment(""),ae=d=>d===null||typeof d!="object"&&typeof d!="function",Ee=Array.isArray,wt=d=>Ee(d)||typeof d?.[Symbol.iterator]=="function",ke=`[ 	
+\f\r]`,ne=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,Me=/-->/g,Ue=/>/g,K=RegExp(`>|${ke}(?:([^\\s"'>=/]+)(${ke}*=${ke}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`,"g"),Ke=/'/g,Ce=/"/g,Ge=/^(?:script|style|textarea|title)$/i,Se=d=>(s,...e)=>({_$litType$:d,strings:s,values:e}),r=Se(1),R=Se(2),Zt=Se(3),V=Symbol.for("lit-noChange"),c=Symbol.for("lit-nothing"),He=new WeakMap,C=H.createTreeWalker(H,129);function We(d,s){if(!Ee(d)||!d.hasOwnProperty("raw"))throw Error("invalid template strings array");return qe!==void 0?qe.createHTML(s):s}var xt=(d,s)=>{let e=d.length-1,t=[],i,n=s===2?"<svg>":s===3?"<math>":"",a=ne;for(let o=0;o<e;o++){let l=d[o],h,_,u=-1,f=0;for(;f<l.length&&(a.lastIndex=f,_=a.exec(l),_!==null);)f=a.lastIndex,a===ne?_[1]==="!--"?a=Me:_[1]!==void 0?a=Ue:_[2]!==void 0?(Ge.test(_[2])&&(i=RegExp("</"+_[2],"g")),a=K):_[3]!==void 0&&(a=K):a===K?_[0]===">"?(a=i??ne,u=-1):_[1]===void 0?u=-2:(u=a.lastIndex-_[2].length,h=_[1],a=_[3]===void 0?K:_[3]==='"'?Ce:Ke):a===Ce||a===Ke?a=K:a===Me||a===Ue?a=ne:(a=K,i=void 0);let g=a===K&&d[o+1].startsWith("/>")?" ":"";n+=a===ne?l+$t:u>=0?(t.push(h),l.slice(0,u)+Ve+l.slice(u)+j+g):l+j+(u===-2?o:g)}return[We(d,n+(d[e]||"<?>")+(s===2?"</svg>":s===3?"</math>":"")),t]},re=class d{constructor({strings:s,_$litType$:e},t){let i;this.parts=[];let n=0,a=0,o=s.length-1,l=this.parts,[h,_]=xt(s,e);if(this.el=d.createElement(h,t),C.currentNode=this.el.content,e===2||e===3){let u=this.el.content.firstChild;u.replaceWith(...u.childNodes)}for(;(i=C.nextNode())!==null&&l.length<o;){if(i.nodeType===1){if(i.hasAttributes())for(let u of i.getAttributeNames())if(u.endsWith(Ve)){let f=_[a++],g=i.getAttribute(u).split(j),v=/([.?@])?(.*)/.exec(f);l.push({type:1,index:n,name:v[2],strings:g,ctor:v[1]==="."?we:v[1]==="?"?xe:v[1]==="@"?ye:W}),i.removeAttribute(u)}else u.startsWith(j)&&(l.push({type:6,index:n}),i.removeAttribute(u));if(Ge.test(i.tagName)){let u=i.textContent.split(j),f=u.length-1;if(f>0){i.textContent=fe?fe.emptyScript:"";for(let g=0;g<f;g++)i.append(u[g],se()),C.nextNode(),l.push({type:2,index:++n});i.append(u[f],se())}}}else if(i.nodeType===8)if(i.data===Oe)l.push({type:2,index:n});else{let u=-1;for(;(u=i.data.indexOf(j,u+1))!==-1;)l.push({type:7,index:n}),u+=j.length-1}n++}}static createElement(s,e){let t=H.createElement("template");return t.innerHTML=s,t}};function G(d,s,e=d,t){if(s===V)return s;let i=t!==void 0?e._$Co?.[t]:e._$Cl,n=ae(s)?void 0:s._$litDirective$;return i?.constructor!==n&&(i?._$AO?.(!1),n===void 0?i=void 0:(i=new n(d),i._$AT(d,e,t)),t!==void 0?(e._$Co??=[])[t]=i:e._$Cl=i),i!==void 0&&(s=G(d,i._$AS(d,s.values),i,t)),s}var $e=class{constructor(s,e){this._$AV=[],this._$AN=void 0,this._$AD=s,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(s){let{el:{content:e},parts:t}=this._$AD,i=(s?.creationScope??H).importNode(e,!0);C.currentNode=i;let n=C.nextNode(),a=0,o=0,l=t[0];for(;l!==void 0;){if(a===l.index){let h;l.type===2?h=new le(n,n.nextSibling,this,s):l.type===1?h=new l.ctor(n,l.name,l.strings,this,s):l.type===6&&(h=new ze(n,this,s)),this._$AV.push(h),l=t[++o]}a!==l?.index&&(n=C.nextNode(),a++)}return C.currentNode=H,i}p(s){let e=0;for(let t of this._$AV)t!==void 0&&(t.strings!==void 0?(t._$AI(s,t,e),e+=t.strings.length-2):t._$AI(s[e])),e++}},le=class d{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(s,e,t,i){this.type=2,this._$AH=c,this._$AN=void 0,this._$AA=s,this._$AB=e,this._$AM=t,this.options=i,this._$Cv=i?.isConnected??!0}get parentNode(){let s=this._$AA.parentNode,e=this._$AM;return e!==void 0&&s?.nodeType===11&&(s=e.parentNode),s}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(s,e=this){s=G(this,s,e),ae(s)?s===c||s==null||s===""?(this._$AH!==c&&this._$AR(),this._$AH=c):s!==this._$AH&&s!==V&&this._(s):s._$litType$!==void 0?this.$(s):s.nodeType!==void 0?this.T(s):wt(s)?this.k(s):this._(s)}O(s){return this._$AA.parentNode.insertBefore(s,this._$AB)}T(s){this._$AH!==s&&(this._$AR(),this._$AH=this.O(s))}_(s){this._$AH!==c&&ae(this._$AH)?this._$AA.nextSibling.data=s:this.T(H.createTextNode(s)),this._$AH=s}$(s){let{values:e,_$litType$:t}=s,i=typeof t=="number"?this._$AC(s):(t.el===void 0&&(t.el=re.createElement(We(t.h,t.h[0]),this.options)),t);if(this._$AH?._$AD===i)this._$AH.p(e);else{let n=new $e(i,this),a=n.u(this.options);n.p(e),this.T(a),this._$AH=n}}_$AC(s){let e=He.get(s.strings);return e===void 0&&He.set(s.strings,e=new re(s)),e}k(s){Ee(this._$AH)||(this._$AH=[],this._$AR());let e=this._$AH,t,i=0;for(let n of s)i===e.length?e.push(t=new d(this.O(se()),this.O(se()),this,this.options)):t=e[i],t._$AI(n),i++;i<e.length&&(this._$AR(t&&t._$AB.nextSibling,i),e.length=i)}_$AR(s=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);s!==this._$AB;){let t=je(s).nextSibling;je(s).remove(),s=t}}setConnected(s){this._$AM===void 0&&(this._$Cv=s,this._$AP?.(s))}},W=class{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(s,e,t,i,n){this.type=1,this._$AH=c,this._$AN=void 0,this.element=s,this.name=e,this._$AM=i,this.options=n,t.length>2||t[0]!==""||t[1]!==""?(this._$AH=Array(t.length-1).fill(new String),this.strings=t):this._$AH=c}_$AI(s,e=this,t,i){let n=this.strings,a=!1;if(n===void 0)s=G(this,s,e,0),a=!ae(s)||s!==this._$AH&&s!==V,a&&(this._$AH=s);else{let o=s,l,h;for(s=n[0],l=0;l<n.length-1;l++)h=G(this,o[t+l],e,l),h===V&&(h=this._$AH[l]),a||=!ae(h)||h!==this._$AH[l],h===c?s=c:s!==c&&(s+=(h??"")+n[l+1]),this._$AH[l]=h}a&&!i&&this.j(s)}j(s){s===c?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,s??"")}},we=class extends W{constructor(){super(...arguments),this.type=3}j(s){this.element[this.name]=s===c?void 0:s}},xe=class extends W{constructor(){super(...arguments),this.type=4}j(s){this.element.toggleAttribute(this.name,!!s&&s!==c)}},ye=class extends W{constructor(s,e,t,i,n){super(s,e,t,i,n),this.type=5}_$AI(s,e=this){if((s=G(this,s,e,0)??c)===V)return;let t=this._$AH,i=s===c&&t!==c||s.capture!==t.capture||s.once!==t.once||s.passive!==t.passive,n=s!==c&&(t===c||i);i&&this.element.removeEventListener(this.name,this,t),n&&this.element.addEventListener(this.name,this,s),this._$AH=s}handleEvent(s){typeof this._$AH=="function"?this._$AH.call(this.options?.host??this.element,s):this._$AH.handleEvent(s)}},ze=class{constructor(s,e,t){this.element=s,this.type=6,this._$AN=void 0,this._$AM=e,this.options=t}get _$AU(){return this._$AM._$AU}_$AI(s){G(this,s)}};var yt=Ae.litHtmlPolyfillSupport;yt?.(re,le),(Ae.litHtmlVersions??=[]).push("3.3.3");var Ze=(d,s,e)=>{let t=e?.renderBefore??s,i=t._$litPart$;if(i===void 0){let n=e?.renderBefore??null;t._$litPart$=i=new le(s.insertBefore(se(),n),n,void 0,e??{})}return i._$AI(d),i};var Te=globalThis,I=class extends L{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){let s=super.createRenderRoot();return this.renderOptions.renderBefore??=s.firstChild,s}update(s){let e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(s),this._$Do=Ze(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return V}};I._$litElement$=!0,I.finalized=!0,Te.litElementHydrateSupport?.({LitElement:I});var zt=Te.litElementPolyfillSupport;zt?.({LitElement:I});(Te.litElementVersions??=[]).push("4.2.2");var At={attribute:!0,type:String,converter:ie,reflect:!1,hasChanged:ge},Et=(d=At,s,e)=>{let{kind:t,metadata:i}=e,n=globalThis.litPropertyMetadata.get(i);if(n===void 0&&globalThis.litPropertyMetadata.set(i,n=new Map),t==="setter"&&((d=Object.create(d)).wrapped=!0),n.set(e.name,d),t==="accessor"){let{name:a}=e;return{set(o){let l=s.get.call(this);s.set.call(this,o),this.requestUpdate(a,l,d,!0,o)},init(o){return o!==void 0&&this.C(a,void 0,d,o),o}}}if(t==="setter"){let{name:a}=e;return function(o){let l=this[a];s.call(this,o),this.requestUpdate(a,l,d,!0,o)}}throw Error("Unsupported decorator location: "+t)};function E(d){return(s,e)=>typeof e=="object"?Et(d,s,e):((t,i,n)=>{let a=i.hasOwnProperty(n);return i.constructor.createProperty(n,t),a?Object.getOwnPropertyDescriptor(i,n):void 0})(d,s,e)}function k(d){return E({...d,state:!0,attribute:!1})}var q=class{constructor(s){this.hass=s}call(s,e={}){return this.hass.callWS({type:`learnbuddy/${s}`,...e})}uebersicht(){return this.call("overview")}dashboard(s){return this.call("dashboard",{kind_id:s})}frageStellen(s,e,t={},i=1){return this.call("ask",{kind_id:s,fach_id:e,...t,anzahl:i})}async abfrageUmfang(s,e,t){return(await this.call("ask_count",{kind_id:s,fach_id:e,...t})).aufgaben}async frageAbbrechen(s){return(await this.call("cancel_question",{kind_id:s})).abgebrochen}setzeAktiv(s,e){return this.call("set_active",{kind_id:s,aktiv:e})}fortschritt(s,e){return this.call("progress",{kind_id:s,tage:e})}wochenreport(s,e){return this.call("weekly_report",{kind_id:s,versatz:e})}async kalenderPruefen(s){return(await this.call("calendar/refresh",{kind_id:s})).gelesen}kalenderIgnorieren(s,e){return this.call("calendar/ignore",{kind_id:s,uid:e})}kalenderWiederherstellen(s){return this.call("calendar/restore",{kind_id:s})}async fachAnlegen(s,e,t,i){return(await this.call("subjects/create",{kind_id:s,typ:e,name:t||null,sprache:i})).fach_id}absenderZuordnen(s,e){return this.call("sender/assign",{kind_id:s,kennung:e})}absenderVerwerfen(s){return this.call("sender/dismiss",{kennung:s})}async aufgaben(s){return(await this.call("tasks/list",{fach_id:s})).aufgaben}aufgabeAnlegen(s,e){return this.call("tasks/create",{fach_id:s,aufgabe:e})}aufgabeAendern(s,e,t){return this.call("tasks/update",{fach_id:s,aufgabe_id:e,aenderungen:t})}aufgabenLoeschen(s,e,t){return this.call("tasks/delete",{fach_id:s,aufgabe_ids:e,bestaetigt:t})}async lektionHinzufuegen(s,e){return(await this.call("lessons/add",{fach_id:s,name:e})).lektionen}async lektionLoeschen(s,e){return(await this.call("lessons/delete",{fach_id:s,name:e})).lektionen}async bereichHinzufuegen(s,e,t=null){return(await this.call("sections/add",{fach_id:s,name:e,art:t})).bereiche}async bereichUmbenennen(s,e,t){return(await this.call("sections/rename",{fach_id:s,bereich:e,name:t})).bereiche}async bereichLoeschen(s,e){return(await this.call("sections/delete",{fach_id:s,bereich:e})).bereiche}importVorschau(s,e,t){return this.call("tasks/import_text",{fach_id:s,inhalt:e,trennzeichen:t,vorschau:!0})}importText(s,e,t,i,n,a=null){return this.call("tasks/import_text",{fach_id:s,inhalt:e,lektion:t,trennzeichen:i,geprueft:n,bereich:a})}generieren(s,e){return this.call("tasks/generate",{fach_id:s,...e})}satzaufgabenErzeugen(s,e){return this.call("tasks/generate_sentences",{fach_id:s,...e})}fragenAusSeiten(s,e){return this.call("tasks/generate_from_pages",{fach_id:s,...e})}fotoAuslesen(s,e){return this.call("tasks/photo_extract",{fach_id:s,seiten:e})}fotoUebernehmen(s,e,t,i=null){return this.call("tasks/photo_accept",{fach_id:s,zeilen:e,lektion:t,bereich:i})}nachrechnen(s,e){return this.call("tasks/verify",{fach_id:s,aufgabe_ids:e})}rechenwegeErzeugen(s,e){return this.call("tasks/generate_steps",{fach_id:s,aufgabe_ids:e})}async bildHochladen(s,e=!1){let t=new FormData;t.append("file",s);let i=`/api/learnbuddy/bilder${e?"?zweck=seite":""}`,n=await this.hass.fetchWithAuth(i,{method:"POST",body:t}),a=await n.json().catch(()=>({}));if(!n.ok||!a.bild)throw{code:String(n.status),message:a.message??"bild_ungueltig"};return a.bild}async bildAdresse(s){return(await this.hass.callWS({type:"auth/sign_path",path:`/api/learnbuddy/bilder/${s}`,expires:3600})).path}async vorschlagUebernehmen(s,e){return(await this.call("tasks/accept_suggestion",{fach_id:s,aufgabe_ids:e})).uebernommen}async alsGeprueftMarkieren(s,e){return(await this.call("tasks/mark_verified",{fach_id:s,aufgabe_ids:e})).markiert}export(s,e){return this.call("tasks/export",{fach_id:s,mit_statistik:e})}importJson(s,e,t,i,n=null){return this.call("tasks/import_json",{fach_id:s,daten:e,mit_statistik:t,lektion:i,bereich:n})}async arbeitSpeichern(s,e){return(await this.call("exams/save",{arbeit_id:s,arbeit:e})).arbeit_id}simulieren(s,e,t){return this.call("exams/simulate",{arbeit_id:s,anzahl:e,weg:t})}async simulationAbbrechen(s){return(await this.call("exams/simulate_stop",{kind_id:s})).abgebrochen}arbeitLoeschen(s){return this.call("exams/delete",{arbeit_id:s})}};var Je={titel:"LearnBuddy",kind:"Kind",fach:"Fach",keine_kinder:"Es ist noch kein Kind angelegt. Lege unter Einstellungen \u2192 Ger\xE4te & Dienste \u2192 LearnBuddy zuerst ein Kind und ein Fach an.",keine_faecher:"F\xFCr dieses Kind gibt es noch kein Fach.",tab_uebersicht:"\xDCbersicht",status_aktiv:"Abfragen aktiv",status_pausiert:"Abfragen pausiert",status_pausiert_bis:"Pausiert bis {zeit}",status_nichts_geplant:"Keine Abfrage geplant",pausieren:"Pausieren",fortsetzen:"Fortsetzen",offene_frage:"Offene Frage",offene_frage_text:"{fach}, gestellt um {von}, l\xE4uft bis {bis}",offene_frage_ohne_frist:"{fach}, gestellt um {von}, ohne Zeitlimit",offene_frage_angehalten:"{fach}, gestellt um {von}, Zeit angehalten (pausiert)",keine_offene_frage:"Keine offene Frage",naechste_abfrage:"N\xE4chste Abfrage",keine_geplant:"Keine geplant",nach_offener_frage:"Nach der offenen Frage",letzte_frage:"Letzte Frage",noch_nie:"Noch nie",jetzt_fragen_kurz:"Jetzt abfragen",egal_welches:"Egal welches Fach",frage_gesendet:"Die Frage wurde gesendet.",fragen_gesendet:"Die Abfrage wurde gestartet.",abfrage_titel:"Jetzt abfragen",abfrage_fach:"Fach",abfrage_lektionen:"Lektion",abfrage_seite_kurz:"S.",abfrage_ohne_lektion:"{n} Aufgaben ohne Lektion sind nur dabei, wenn alles angehakt ist.",abfrage_laeuft:"Laufende Abfrage",abfrage_laeuft_text:"{ort} \xB7 noch {n} weitere",abfrage_seiten:"S. {von}\u2013{bis}",abfrage_ab_seite:"ab S. {n}",abfrage_bis_seite:"bis S. {n}",abfrage_ab_fehlerquote:"Fehlerquote ab {n} %",abfrage_seite_von:"Buchseite von",abfrage_seite_bis:"Buchseite bis",abfrage_fehlerquote:"Fehlerquote mindestens (%)",abfrage_filter_hinweis:"Leere Felder schr\xE4nken nicht ein. Die Buchseiten gelten je Lektion; mit Seitenangabe z\xE4hlen dort nur Aufgaben mit Buchseite. Mit Fehlerquote z\xE4hlen nur schon beantwortete Aufgaben. Ungepr\xFCfte Aufgaben werden nie abgefragt.",abfrage_anzahl:"Anzahl der Aufgaben (1 bis 20)",abfrage_frist:"Ablaufzeit je Frage (Minuten)",abfrage_frist_hinweis:"Leer = allgemeine Einstellung, 0 = l\xE4uft nie ab. Gilt nur f\xFCr diese Abfrage.",abfrage_umfang:"Zur Auswahl stehen {n} Aufgaben. Sie kommen nacheinander, die n\xE4chste nach jeder Antwort.",abfrage_umfang_laedt:"Die Auswahl wird gez\xE4hlt \u2026",err_seiten_verdreht:"Die erste Buchseite liegt hinter der letzten.",abfrage_senden:"Abfrage starten",kz_gefragt:"Gestellte Fragen",kz_richtig:"Richtig",kz_falsch:"Falsch",kz_unbeantwortet:"Unbeantwortet",ki_keine:"F\xFCr dieses Fach ist keine KI-Entit\xE4t gew\xE4hlt.",ki_nicht_verfuegbar:"Die gew\xE4hlte KI-Entit\xE4t ist gerade nicht verf\xFCgbar.",ki_ohne_bilder:"Die gew\xE4hlte KI-Entit\xE4t kann keine Bilder lesen.",ki_hinweis_keine:"F\xFCr dieses Fach ist keine KI-Entit\xE4t gew\xE4hlt. Aufgaben erzeugen, Rechenwege schreiben und der Import aus Fotos sind deshalb ausgeschaltet; Antworten werden nur lokal bewertet. Einrichten unter Einstellungen \u2192 Ger\xE4te & Dienste \u2192 LearnBuddy \u2192 Zahnrad.",ki_hinweis_ohne_bilder:"Die gew\xE4hlte KI-Entit\xE4t kann keine Bilder lesen. Funktionen mit Fotos sind deshalb ausgeschaltet.",ki_hinweis_nicht_verfuegbar:"Die gew\xE4hlte KI-Entit\xE4t ist gerade nicht verf\xFCgbar. Die KI-Funktionen sind ausgeschaltet und Antworten werden nur lokal bewertet. Pr\xFCfe die KI-Integration in Home Assistant.",ki_hinweis_sach_zusatz:" Kurzantworten werden so lange nicht gestellt, nur Auswahlfragen.",err_ki_nicht_verfuegbar:"Die gew\xE4hlte KI-Entit\xE4t ist gerade nicht verf\xFCgbar.",err_ki_nicht_erreichbar:"Die KI war nicht erreichbar oder hat den Auftrag abgelehnt (Verbindung, Konto, Guthaben). Bitte sp\xE4ter erneut versuchen.",neue_version:"LearnBuddy wurde aktualisiert. Diese Seite zeigt noch die alte Version; lade sie neu, damit alle Funktionen sichtbar sind.",neu_laden:"Seite neu laden",absender_unbekannt:"Eine Nachricht von einem unbekannten Absender ist eingegangen: {kennung} ({quelle}). Sie konnte keinem Kind zugeordnet werden.",absender_uebernehmen:"Als Absenderkennung f\xFCr {name} \xFCbernehmen",absender_verwerfen:"Verwerfen",absender_uebernommen:"Absenderkennung \xFCbernommen. Die n\xE4chste Antwort wird zugeordnet.",quelle_telegram:"Telegram",quelle_whatsapp:"WhatsApp",quelle_event:"eigenes Ereignis",err_absender_leer:"Die Absenderkennung ist leer.",err_absender_vergeben:"Diese Absenderkennung geh\xF6rt schon zu einem anderen Kind.",absender_fehlt:"Bei diesem Kind fehlt die Absenderkennung (Chat-ID oder Telefonnummer). Fragen gehen raus, aber Antworten k\xF6nnen nicht zugeordnet werden. Eintragen unter Einstellungen \u2192 Ger\xE4te & Dienste \u2192 LearnBuddy \u2192 Kind bearbeiten.",sim_plan:"Simulation einplanen (optional)",sim_plan_aktiv:"Zu einem festen Zeitpunkt automatisch eine Simulation schicken",sim_plan_hilfe:"Zum gew\xE4hlten Zeitpunkt bekommt das Kind automatisch eine Simulation dieser Arbeit per Messenger: das Aufgabenblatt als Bild, dann die Aufgaben nacheinander, am Ende die Auswertung. Ist das Kind dann pausiert oder l\xE4uft schon eine Simulation, entf\xE4llt sie.",sim_plan_um:"Datum und Uhrzeit",sim_plan_offen:"Simulation geplant f\xFCr {zeit} ({n} Aufgaben)",sim_plan_erledigt:"Geplante Simulation vom {zeit} ist erledigt",err_simulation_um_vergangen:"Der Zeitpunkt der Simulation liegt in der Vergangenheit.",err_simulation_um_ungueltig:"Bitte Datum und Uhrzeit der Simulation pr\xFCfen.",sim_knopf_arbeit:"Klassenarbeit simulieren",sim_knopf_hue:"H\xDC simulieren",sim_hilfe:"Aus den freigegebenen Aufgaben dieser Arbeit wird zuf\xE4llig ein Aufgabenblatt zusammengestellt. Die Lernstatistik bleibt davon unber\xFChrt.",sim_weg_ausdruck:"Per Ausdruck",sim_weg_ausdruck_hilfe:"Das Aufgabenblatt entsteht als Bild zum Herunterladen und Drucken. Es wird nichts verschickt.",sim_weg_messenger:"Per Messenger",sim_weg_messenger_hilfe:"{name} bekommt das Blatt als Bild und danach die Aufgaben nacheinander. R\xFCckmeldung gibt es erst am Ende: Punkte, Prozent und die L\xF6sungen zu den Fehlern.",sim_anzahl:"Anzahl der Aufgaben",sim_verfuegbar:"Auf diesem Weg verf\xFCgbar: {n}",sim_keine_aufgaben:"F\xFCr diese Arbeit gibt es keine freigegebenen Aufgaben.",sim_start_ausdruck:"Blatt erzeugen",sim_start_messenger:"Simulation starten",sim_gestartet:"Die Simulation mit {n} Aufgaben l\xE4uft. Die Auswertung geht am Ende ans Kind.",sim_blatt_hilfe:"Das Blatt mit {n} Aufgaben ist fertig. Die Bilder werden nach 24 Stunden gel\xF6scht; lade sie herunter, wenn du sie behalten willst.",sim_herunterladen:"Seite {n} herunterladen",sim_drucken:"Drucken",sim_druck_blockiert:"Der Browser hat das Druckfenster blockiert. Lade die Seiten herunter und drucke sie von dort.",sim_laeuft:"Simulation",sim_laeuft_text:"l\xE4uft: Aufgabe {nr} von {n}",sim_abbrechen:"Simulation abbrechen",frage_abbrechen:"Frage abbrechen",frage_abbrechen_frage:"Die offene Frage zur\xFCckziehen? Sie wird nicht gez\xE4hlt, und das Kind bekommt eine kurze Nachricht.",sim_abbrechen_frage:"Die laufende Simulation ohne Auswertung beenden?",err_simulation_laeuft:"F\xFCr dieses Kind l\xE4uft gerade eine Simulation.",err_weg_ungueltig:"Unbekannter Weg f\xFCr die Simulation.",foto_import:"Aus Foto importieren",foto_titel:"Aufgaben aus Fotos auslesen",foto_hilfe:"Fotografiere die Vokabelseiten m\xF6glichst gerade und gut lesbar. Die KI liest Wort, \xDCbersetzung, Seitenzahl und den Verweis auf die Unit-Seite aus. Beispiels\xE4tze und Lautschrift l\xE4sst sie weg. Danach pr\xFCfst du die Vorschau. Die Fotos gehen an den KI-Dienst und werden anschlie\xDFend gel\xF6scht.",foto_hilfe_mathe:"Fotografiere Buchseite oder Arbeitsblatt m\xF6glichst gerade und gut lesbar. Die KI liest die Aufgaben aus und l\xF6st sie; die L\xF6sungen werden nachgerechnet. Danach pr\xFCfst du die Vorschau. Die Fotos gehen an den KI-Dienst und werden anschlie\xDFend gel\xF6scht.",foto_auslesen:"Auslesen",foto_leer:"Auf den Fotos wurde nichts Verwertbares gefunden.",foto_vorschau_titel:"Vorschau pr\xFCfen",foto_vorschau_hilfe:"Vergleiche die Zeilen mit dem Buch, korrigiere sie bei Bedarf und entferne das H\xE4kchen bei allem, was nicht \xFCbernommen werden soll. Gespeichert wird erst mit \u201E\xDCbernehmen\u201C.",foto_vorhanden:"schon vorhanden",foto_braucht_bild:"braucht eine Abbildung \u2013 als \u201EAufgabe mit Bild\u201C anlegen",foto_unbestaetigt:"L\xF6sung nicht best\xE4tigt",foto_uebernehmen:"{n} \xFCbernehmen",foto_fertig:"{n} \xFCbernommen, {doppelt} schon vorhanden, {fehler} fehlerhaft.",foto_fehler:"{n} Zeilen sind fehlerhaft (leere oder zu lange Felder). Bitte korrigieren.",err_foto_sachfach:"F\xFCr Sachf\xE4cher gibt es \u201EFragen aus Buchseite\u201C.",kz_teilweise:"Teilweise richtig",neue_frage:"Neue Frage",spalte_frage:"Frage",spalte_musterantwort:"Musterantwort",spalte_satz:"Satz",spalte_satz_loesung:"L\xF6sung",richtige_antwort:"Richtige Antwort",form:"Frageform",form_kurz:"Kurzantwort",form_auswahl:"Auswahl",form_gemischt:"Gemischt",form_luecke:"L\xFCckentext",hilfe_label:"\xDCbersetzung als Hilfe ({sprache})",hilfe_senden:"\xDCbersetzung mitsenden",hilfe_senden_kurz:"\xDCbersetzung mitsenden",hilfe_alle_an:"\xDCbersetzung mitsenden",hilfe_alle_aus:"Ohne \xDCbersetzung senden",hilfe_gesetzt:"{n} Aufgaben ge\xE4ndert.",err_hilfe_senden_ungueltig:"Ung\xFCltige Angabe.",err_hilfe_ungueltig:"Die \xDCbersetzung ist zu lang.",form_uebersetzung:"\xDCbersetzung",saetze_generieren:"S\xE4tze generieren",saetze_foto:"S\xE4tze aus Foto",saetze_hilfe_text:"Die KI schreibt kurze S\xE4tze mit einer L\xFCcke, die das Kind ausf\xFCllt. Die Aufgaben warten danach auf deine Freigabe (Filter \u201EGepr\xFCft: nein\u201C).",saetze_hilfe_foto:"Die KI liest \xDCbungen von Buchseiten oder schreibt \xE4hnliche neue. Die Aufgaben warten danach auf deine Freigabe.",saetze_beschreibung:"Beschreibung und W\xFCnsche",saetze_beschreibung_hilfe:"z. B. Personalpronomen in kurzen S\xE4tzen",saetze_uebernehmen:"\xDCbungen von der Seite \xFCbernehmen",saetze_aehnliche:"\xC4hnliche neue Aufgaben erfinden",saetze_laeuft:"Die KI schreibt die S\xE4tze. Das kann eine Minute dauern \u2026",saetze_start:"Erzeugen",saetze_fertig:"{erzeugt} Aufgaben erzeugt, {verworfen} unbrauchbar, {doppelt} doppelt. Sie warten auf deine Freigabe.",err_saetze_nur_satzbereich:"Das geht nur in einem Thema f\xFCr S\xE4tze.",bereich_art:"Art der Aufgaben",bereich_art_vokabel:"Vokabeln (Wortpaare)",bereich_art_satz:"S\xE4tze (L\xFCckentext, Auswahl, Kurzantwort)",err_import_satz:"In ein Satz-Thema l\xE4sst sich nur per JSON-Import oder von Hand eintragen.",err_foto_satz:"Das Foto-Import kennt nur Vokabeln.",kernpunkte:"Kernpunkte (einer je Zeile, optional): was eine vollst\xE4ndige Antwort enth\xE4lt",falsche_optionen:"Falsche Antworten (eine je Zeile, 2 bis 3)",belegstelle:"Belegstelle",quellseite_anzeigen:"Buchseite anzeigen",sach_ohne_ki:"F\xFCr dieses Fach ist keine KI-Entit\xE4t gew\xE4hlt. Deshalb werden nur Auswahlfragen gestellt; Kurzantworten kann nur die KI bewerten.",seiten:"Fragen aus Buchseite",seiten_titel:"Fragen aus Buchseiten erzeugen",seiten_hilfe:"Fotografiere die Seiten m\xF6glichst gerade und gut lesbar. Die KI liest sie und schl\xE4gt Fragen mit Musterantwort vor. Die Fragen warten danach auf deine Freigabe. Die Fotos gehen an den KI-Dienst.",seiten_waehlen:"Fotos der Seiten (bis zu {n})",seiten_zu_viele:"Es werden nur die ersten {n} Fotos verwendet.",seiten_anzahl:"Anzahl Fragen",seiten_schwerpunkt:"Schwerpunkt (optional)",seiten_schwerpunkt_hilfe:"z. B. nur der Abschnitt \xFCber die Zellatmung",seiten_start:"Fragen erzeugen",seiten_laeuft:"Die KI liest die Seiten. Das kann eine Minute dauern \u2026",seiten_fertig:"{erzeugt} Fragen erzeugt, {verworfen} unbrauchbar, {doppelt} doppelt. Bitte pr\xFCfen und freigeben.",err_sach_frage_ungueltig:"Bitte eine Frage eingeben (h\xF6chstens 500 Zeichen).",err_sach_antwort_ungueltig:"Bitte eine Antwort eingeben (h\xF6chstens 500 Zeichen).",err_form_ungueltig:"Unbekannte Frageform.",err_kernpunkte_ungueltig:"H\xF6chstens 6 Kernpunkte mit je 200 Zeichen.",err_falsche_optionen_ungueltig:"Eine Auswahlfrage braucht 2 bis 3 falsche Antworten, die sich untereinander und von der richtigen unterscheiden.",err_stelle_ungueltig:"Die Belegstelle darf h\xF6chstens 300 Zeichen lang sein.",err_import_sachfach:"In Sachf\xE4cher lassen sich keine Listen importieren.",err_seiten_nur_sachfach:"Fragen aus Buchseiten gibt es nur f\xFCr Sachf\xE4cher.",err_seiten_ungueltig:"Bitte 1 bis 4 Fotos w\xE4hlen.",err_ki_ohne_bilder:"Die gew\xE4hlte KI-Entit\xE4t kann keine Bilder lesen.",kz_trefferquote:"Trefferquote",kz_aufgaben:"Aufgaben",fortschritt:"Fortschritt",fortschritt_zeitraum:"Zeitraum",fortschritt_tage:"{n} Tage",fortschritt_seit:"Der Verlauf wird seit dem {datum} aufgezeichnet.",fortschritt_leer:"Noch nichts aufgezeichnet. Sobald Fragen gestellt und beantwortet werden, erscheint hier der Verlauf.",fortschritt_antworten:"Antworten je Tag",fortschritt_quote:"Trefferquote",fortschritt_quote_hilfe:"\xDCber die jeweils letzten 7 Tage gerechnet.",fortschritt_lernstand:"Lernstand je Fach",fortschritt_lernstand_hilfe:"Anteil der Karten ab Box 3.",fortschritt_schwach:"Schwachstellen",fortschritt_lektionen:"Lektionen mit den meisten Fehlern",fortschritt_aufgaben:"Aufgaben mit den meisten Fehlern",fortschritt_keine_schwach:"Keine auff\xE4lligen Lektionen oder Aufgaben im Zeitraum.",fortschritt_simulationen:"Simulationen",fortschritt_keine_sim:"Keine Simulation im Zeitraum.",fortschritt_tabelle:"Als Tabelle",fortschritt_diagramm:"Als Diagramm",fortschritt_keine_daten:"Keine Antworten im Zeitraum.",reihe_tag:"Tag",reihe_gefragt:"Gestellt",reihe_richtig:"Richtig",reihe_teilweise:"Teilweise",reihe_falsch:"Falsch",reihe_unbeantwortet:"Unbeantwortet",fehler_n:"{n}\xD7 falsch",fehlerquote_n:"{n} % falsch ({f} von {g})",sim_punkte:"{p} von {m} Punkten ({proz} %)",sim_unvollstaendig:"Zeit abgelaufen",wochenreport:"Wochenreport",report_woche:"Woche vom {von} bis {bis}",report_laufend:"laufende Woche",report_frueher:"Vorige Woche",report_spaeter:"N\xE4chste Woche",report_kennzahlen:"Kennzahlen der Woche",report_tage_aktiv:"Tage mit Antworten",report_vergleich:"Vergleich zur Vorwoche",report_antworten:"Antworten",report_vorwoche:"Vorwoche: {wert}",report_lernstand:"Lernstand {fach}",report_keine_vorwoche:"keine Daten",report_schwach:"Schwachstellen",report_anstehend:"Anstehende Arbeiten (n\xE4chste 14 Tage)",report_keine_arbeiten:"Keine Arbeit in den n\xE4chsten 14 Tagen.",report_in_tagen:"in {n} Tagen",report_heute:"heute",report_morgen:"morgen",report_sicher:"{n} % sicher",report_vorschlaege:"Noch nicht eingetragen (aus dem Kalender)",report_simulationen:"Simulationen",report_loesung:"L\xF6sung: {loesung}",report_drucken:"Drucken",report_kopieren:"Als Text kopieren",report_kopiert:"In die Zwischenablage kopiert.",report_kopieren_fehler:"Kopieren wurde vom Browser nicht erlaubt.",report_druck_blockiert:"Der Browser hat das Druckfenster blockiert.",err_verlauf_aus:"Der Verlauf ist in den Optionen ausgeschaltet.",err_wochenreport_aus:"Der Wochenreport ist in den Optionen ausgeschaltet.",err_zeitraum_ungueltig:"Dieser Zeitraum ist nicht m\xF6glich.",anstehend:"Anstehende Arbeiten und H\xDCs",vorschlaege:"Vorschl\xE4ge aus dem Kalender",vorschlag_eintragen:"Eintragen",vorschlag_ignorieren:"Ignorieren",vorschlag_gleicher_tag:"Am selben Tag gibt es schon: {arbeiten}",keine_vorschlaege:"Keine neuen Termine im Kalender.",kalender_pruefen:"Jetzt pr\xFCfen",kalender_geprueft:"Zuletzt gepr\xFCft: {zeit}",kalender_nie:"Der Kalender wurde noch nicht gelesen.",kalender_fehler:"Der Kalender konnte zuletzt nicht gelesen werden. Angezeigt wird der Stand davor.",kalender_ignorierte:"{n} ignorierte wieder anzeigen",arbeit_fach:"Fach",arbeit_fach_waehlen:"\u2013 bitte w\xE4hlen \u2013",arbeit_fehlt_fach:"Zum Speichern fehlt noch das Fach.",fach_neu:"Neues Fach",fach_neu_titel:"Neues Fach anlegen",fach_neu_art:"Art des Fachs",fach_neu_sprache:"Sprache",fach_neu_name:"Name",fach_neu_name_optional:"Name (leer: wie die Sprache bzw. \u201EMathe\u201C)",fach_neu_anlegen:"Fach anlegen",fach_neu_fehlt:"F\xFCr dieses Kind gibt es noch kein Fach. Lege zuerst eines an.",fachart_fremdsprache:"Fremdsprache",err_kalender_aus:"F\xFCr dieses Kind ist kein Pr\xFCfungskalender eingeschaltet.",err_termin_unbekannt:"Der Termin steht nicht mehr im Kalender.",err_sprache_ungueltig:"Bitte eine Fremdsprache w\xE4hlen, die nicht die Muttersprache ist.",err_fachart_ungueltig:"Bitte die Art des Fachs w\xE4hlen.",err_fach_vorhanden:"Ein Fach mit diesem Namen gibt es schon.",err_name_leer:"Bitte einen Namen eingeben.",keine_anstehend:"Keine Arbeit oder H\xDC geplant.",heute:"heute",morgen:"morgen",in_tagen:"in {n} Tagen",heute_abfragen:"heute {n} Abfragen",sicher:"{n} % sicher",sicher_hinweis:"Anteil der Karten in Box 3 bis 5",faecher_titel:"F\xE4cher",fach_aufgaben:"{n} Aufgaben in {l} Lektionen",ungeprueft:"{n} ungepr\xFCft",aufgaben_oeffnen:"Aufgaben",lernstand:"Lernstand",lernstand_hinweis:"Karten je Leitner-Box: Box 1 ist neu oder zuletzt falsch, Box 5 sitzt sicher.",box:"Box {n}",karten:"{n} Karten",keine_karten:"Noch keine Aufgaben vorhanden.",schwierig:"Schwierigste Vokabeln",keine_schwierig:"Noch keine falschen Antworten.",fehler_mal:"{n} \xD7 falsch",arbeiten_oeffnen:"Arbeiten verwalten",tab_aufgaben:"Aufgaben",tab_arbeiten:"Arbeiten",laden:"Lade \u2026",neue_aufgabe:"Neue Aufgabe",importieren:"Importieren",lektion_hinzufuegen:"Lektion hinzuf\xFCgen",lektion_titel:"Lektionen",lektion_hilfe:"Lektionen werden hier angelegt und stehen danach beim Anlegen, Importieren und in Arbeiten zur Auswahl.",lektion_name:"Name der Lektion",lektion_keine:"Noch keine Lektion angelegt.",lektion_anzahl:"{n} Aufgaben",lektion_loeschen_hinweis:"Nur leere Lektionen lassen sich l\xF6schen",lektion_angelegt:"\u201E{name}\u201C angelegt.",keine_lektion:"\u2013 keine \u2013",export_json:"JSON exportieren",import_json:"JSON importieren",ausgewaehlt:"{n} ausgew\xE4hlt",loeschen:"L\xF6schen",arbeit_aus_auswahl:"Arbeit aus Auswahl",filter_suche:"Suche",filter_lektion:"Lektion",filter_quelle:"Quelle",filter_geprueft:"Gepr\xFCft",filter_fehlerquote:"Fehlerquote ab %",filter_von:"Erstellt ab",filter_bis:"Erstellt bis",filter_seite_von:"Buchseite von",filter_seite_bis:"Buchseite bis",filter_zuruecksetzen:"Filter zur\xFCcksetzen",alle:"Alle",ohne_lektion:"Ohne Lektion",ja:"Ja",nein:"Nein",quelle_manuell:"Manuell",quelle_upload:"Upload",quelle_generiert:"Generiert",spalte_alternativen:"Alternativen",spalte_hinweis:"Hinweis",aufgabenart_titel:"Was f\xFCr eine Aufgabe?",aufgabenart_rechnen:"Rechenaufgabe",aufgabenart_rechnen_hilfe:"Nur Text, zum Beispiel 3/4 + 1/8 oder eine Textaufgabe.",aufgabenart_bild:"Aufgabe mit Bild",aufgabenart_bild_hilfe:"Ein Diagramm, eine Kurve oder eine Zeichnung ist die Grundlage. Das Bild wird mit der Aufgabe verschickt.",bildaufgabe_titel:"Aufgabe mit Bild",bild:"Bild",bild_waehlen:"Bild ausw\xE4hlen",bild_hilfe:"PNG, JPEG, WebP oder GIF, h\xF6chstens 10 MB. Das Bild wird verkleinert gespeichert, Zusatzdaten wie der Aufnahmeort werden entfernt.",bild_vorschau:"Vorschau des Bildes",bild_anzeigen:"Bild anzeigen",einleitung:"Einleitung (optional)",einleitung_hilfe:"Steht vor jeder Teilaufgabe, z. B. \u201EIn anderen L\xE4ndern sind die Schulferien \u2026\u201C",teilaufgaben:"Teilaufgaben",teilaufgaben_hilfe:"Jede Zeile wird eine eigene Aufgabe mit demselben Bild und wird einzeln abgefragt.",teilaufgabe:"Teilaufgabe {n}",teilaufgabe_hinzufuegen:"Teilaufgabe hinzuf\xFCgen",teilaufgabe_entfernen:"Teilaufgabe entfernen",bildaufgaben_gespeichert:"Aufgaben mit Bild angelegt: {n}",bild_fehlt:"Bitte ein Bild ausw\xE4hlen.",teil_fehlt:"Bitte mindestens eine Teilaufgabe mit L\xF6sung eintragen.",keine_bilder:"{name} kann im Moment keine Bilder empfangen. Aufgaben mit Bild werden deshalb nicht gestellt. Bilder gehen automatisch \xFCber Telegram; f\xFCr andere Messenger tr\xE4gst du beim Kind eine \u201EAktion f\xFCr Bilder\u201C ein.",export_ohne_bild:"Exportiert. Aufgaben mit Bild sind nicht enthalten: {n}",spalte_aufgabe:"Aufgabe",spalte_loesung:"L\xF6sung",spalte_schwierigkeit:"Stufe",schwierigkeit:"Schwierigkeit",schwierigkeit_hinweis:"1 = leicht, 5 = schwer",schwierigkeit_beliebig:"beliebig",rechenweg:"Rechenweg (ein Schritt je Zeile, optional)",rechenweg_vorhanden:"Rechenweg hinterlegt",verifikation_rechnerisch:"nachgerechnet",verifikation_ki:"von der KI gegengepr\xFCft",verifikation_manuell:"selbst nachgerechnet",selbst_nachgerechnet:"Selbst nachgerechnet",selbst_nachgerechnet_hinweis:"Markiert die L\xF6sungen der Auswahl als von dir gepr\xFCft. Ein abweichender Vorschlag wird verworfen.",selbst_nachgerechnet_fertig:"Als selbst nachgerechnet markiert: {n}",verifikation_abweichung:"L\xF6sung weicht ab",nachrechnen:"Auswahl nachrechnen",nachrechnen_laeuft:"Die Aufgaben werden nachgerechnet \u2026",nachgerechnet:"{bestaetigt} best\xE4tigt, {abweichend} abweichend, {offen} nicht pr\xFCfbar.",nachrechnen_titel:"Ergebnis des Nachrechnens",nachrechnen_zusammenfassung:"{bestaetigt} L\xF6sungen wurden best\xE4tigt, {offen} Aufgaben lie\xDFen sich nicht pr\xFCfen. Bei diesen Aufgaben kommt ein anderes Ergebnis heraus. Ge\xE4ndert wurde nichts. Du kannst den gefundenen Wert je Aufgabe \xFCbernehmen oder die Aufgabe sp\xE4ter in der Tabelle bearbeiten. Ein Ergebnis der KI kann auch selbst falsch sein oder die Aufgabe ist mehrdeutig gestellt.",nachrechnen_eingetragen:"eingetragen",nachrechnen_berechnet:"berechnet",nachrechnen_ki:"die KI kommt auf",nur_abweichende:"Diese Aufgaben anzeigen",rechenweg_erzeugen:"Rechenweg erzeugen",rechenweg_erzeugen_laeuft:"Die KI schreibt die Rechenwege \u2026",rechenwege_erzeugt:"Rechenwege erzeugt: {erzeugt}. Schon vorhanden: {vorhanden}. \xDCbersprungen, weil die L\xF6sung abweicht: {abweichend}. Fehlgeschlagen: {fehlgeschlagen}.",vorschlag:"Vorschlag",vorschlag_ki:"Vorschlag der KI",uebernehmen_loesung:"\xDCbernehmen",uebernehmen_titel:"Ersetzt die eingetragene L\xF6sung durch diesen Wert. Der gespeicherte Rechenweg und die bisherige Statistik der Aufgabe werden dabei gel\xF6scht.",alle_uebernehmen:"Alle \xFCbernehmen",alle_uebernehmen_frage:"{n} L\xF6sungen ersetzen? {ki} davon stammen von der KI und k\xF6nnen selbst falsch sein.",uebernommen:"L\xF6sungen \xFCbernommen: {n}",schliessen:"Schlie\xDFen",fachart_mathe:"Mathematik",fachart_sach:"Sachfach",generieren:"Aufgaben generieren",generieren_titel:"Aufgaben von der KI erzeugen lassen",generieren_hilfe:"Die KI erzeugt Aufgaben, die den vorhandenen \xE4hneln. Gespeichert werden nur Aufgaben, deren L\xF6sung nachgerechnet oder gegengepr\xFCft werden konnte. Sie warten danach auf deine Freigabe. Der Name des Kindes wird nicht \xFCbertragen.",generieren_beispiele_auswahl:"Als Beispiele dienen die {n} markierten Aufgaben.",generieren_beispiele_thema:"Als Beispiele dienen die Aufgaben der gew\xE4hlten Lektion.",generieren_anzahl:"Anzahl (1\u201320)",generieren_beschreibung:"Beschreibung (optional)",generieren_beschreibung_hilfe:"z. B. Br\xFCche mit gleichem Nenner addieren",generieren_start:"Erzeugen",generieren_laeuft:"Die KI arbeitet, das kann bis zu zwei Minuten dauern \u2026",generieren_ohne_ki:"F\xFCr dieses Fach ist keine KI-Entit\xE4t gew\xE4hlt (Einstellungen der Integration).",generiert:"{erzeugt} erzeugt, {verworfen} verworfen, {doppelt} doppelt.",freigeben:"Auswahl freigeben",freigegeben:"{n} Aufgaben freigegeben.",import_titel_mathe:"Aufgaben importieren",import_hilfe_mathe:"Eine Aufgabe pro Zeile: Aufgabe; L\xF6sung; optionaler Hinweis. Weitere g\xFCltige Schreibweisen der L\xF6sung mit | trennen.",schwierig_aufgaben:"Schwierigste Aufgaben",spalte_seite:"Seite",spalte_lektion:"Lektion",spalte_box:"Box",spalte_fehler:"Fehler",spalte_geprueft:"Gepr\xFCft",spalte_erstellt:"Erstellt",box_hinweis:"Leitner-Box je Abfragerichtung (1 = neu oder falsch, 5 = sicher)",alternativen_hinweis:"Mehrere mit | trennen",keine_aufgaben:"Keine Aufgaben vorhanden.",keine_treffer:"Keine Aufgabe passt zu den Filtern.",anzahl:"{n} von {gesamt} Aufgaben",bearbeiten:"Bearbeiten",speichern:"Speichern",abbrechen:"Abbrechen",alle_auswaehlen:"Alle sichtbaren ausw\xE4hlen",loeschen_frage:"{n} Aufgabe(n) wirklich l\xF6schen?",loeschen_warnung:"{n} der ausgew\xE4hlten Aufgaben geh\xF6ren zu anstehenden Arbeiten: {arbeiten}. Trotzdem l\xF6schen?",geloescht:"{n} Aufgabe(n) gel\xF6scht.",geloescht_arbeit:"Arbeit gel\xF6scht.",gespeichert:"Gespeichert.",import_titel:"Vokabeln importieren",import_hilfe:"Eine Vokabel pro Zeile: {a}; {b}; optionaler Hinweis. Alternativen mit | trennen.",import_inhalt:"Inhalt",import_trennzeichen:"Trennzeichen (leer = automatisch)",import_geprueft:"Als gepr\xFCft \xFCbernehmen",vorschau:"Vorschau",uebernehmen:"\xDCbernehmen",vorschau_neu:"neu",vorschau_vorhanden:"bereits vorhanden",vorschau_fehler:"Nicht lesbare Zeilen: {zeilen}",import_ergebnis:"{n} importiert, {u} \xFCbersprungen.",import_fehler:"{n} fehlerhafte Eintr\xE4ge.",export_titel:"Aufgaben exportieren",mit_statistik:"Lernstatistik einschlie\xDFen",herunterladen:"Herunterladen",import_json_titel:"JSON importieren",import_json_hilfe:"Vorhandene Aufgaben bleiben erhalten, gleiche Vokabeln werden \xFCbersprungen.",datei_ungueltig:"Die Datei enth\xE4lt kein g\xFCltiges JSON.",import_json_lektion:"Lektion der importierten Aufgaben",import_json_aus_datei:"Lektionen aus der Datei \xFCbernehmen",import_json_lektion_hilfe:"Mit einer gew\xE4hlten Lektion landen alle importierten Aufgaben dort, egal was in der Datei steht.",neue_arbeit:"Neue Arbeit / H\xDC",keine_arbeiten:"F\xFCr dieses Fach ist keine Arbeit angelegt.",art:"Art",art_arbeit:"Klassenarbeit",art_hue:"H\xDC",datum:"Datum",thema:"Titel",abfragen_pro_tag:"Abfragen pro Tag",start_tage_vorher:"Beginn (Tage vorher)",intensivierung:"Frequenz zum Termin hin steigern",antwortfrist:"Antwortfrist (Minuten)",antwortfrist_leer:"wie allgemein eingestellt",antwortfrist_hinweis:"Leer: Es gilt die allgemeine Einstellung. Bei mehreren laufenden Arbeiten gilt die k\xFCrzeste Frist.",aufgaben_der_arbeit:"Aufgaben der Arbeit",auswahl_alle:"Alle Aufgaben des Fachs",auswahl_gezielt:"Gezielte Auswahl",schnell_lektionen:"Ganze Lektionen",schnell_bereiche:"Ganze Themen",bereich:"Thema",bereiche_verwalten:"Themen verwalten",faecher_verwalten:"F\xE4cher verwalten",faecher_hilfe:"Hier siehst du die F\xE4cher des Kindes und legst neue an.",faecher_einstellungen:"Name, KI und L\xF6schen eines Fachs in den Einstellungen von Home Assistant",fach_angelegt:"Fach angelegt.",themen_titel:"Themen",aufgabenverwaltung:"Aufgabenverwaltung",import_aus_text:"Aus Text importieren",bereiche_titel:"Themen",bereiche_hilfe:"Themen sind Reiter eines Fachs, z. B. \u201EVokabeln\u201C und \u201EPersonalpronomen\u201C. Neue Aufgaben, Importe und Fotos landen im gew\xE4hlten Thema.",bereich_name:"Name des neuen Themas",bereich_angelegt:"\u201E{name}\u201C angelegt.",bereich_standard_vokabel:"Vokabeln",bereich_standard_mathe:"Aufgaben",bereich_standard_sach:"Fragen",bereich_standard_satz:"S\xE4tze",bereich_standard_hinweis:"Das erste Thema bleibt immer bestehen",bereich_loeschen_hinweis:"Nur leere Themen lassen sich l\xF6schen",verschieben_nach:"Verschieben nach \u2026",verschoben:"{n} Aufgaben verschoben.",umbenennen:"Umbenennen",err_bereich_leer:"Bitte einen Namen eingeben.",err_bereich_ungueltig:"Der Name ist zu lang.",err_bereich_zu_viele:"Mehr Themen sind nicht m\xF6glich.",err_bereich_vorhanden:"Dieses Thema gibt es schon.",err_bereich_art_ungueltig:"Diese Aufgabenart ist hier nicht m\xF6glich.",err_bereich_unbekannt:"Dieses Thema gibt es nicht.",err_bereich_standard:"Das erste Thema l\xE4sst sich nicht l\xF6schen.",err_bereich_verwendet:"Das Thema enth\xE4lt noch Aufgaben.",arbeit_fehlt_beides:"Zum Speichern fehlen noch Titel und Datum.",arbeit_fehlt_thema:"Zum Speichern fehlt noch der Titel.",arbeit_fehlt_datum:"Zum Speichern fehlt noch das Datum.",schnell_seit:"Alle Aufgaben seit",schnell_seiten:"Alle Aufgaben von Buchseite",schnell_seiten_bis:"bis Buchseite",hinzufuegen:"Hinzuf\xFCgen",einzelne_aufgaben:"Einzelne Aufgaben",auswahl_leeren:"Auswahl leeren",arbeit_umfang:"{n} Aufgaben",arbeit_alle:"alle Aufgaben",arbeit_loeschen_frage:"Arbeit \u201E{thema}\u201C wirklich l\xF6schen?",arbeit_titel_neu:"Arbeit / H\xDC anlegen",arbeit_titel_bearbeiten:"Arbeit / H\xDC bearbeiten",vergangen:"vorbei",fehler_allgemein:"Das hat nicht geklappt: {fehler}",err_nicht_geladen:"LearnBuddy ist gerade nicht geladen.",err_fach_unbekannt:"Das Fach wurde nicht gefunden.",err_aufgabe_unbekannt:"Die Aufgabe wurde nicht gefunden.",err_arbeit_unbekannt:"Die Arbeit wurde nicht gefunden.",err_frage_ungueltig:"Bitte beide W\xF6rter ausf\xFCllen (h\xF6chstens 500 Zeichen).",err_alternativen_ungueltig:"Die Alternativen sind ung\xFCltig.",err_hinweis_ungueltig:"Der Hinweis ist zu lang.",err_aufgabe_ungueltig:"Bitte eine Aufgabe eingeben (h\xF6chstens 500 Zeichen).",err_loesung_ungueltig:"Bitte eine L\xF6sung eingeben (h\xF6chstens 100 Zeichen).",err_rechenweg_ungueltig:"Der Rechenweg darf h\xF6chstens 8 Schritte haben.",err_schwierigkeit_ungueltig:"Die Schwierigkeit muss zwischen 1 und 5 liegen.",err_anzahl_ungueltig:"Die Anzahl muss zwischen 1 und 20 liegen.",err_beschreibung_ungueltig:"Die Beschreibung ist zu lang.",err_ki_fehlt:"F\xFCr dieses Fach ist keine KI-Entit\xE4t gew\xE4hlt.",err_ki_fehler:"Die KI hat keine brauchbaren Aufgaben geliefert. Bitte sp\xE4ter erneut versuchen.",err_generieren_nur_mathe:"Aufgaben lassen sich nur f\xFCr Mathe-F\xE4cher generieren.",err_generieren_ohne_vorgabe:"Bitte eine Lektion oder eine Beschreibung angeben oder zuerst Beispielaufgaben anlegen.",err_export_typ:"Die Datei geh\xF6rt zu einer anderen Art von Fach.",err_bild_ungueltig:"Das ist kein Bild in einem unterst\xFCtzten Format (PNG, JPEG, WebP, GIF).",err_bild_zu_gross:"Das Bild ist gr\xF6\xDFer als 10 MB.",err_bild_unbekannt:"Das Bild wurde nicht gefunden. Bitte erneut hochladen.",err_nachrechnen_nur_mathe:"Nachrechnen gibt es nur f\xFCr Mathe-F\xE4cher.",err_rechenweg_nur_mathe:"Rechenwege gibt es nur f\xFCr Mathe-F\xE4cher.",err_auswahl_ungueltig:"Bitte 1 bis 100 Aufgaben ausw\xE4hlen.",err_seite_ungueltig:"Die Seite muss eine Zahl zwischen 1 und 9999 sein.",err_lektion_ungueltig:"Der Name ist zu lang (h\xF6chstens 100 Zeichen).",err_lektion_leer:"Bitte einen Namen eingeben.",err_lektion_vorhanden:"Diese Lektion gibt es schon.",err_lektion_unbekannt:"Diese Lektion gibt es nicht. Bitte zuerst anlegen.",err_lektion_verwendet:"Die Lektion enth\xE4lt noch Aufgaben.",err_import_leer:"Der Inhalt enth\xE4lt keine g\xFCltige Zeile.",err_export_ungueltig:"Die Datei ist kein LearnBuddy-Export.",err_export_version:"Diese Export-Version wird nicht unterst\xFCtzt.",err_export_sprachen:"Die Sprachen des Exports passen nicht zu diesem Fach.",err_thema_leer:"Bitte einen Titel eingeben.",err_datum_vergangen:"Das Datum liegt in der Vergangenheit.",err_arbeit_ungueltig:"Bitte die Angaben zur Arbeit pr\xFCfen.",err_unauthorized:"Daf\xFCr sind Administratorrechte n\xF6tig.",err_kind_unbekannt:"Das Kind wurde nicht gefunden.",err_keine_aufgaben:"Es gibt keine gepr\xFCften Aufgaben, die abgefragt werden k\xF6nnten.",err_senden_fehlgeschlagen:"Die Nachricht konnte nicht zugestellt werden. Bitte das Messenger-Ziel des Kindes pr\xFCfen."},St={titel:"LearnBuddy",kind:"Child",fach:"Subject",keine_kinder:"No child has been added yet. Add a child and a subject under Settings \u2192 Devices & services \u2192 LearnBuddy first.",keine_faecher:"This child has no subject yet.",tab_uebersicht:"Overview",status_aktiv:"Questions enabled",status_pausiert:"Questions paused",status_pausiert_bis:"Paused until {zeit}",status_nichts_geplant:"No question scheduled",pausieren:"Pause",fortsetzen:"Resume",offene_frage:"Open question",offene_frage_text:"{fach}, asked at {von}, expires at {bis}",offene_frage_ohne_frist:"{fach}, asked at {von}, no time limit",offene_frage_angehalten:"{fach}, asked at {von}, clock stopped (paused)",keine_offene_frage:"No open question",naechste_abfrage:"Next question",keine_geplant:"None scheduled",nach_offener_frage:"After the open question",letzte_frage:"Last question",noch_nie:"Never",jetzt_fragen_kurz:"Ask now",egal_welches:"Any subject",frage_gesendet:"The question was sent.",fragen_gesendet:"The questions were started.",abfrage_titel:"Ask now",abfrage_fach:"Subject",abfrage_lektionen:"Lesson",abfrage_seite_kurz:"p.",abfrage_ohne_lektion:"{n} tasks without a lesson are only included if all lessons are selected.",abfrage_laeuft:"Running questions",abfrage_laeuft_text:"{ort} \xB7 {n} more to come",abfrage_seiten:"p. {von}\u2013{bis}",abfrage_ab_seite:"from p. {n}",abfrage_bis_seite:"up to p. {n}",abfrage_ab_fehlerquote:"error rate from {n} %",abfrage_seite_von:"Book page from",abfrage_seite_bis:"Book page to",abfrage_fehlerquote:"Error rate at least (%)",abfrage_filter_hinweis:"Empty fields do not limit anything. Book pages apply per lesson; with pages only tasks with a book page count there. With an error rate only tasks that were answered before count. Tasks that wait for approval are never asked.",abfrage_anzahl:"Number of questions (1 to 20)",abfrage_frist:"Time to answer each question (minutes)",abfrage_frist_hinweis:"Empty = general setting, 0 = never expires. Applies to this request only.",abfrage_umfang:"{n} tasks are available. They come one after another, the next one after each answer.",abfrage_umfang_laedt:"Counting the selection \u2026",err_seiten_verdreht:"The first book page is behind the last one.",abfrage_senden:"Start asking",kz_gefragt:"Questions asked",kz_richtig:"Correct",kz_falsch:"Wrong",kz_unbeantwortet:"Unanswered",ki_keine:"No AI entity is selected for this subject.",ki_nicht_verfuegbar:"The selected AI entity is not available right now.",ki_ohne_bilder:"The selected AI entity cannot read images.",ki_hinweis_keine:"No AI entity is selected for this subject. Creating tasks, writing solution steps and the import from photos are switched off; answers are only judged locally. Set it up under Settings \u2192 Devices & services \u2192 LearnBuddy \u2192 gear.",ki_hinweis_ohne_bilder:"The selected AI entity cannot read images. Features that use photos are switched off.",ki_hinweis_nicht_verfuegbar:"The selected AI entity is not available right now. The AI features are switched off and answers are only judged locally. Check the AI integration in Home Assistant.",ki_hinweis_sach_zusatz:" Short answers are not asked meanwhile, only multiple-choice questions.",err_ki_nicht_verfuegbar:"The selected AI entity is not available right now.",err_ki_nicht_erreichbar:"The AI could not be reached or refused the request (connection, account, credit). Please try again later.",neue_version:"LearnBuddy was updated. This page still shows the old version; reload it to see all features.",neu_laden:"Reload the page",absender_unbekannt:"A message from an unknown sender arrived: {kennung} ({quelle}). It could not be assigned to a child.",absender_uebernehmen:"Use as sender ID for {name}",absender_verwerfen:"Dismiss",absender_uebernommen:"Sender ID saved. The next answer will be assigned.",quelle_telegram:"Telegram",quelle_whatsapp:"WhatsApp",quelle_event:"custom event",err_absender_leer:"The sender ID is empty.",err_absender_vergeben:"This sender ID already belongs to another child.",absender_fehlt:"This child has no sender ID (chat ID or phone number). Questions are sent, but answers cannot be assigned. Set it under Settings \u2192 Devices & services \u2192 LearnBuddy \u2192 edit the child.",sim_plan:"Plan a simulation (optional)",sim_plan_aktiv:"Send a simulation automatically at a fixed time",sim_plan_hilfe:"At the chosen time the child automatically gets a simulation of this exam in the messenger: the sheet as an image, then the tasks one after the other, the result at the end. If the child is paused or a simulation is already running then, it is skipped.",sim_plan_um:"Date and time",sim_plan_offen:"Simulation planned for {zeit} ({n} tasks)",sim_plan_erledigt:"The simulation planned for {zeit} is done",err_simulation_um_vergangen:"The time of the simulation is in the past.",err_simulation_um_ungueltig:"Please check date and time of the simulation.",sim_knopf_arbeit:"Simulate the exam",sim_knopf_hue:"Simulate the homework check",sim_hilfe:"A sheet is put together at random from the approved tasks of this exam. The learning statistics stay untouched.",sim_weg_ausdruck:"As a printout",sim_weg_ausdruck_hilfe:"The sheet is made as an image to download and print. Nothing is sent.",sim_weg_messenger:"In the messenger",sim_weg_messenger_hilfe:"{name} gets the sheet as an image and then the tasks one after the other. Feedback only comes at the end: points, percent and the solutions to the mistakes.",sim_anzahl:"Number of tasks",sim_verfuegbar:"Available this way: {n}",sim_keine_aufgaben:"There are no approved tasks for this exam.",sim_start_ausdruck:"Create the sheet",sim_start_messenger:"Start the simulation",sim_gestartet:"The simulation with {n} tasks is running. The child gets the result at the end.",sim_blatt_hilfe:"The sheet with {n} tasks is ready. The images are deleted after 24 hours; download them if you want to keep them.",sim_herunterladen:"Download page {n}",sim_drucken:"Print",sim_druck_blockiert:"The browser blocked the print window. Download the pages and print them from there.",sim_laeuft:"Simulation",sim_laeuft_text:"running: task {nr} of {n}",sim_abbrechen:"Stop the simulation",frage_abbrechen:"Cancel question",frage_abbrechen_frage:"Withdraw the open question? It is not counted, and the child gets a short message.",sim_abbrechen_frage:"Stop the running simulation without a result?",err_simulation_laeuft:"A simulation is running for this child.",err_weg_ungueltig:"Unknown way of simulating.",foto_import:"Import from photo",foto_titel:"Read tasks from photos",foto_hilfe:"Take the photos of the vocabulary pages straight and legible. The AI reads word, translation, page number and the reference to the unit page. It leaves out example sentences and phonetic transcriptions. Then you check the preview. The photos are sent to the AI service and deleted afterwards.",foto_hilfe_mathe:"Take the photo of the book page or worksheet straight and legible. The AI reads the tasks and solves them; the results are recalculated. Then you check the preview. The photos are sent to the AI service and deleted afterwards.",foto_auslesen:"Read",foto_leer:"Nothing usable was found on the photos.",foto_vorschau_titel:"Check the preview",foto_vorschau_hilfe:"Compare the lines with the book, correct them if needed and untick everything that should not be imported. Nothing is stored before you click the button.",foto_vorhanden:"already there",foto_braucht_bild:"needs a figure \u2013 create it as a task with an image",foto_unbestaetigt:"result not confirmed",foto_uebernehmen:"Import {n}",foto_fertig:"{n} imported, {doppelt} already there, {fehler} faulty.",foto_fehler:"{n} lines are faulty (empty or too long fields). Please correct them.",err_foto_sachfach:"Knowledge subjects have their own way to create questions from pages.",kz_teilweise:"Partly right",neue_frage:"New question",spalte_frage:"Question",spalte_musterantwort:"Model answer",spalte_satz:"Sentence",spalte_satz_loesung:"Solution",richtige_antwort:"Correct answer",form:"Form",form_kurz:"Short answer",form_auswahl:"Multiple choice",form_gemischt:"Mixed",form_luecke:"Gap text",hilfe_label:"Translation as a hint ({sprache})",hilfe_senden:"Send the translation",hilfe_senden_kurz:"Send the translation",hilfe_alle_an:"Send the translation",hilfe_alle_aus:"Send without translation",hilfe_gesetzt:"{n} tasks changed.",err_hilfe_senden_ungueltig:"Invalid value.",err_hilfe_ungueltig:"The translation is too long.",form_uebersetzung:"Translation",saetze_generieren:"Generate sentences",saetze_foto:"Sentences from photo",saetze_hilfe_text:"The AI writes short sentences with a gap for the child to fill in. The tasks then wait for your approval (filter \u201CChecked: no\u201D).",saetze_hilfe_foto:"The AI reads exercises from book pages or writes similar new ones. The tasks then wait for your approval.",saetze_beschreibung:"Description and wishes",saetze_beschreibung_hilfe:"e.g. personal pronouns in short sentences",saetze_uebernehmen:"Take over the exercises of the page",saetze_aehnliche:"Invent similar new tasks",saetze_laeuft:"The AI is writing the sentences. This can take a minute \u2026",saetze_start:"Create",saetze_fertig:"{erzeugt} tasks created, {verworfen} unusable, {doppelt} duplicates. They wait for your approval.",err_saetze_nur_satzbereich:"This only works in a topic for sentences.",bereich_art:"Kind of tasks",bereich_art_vokabel:"Vocabulary (word pairs)",bereich_art_satz:"Sentences (gap, choice, short answer)",err_import_satz:"A sentence topic only takes tasks by JSON import or by hand.",err_foto_satz:"The photo import only knows vocabulary.",kernpunkte:"Key points (one per line, optional): what a complete answer contains",falsche_optionen:"Wrong answers (one per line, 2 to 3)",belegstelle:"Source passage",quellseite_anzeigen:"Show the book page",sach_ohne_ki:"No AI entity is selected for this subject. Therefore only multiple-choice questions are asked; short answers can only be judged by the AI.",seiten:"Questions from a book page",seiten_titel:"Create questions from book pages",seiten_hilfe:"Take the photos straight and legible. The AI reads the pages and suggests questions with a model answer. The questions then wait for your approval. The photos are sent to the AI service.",seiten_waehlen:"Photos of the pages (up to {n})",seiten_zu_viele:"Only the first {n} photos are used.",seiten_anzahl:"Number of questions",seiten_schwerpunkt:"Focus (optional)",seiten_schwerpunkt_hilfe:"e.g. only the part about cellular respiration",seiten_start:"Create questions",seiten_laeuft:"The AI is reading the pages. This can take a minute \u2026",seiten_fertig:"{erzeugt} questions created, {verworfen} unusable, {doppelt} duplicates. Please check and approve them.",err_sach_frage_ungueltig:"Please enter a question (at most 500 characters).",err_sach_antwort_ungueltig:"Please enter an answer (at most 500 characters).",err_form_ungueltig:"Unknown form of question.",err_kernpunkte_ungueltig:"At most 6 key points with 200 characters each.",err_falsche_optionen_ungueltig:"A multiple-choice question needs 2 to 3 wrong answers that differ from each other and from the correct one.",err_stelle_ungueltig:"The source passage may be 300 characters long at most.",err_import_sachfach:"Lists cannot be imported into knowledge subjects.",err_seiten_nur_sachfach:"Questions from book pages only exist for knowledge subjects.",err_seiten_ungueltig:"Please choose 1 to 4 photos.",err_ki_ohne_bilder:"The selected AI entity cannot read images.",kz_trefferquote:"Success rate",kz_aufgaben:"Tasks",fortschritt:"Progress",fortschritt_zeitraum:"Period",fortschritt_tage:"{n} days",fortschritt_seit:"The history is recorded since {datum}.",fortschritt_leer:"Nothing recorded yet. As soon as questions are asked and answered, the history shows up here.",fortschritt_antworten:"Answers per day",fortschritt_quote:"Hit rate",fortschritt_quote_hilfe:"Calculated over the last 7 days each.",fortschritt_lernstand:"Level per subject",fortschritt_lernstand_hilfe:"Share of cards in box 3 or higher.",fortschritt_schwach:"Weak spots",fortschritt_lektionen:"Lessons with the most mistakes",fortschritt_aufgaben:"Tasks with the most mistakes",fortschritt_keine_schwach:"No conspicuous lessons or tasks in the period.",fortschritt_simulationen:"Simulations",fortschritt_keine_sim:"No simulation in the period.",fortschritt_tabelle:"As a table",fortschritt_diagramm:"As a chart",fortschritt_keine_daten:"No answers in the period.",reihe_tag:"Day",reihe_gefragt:"Asked",reihe_richtig:"Right",reihe_teilweise:"Partly",reihe_falsch:"Wrong",reihe_unbeantwortet:"Unanswered",fehler_n:"{n}\xD7 wrong",fehlerquote_n:"{n} % wrong ({f} of {g})",sim_punkte:"{p} of {m} points ({proz} %)",sim_unvollstaendig:"time ran out",wochenreport:"Weekly report",report_woche:"Week from {von} to {bis}",report_laufend:"running week",report_frueher:"Previous week",report_spaeter:"Next week",report_kennzahlen:"Figures of the week",report_tage_aktiv:"Days with answers",report_vergleich:"Compared to the week before",report_antworten:"Answers",report_vorwoche:"week before: {wert}",report_lernstand:"Level {fach}",report_keine_vorwoche:"no data",report_schwach:"Weak spots",report_anstehend:"Upcoming exams (next 14 days)",report_keine_arbeiten:"No exam in the next 14 days.",report_in_tagen:"in {n} days",report_heute:"today",report_morgen:"tomorrow",report_sicher:"{n} % safe",report_vorschlaege:"Not entered yet (from the calendar)",report_simulationen:"Simulations",report_loesung:"Solution: {loesung}",report_drucken:"Print",report_kopieren:"Copy as text",report_kopiert:"Copied to the clipboard.",report_kopieren_fehler:"The browser did not allow copying.",report_druck_blockiert:"The browser blocked the print window.",err_verlauf_aus:"The history is switched off in the options.",err_wochenreport_aus:"The weekly report is switched off in the options.",err_zeitraum_ungueltig:"This period is not possible.",anstehend:"Upcoming exams",vorschlaege:"Suggestions from the calendar",vorschlag_eintragen:"Enter",vorschlag_ignorieren:"Ignore",vorschlag_gleicher_tag:"Already on the same day: {arbeiten}",keine_vorschlaege:"No new dates in the calendar.",kalender_pruefen:"Check now",kalender_geprueft:"Last checked: {zeit}",kalender_nie:"The calendar has not been read yet.",kalender_fehler:"The calendar could not be read last time. Shown is what was read before.",kalender_ignorierte:"Show {n} ignored again",arbeit_fach:"Subject",arbeit_fach_waehlen:"\u2013 please choose \u2013",arbeit_fehlt_fach:"Choose the subject before saving.",fach_neu:"New subject",fach_neu_titel:"Add a subject",fach_neu_art:"Kind of subject",fach_neu_sprache:"Language",fach_neu_name:"Name",fach_neu_name_optional:"Name (empty: like the language or \u201CMath\u201D)",fach_neu_anlegen:"Add subject",fach_neu_fehlt:"This child has no subject yet. Add one first.",fachart_fremdsprache:"Foreign language",err_kalender_aus:"No exam calendar is switched on for this child.",err_termin_unbekannt:"The date is no longer in the calendar.",err_sprache_ungueltig:"Please choose a foreign language other than the native language.",err_fachart_ungueltig:"Please choose the kind of subject.",err_fach_vorhanden:"A subject with this name already exists.",err_name_leer:"Please enter a name.",keine_anstehend:"No exam is planned.",heute:"today",morgen:"tomorrow",in_tagen:"in {n} days",heute_abfragen:"{n} questions today",sicher:"{n} % mastered",sicher_hinweis:"Share of cards in boxes 3 to 5",faecher_titel:"Subjects",fach_aufgaben:"{n} tasks in {l} lessons",ungeprueft:"{n} not approved",aufgaben_oeffnen:"Tasks",lernstand:"Progress",lernstand_hinweis:"Cards per Leitner box: box 1 is new or was wrong last time, box 5 is mastered.",box:"Box {n}",karten:"{n} cards",keine_karten:"There are no tasks yet.",schwierig:"Hardest words",keine_schwierig:"No wrong answers yet.",fehler_mal:"{n} \xD7 wrong",arbeiten_oeffnen:"Manage exams",tab_aufgaben:"Tasks",tab_arbeiten:"Exams",laden:"Loading \u2026",neue_aufgabe:"New task",importieren:"Import",lektion_hinzufuegen:"Add lesson",lektion_titel:"Lessons",lektion_hilfe:"Lessons are created here and can then be selected when adding or importing tasks and in exams.",lektion_name:"Name of the lesson",lektion_keine:"No lesson has been created yet.",lektion_anzahl:"{n} tasks",lektion_loeschen_hinweis:"Only empty lessons can be deleted",lektion_angelegt:"\u201C{name}\u201D created.",keine_lektion:"\u2013 none \u2013",export_json:"Export JSON",import_json:"Import JSON",ausgewaehlt:"{n} selected",loeschen:"Delete",arbeit_aus_auswahl:"Exam from selection",filter_suche:"Search",filter_lektion:"Lesson",filter_quelle:"Source",filter_geprueft:"Approved",filter_fehlerquote:"Error rate from %",filter_von:"Created from",filter_bis:"Created until",filter_seite_von:"Book page from",filter_seite_bis:"Book page to",filter_zuruecksetzen:"Reset filters",alle:"All",ohne_lektion:"Without lesson",ja:"Yes",nein:"No",quelle_manuell:"Manual",quelle_upload:"Upload",quelle_generiert:"Generated",spalte_alternativen:"Alternatives",spalte_hinweis:"Hint",aufgabenart_titel:"What kind of task?",aufgabenart_rechnen:"Calculation",aufgabenart_rechnen_hilfe:"Text only, for example 3/4 + 1/8 or a word problem.",aufgabenart_bild:"Task with an image",aufgabenart_bild_hilfe:"A diagram, a graph or a drawing is the basis. The image is sent with the task.",bildaufgabe_titel:"Task with an image",bild:"Image",bild_waehlen:"Choose an image",bild_hilfe:"PNG, JPEG, WebP or GIF, at most 10 MB. The image is stored smaller, extra data such as the location is removed.",bild_vorschau:"Preview of the image",bild_anzeigen:"Show the image",einleitung:"Introduction (optional)",einleitung_hilfe:"Is put in front of every part, e.g. \u201CIn other countries the holidays \u2026\u201D",teilaufgaben:"Parts",teilaufgaben_hilfe:"Every row becomes a task of its own with the same image and is asked separately.",teilaufgabe:"Part {n}",teilaufgabe_hinzufuegen:"Add a part",teilaufgabe_entfernen:"Remove the part",bildaufgaben_gespeichert:"Tasks with an image created: {n}",bild_fehlt:"Please choose an image.",teil_fehlt:"Please enter at least one part with its result.",keine_bilder:"{name} cannot receive images at the moment, so tasks with an image are not asked. Images are sent automatically through Telegram; for other messengers enter an \u201Caction for images\u201D at the child.",export_ohne_bild:"Exported. Tasks with an image are not included: {n}",spalte_aufgabe:"Task",spalte_loesung:"Result",spalte_schwierigkeit:"Level",schwierigkeit:"Difficulty",schwierigkeit_hinweis:"1 = easy, 5 = hard",schwierigkeit_beliebig:"any",rechenweg:"Steps of the solution (one per line, optional)",rechenweg_vorhanden:"Steps of the solution are stored",verifikation_rechnerisch:"recalculated",verifikation_ki:"double-checked by the AI",verifikation_manuell:"checked by yourself",selbst_nachgerechnet:"Checked by myself",selbst_nachgerechnet_hinweis:"Marks the solutions of the selection as checked by you. A differing suggestion is dropped.",selbst_nachgerechnet_fertig:"Marked as checked by yourself: {n}",verifikation_abweichung:"result differs",nachrechnen:"Recalculate selection",nachrechnen_laeuft:"The tasks are being recalculated \u2026",nachgerechnet:"{bestaetigt} confirmed, {abweichend} differing, {offen} not checkable.",nachrechnen_titel:"Result of recalculating",nachrechnen_zusammenfassung:"{bestaetigt} results were confirmed, {offen} tasks could not be checked. These tasks give another result. Nothing was changed. You can apply the value that was found per task or edit the task in the table later. A result of the AI can be wrong itself, or the task is ambiguous.",nachrechnen_eingetragen:"stored",nachrechnen_berechnet:"calculated",nachrechnen_ki:"the AI gets",nur_abweichende:"Show these tasks",rechenweg_erzeugen:"Create solution steps",rechenweg_erzeugen_laeuft:"The AI is writing the solution steps \u2026",rechenwege_erzeugt:"Solution steps created: {erzeugt}. Already there: {vorhanden}. Skipped because the result differs: {abweichend}. Failed: {fehlgeschlagen}.",vorschlag:"Suggestion",vorschlag_ki:"Suggestion of the AI",uebernehmen_loesung:"Apply",uebernehmen_titel:"Replaces the stored result with this value. The stored solution steps and the statistics of the task are deleted.",alle_uebernehmen:"Apply all",alle_uebernehmen_frage:"Replace {n} results? {ki} of them come from the AI and can be wrong themselves.",uebernommen:"Results applied: {n}",schliessen:"Close",fachart_mathe:"Mathematics",fachart_sach:"Knowledge subject",generieren:"Generate tasks",generieren_titel:"Let the AI create tasks",generieren_hilfe:"The AI creates tasks similar to the existing ones. Only tasks whose solution could be recalculated or double-checked are stored. They wait for your approval afterwards. The name of the child is not sent.",generieren_beispiele_auswahl:"The {n} selected tasks serve as examples.",generieren_beispiele_thema:"The tasks of the chosen lesson serve as examples.",generieren_anzahl:"Number (1\u201320)",generieren_beschreibung:"Description (optional)",generieren_beschreibung_hilfe:"e.g. adding fractions with the same denominator",generieren_start:"Create",generieren_laeuft:"The AI is working, this can take up to two minutes \u2026",generieren_ohne_ki:"No AI entity is selected for this subject (settings of the integration).",generiert:"{erzeugt} created, {verworfen} discarded, {doppelt} duplicates.",freigeben:"Approve selection",freigegeben:"{n} tasks approved.",import_titel_mathe:"Import tasks",import_hilfe_mathe:"One task per line: task; result; optional hint. Separate other accepted spellings of the result with |.",schwierig_aufgaben:"Hardest tasks",spalte_seite:"Page",spalte_lektion:"Lesson",spalte_box:"Box",spalte_fehler:"Errors",spalte_geprueft:"Approved",spalte_erstellt:"Created",box_hinweis:"Leitner box per direction (1 = new or wrong, 5 = mastered)",alternativen_hinweis:"Separate several with |",keine_aufgaben:"There are no tasks yet.",keine_treffer:"No task matches the filters.",anzahl:"{n} of {gesamt} tasks",bearbeiten:"Edit",speichern:"Save",abbrechen:"Cancel",alle_auswaehlen:"Select all visible",loeschen_frage:"Really delete {n} task(s)?",loeschen_warnung:"{n} of the selected tasks belong to upcoming exams: {arbeiten}. Delete anyway?",geloescht:"{n} task(s) deleted.",geloescht_arbeit:"Exam deleted.",gespeichert:"Saved.",import_titel:"Import vocabulary",import_hilfe:"One word per line: {a}; {b}; optional hint. Separate alternatives with |.",import_inhalt:"Content",import_trennzeichen:"Separator (empty = automatic)",import_geprueft:"Import as approved",vorschau:"Preview",uebernehmen:"Import",vorschau_neu:"new",vorschau_vorhanden:"already exists",vorschau_fehler:"Unreadable lines: {zeilen}",import_ergebnis:"{n} imported, {u} skipped.",import_fehler:"{n} invalid entries.",export_titel:"Export tasks",mit_statistik:"Include learning statistics",herunterladen:"Download",import_json_titel:"Import JSON",import_json_hilfe:"Existing tasks are kept, identical words are skipped.",datei_ungueltig:"The file does not contain valid JSON.",import_json_lektion:"Lesson of the imported tasks",import_json_aus_datei:"Keep the lessons from the file",import_json_lektion_hilfe:"With a selected lesson all imported tasks go there, whatever the file says.",neue_arbeit:"New exam",keine_arbeiten:"There is no exam for this subject.",art:"Type",art_arbeit:"Exam",art_hue:"Homework check",datum:"Date",thema:"Title",abfragen_pro_tag:"Questions per day",start_tage_vorher:"Start (days before)",intensivierung:"Increase frequency towards the date",antwortfrist:"Time to answer (minutes)",antwortfrist_leer:"as set in general",antwortfrist_hinweis:"Empty: the general setting applies. With several running exams the shortest time wins.",aufgaben_der_arbeit:"Tasks of the exam",auswahl_alle:"All tasks of the subject",auswahl_gezielt:"Specific selection",schnell_lektionen:"Whole lessons",schnell_bereiche:"Whole topics",bereich:"Topic",bereiche_verwalten:"Manage topics",faecher_verwalten:"Manage subjects",faecher_hilfe:"Here you see the subjects of the child and add new ones.",faecher_einstellungen:"Name, AI and deleting a subject in the settings of Home Assistant",fach_angelegt:"Subject added.",themen_titel:"Topics",aufgabenverwaltung:"Task management",import_aus_text:"Import from text",bereiche_titel:"Topics",bereiche_hilfe:"Topics are tabs of a subject, e.g. \u201CVocabulary\u201D and \u201CPersonal pronouns\u201D. New tasks, imports and photos go to the selected topic.",bereich_name:"Name of the new topic",bereich_angelegt:"\u201C{name}\u201D created.",bereich_standard_vokabel:"Vocabulary",bereich_standard_mathe:"Tasks",bereich_standard_sach:"Questions",bereich_standard_satz:"Sentences",bereich_standard_hinweis:"The first topic always stays",bereich_loeschen_hinweis:"Only empty topics can be deleted",verschieben_nach:"Move to \u2026",verschoben:"{n} tasks moved.",umbenennen:"Rename",err_bereich_leer:"Please enter a name.",err_bereich_ungueltig:"The name is too long.",err_bereich_zu_viele:"No more topics are possible.",err_bereich_vorhanden:"This topic already exists.",err_bereich_art_ungueltig:"This kind of task is not possible here.",err_bereich_unbekannt:"This topic does not exist.",err_bereich_standard:"The first topic cannot be deleted.",err_bereich_verwendet:"The topic still contains tasks.",arbeit_fehlt_beides:"Title and date are still missing.",arbeit_fehlt_thema:"The title is still missing.",arbeit_fehlt_datum:"The date is still missing.",schnell_seit:"All tasks since",schnell_seiten:"All tasks from book page",schnell_seiten_bis:"to book page",hinzufuegen:"Add",einzelne_aufgaben:"Single tasks",auswahl_leeren:"Clear selection",arbeit_umfang:"{n} tasks",arbeit_alle:"all tasks",arbeit_loeschen_frage:"Really delete the exam \u201C{thema}\u201D?",arbeit_titel_neu:"Add exam",arbeit_titel_bearbeiten:"Edit exam",vergangen:"past",fehler_allgemein:"That did not work: {fehler}",err_nicht_geladen:"LearnBuddy is not loaded right now.",err_fach_unbekannt:"The subject was not found.",err_aufgabe_unbekannt:"The task was not found.",err_arbeit_unbekannt:"The exam was not found.",err_frage_ungueltig:"Please fill in both words (500 characters at most).",err_alternativen_ungueltig:"The alternatives are invalid.",err_hinweis_ungueltig:"The hint is too long.",err_aufgabe_ungueltig:"Please enter a task (at most 500 characters).",err_loesung_ungueltig:"Please enter a result (at most 100 characters).",err_rechenweg_ungueltig:"The solution may have at most 8 steps.",err_schwierigkeit_ungueltig:"The difficulty must be between 1 and 5.",err_anzahl_ungueltig:"The number must be between 1 and 20.",err_beschreibung_ungueltig:"The description is too long.",err_ki_fehlt:"No AI entity is selected for this subject.",err_ki_fehler:"The AI did not return usable tasks. Please try again later.",err_generieren_nur_mathe:"Tasks can only be generated for math subjects.",err_generieren_ohne_vorgabe:"Enter a lesson or a description, or add example tasks first.",err_export_typ:"The file belongs to another kind of subject.",err_bild_ungueltig:"This is not an image in a supported format (PNG, JPEG, WebP, GIF).",err_bild_zu_gross:"The image is larger than 10 MB.",err_bild_unbekannt:"The image was not found. Please upload it again.",err_nachrechnen_nur_mathe:"Only math subjects can be recalculated.",err_rechenweg_nur_mathe:"Only math subjects have solution steps.",err_auswahl_ungueltig:"Please select 1 to 100 tasks.",err_seite_ungueltig:"The page must be a number between 1 and 9999.",err_lektion_ungueltig:"The name is too long (100 characters at most).",err_lektion_leer:"Please enter a name.",err_lektion_vorhanden:"This lesson already exists.",err_lektion_unbekannt:"This lesson does not exist. Please create it first.",err_lektion_verwendet:"The lesson still contains tasks.",err_import_leer:"The content does not contain any valid line.",err_export_ungueltig:"The file is not a LearnBuddy export.",err_export_version:"This export version is not supported.",err_export_sprachen:"The languages of the export do not match this subject.",err_thema_leer:"Please enter a title.",err_datum_vergangen:"The date is in the past.",err_arbeit_ungueltig:"Please check the details of the exam.",err_unauthorized:"Administrator rights are required.",err_kind_unbekannt:"The child was not found.",err_keine_aufgaben:"There are no approved tasks that could be asked.",err_senden_fehlgeschlagen:"The message could not be delivered. Please check the messenger target of the child."},Tt={de:{de:"Deutsch",en:"Englisch",fr:"Franz\xF6sisch",es:"Spanisch",it:"Italienisch",la:"Latein"},en:{de:"German",en:"English",fr:"French",es:"Spanish",it:"Italian",la:"Latin"}};function Qe(d){return d.toLowerCase().startsWith("de")?"de":"en"}function Z(d){let s=Qe(d)==="de"?Je:St;return(e,t={})=>s[e].replace(/\{(\w+)\}/g,(i,n)=>String(t[n]??""))}function z(d,s){return Tt[Qe(d)]?.[s]??s}function y(d,s){let e=s,t=[`err_${e?.message??""}`,`err_${e?.code??""}`];for(let i of t)if(i in Je)return d(i);return d("fehler_allgemein",{fehler:e?.message??String(s)})}var J=U`
   :host {
     display: block;
     min-height: 100vh;
@@ -105,6 +105,31 @@ var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e
   .tabs button[aria-selected="true"] {
     color: var(--lh-accent);
     border-bottom-color: var(--lh-accent);
+  }
+  .abschnittskopf {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .abschnittskopf.trenner,
+  h3.abschnitt.trenner {
+    margin-top: 24px;
+  }
+  h3.abschnitt {
+    margin: 0 4px 8px;
+    font-size: 1.05em;
+    font-weight: 600;
+  }
+  .abschnittskopf h3.abschnitt {
+    margin: 0 4px;
+  }
+  .werkzeuge {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    margin: -8px 0 8px;
   }
   .leiste {
     display: flex;
@@ -545,7 +570,7 @@ var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e
   :host([narrow]) td.schmal {
     white-space: normal;
   }
-`;var oe=["richtig","teilweise","falsch","unbeantwortet"],Ft={richtig:"#2a78d6",teilweise:"#1baf7a",falsch:"#eb6834",unbeantwortet:"#4a3aa7"},It={richtig:"#3987e5",teilweise:"#199e70",falsch:"#d95926",unbeantwortet:"#9085e9"},Qe=["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4","#008300"],Xe=["#3987e5","#d95926","#199e70","#c98500","#d55181","#008300"],Dt=[7,30,90],Rt=200,Ye=170,S=38,Q=12,X=10,M=24,Nt=24,et=2;function Bt(d){if(d<=4)return 4;let s=10**Math.floor(Math.log10(d));for(let e of[1,2,4,5,10])if(d<=e*s)return e*s;return 10*s}var A=class extends I{constructor(){super(...arguments);this.narrow=!1;this.kindId="";this.wochenreport=!1;this._tage=30;this._fehler="";this._tabelle=!1;this._zeiger=null;this._report=null;this._reportVersatz=-1;this._reportOffen=!1;this._reportHinweis="";this._breiten={}}static{this.styles=[J,U`
+`;var oe=["richtig","teilweise","falsch","unbeantwortet"],Ft={richtig:"#2a78d6",teilweise:"#1baf7a",falsch:"#eb6834",unbeantwortet:"#4a3aa7"},It={richtig:"#3987e5",teilweise:"#199e70",falsch:"#d95926",unbeantwortet:"#9085e9"},Xe=["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4","#008300"],Ye=["#3987e5","#d95926","#199e70","#c98500","#d55181","#008300"],Dt=[7,30,90],Rt=200,et=170,S=38,Q=12,X=10,M=24,Nt=24,tt=2;function Bt(d){if(d<=4)return 4;let s=10**Math.floor(Math.log10(d));for(let e of[1,2,4,5,10])if(d<=e*s)return e*s;return 10*s}var A=class extends I{constructor(){super(...arguments);this.narrow=!1;this.kindId="";this.wochenreport=!1;this._tage=30;this._fehler="";this._tabelle=!1;this._zeiger=null;this._report=null;this._reportVersatz=-1;this._reportOffen=!1;this._reportHinweis="";this._breiten={}}static{this.styles=[J,U`
       :host {
         min-height: 0;
         background: none;
@@ -694,10 +719,10 @@ var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e
         text-align: center;
         font-weight: 500;
       }
-    `]}get _t(){return Z(this.hass?.language??"en")}get _api(){return new j(this.hass)}get _dunkel(){return!!this.hass?.themes?.darkMode}willUpdate(e){(e.has("kindId")||e.has("stand"))&&this._lade(),e.has("kindId")&&(this._reportOffen=!1)}_mass(e,t){return{b:Math.max(240,this._breiten[e]??600),h:t}}connectedCallback(){super.connectedCallback(),this._beobachter=new ResizeObserver(e=>{let t={...this._breiten},i=!1;for(let n of e){let a=n.target.dataset.name??"",o=Math.round(n.contentRect.width);a&&o&&t[a]!==o&&(t[a]=o,i=!0)}i&&(this._breiten=t)})}disconnectedCallback(){super.disconnectedCallback(),this._beobachter?.disconnect()}updated(){for(let e of this.renderRoot.querySelectorAll(".diagramm"))this._beobachter?.observe(e)}async _lade(){if(!(!this.hass||!this.kindId))try{this._daten=await this._api.fortschritt(this.kindId,this._tage),this._fehler=""}catch(e){this._fehler=y(this._t,e)}}async _setzeTage(e){this._tage=e,this._zeiger=null,await this._lade()}_datum(e,t=!1){return e?new Date(`${e.slice(0,10)}T00:00:00`).toLocaleDateString(this.hass?.language??"en",t?{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"}:{day:"2-digit",month:"2-digit"}):""}_prozent(e){return e==null?"\u2013":`${e} %`}_simText(e){let t=this._t,i=[e.fach,e.thema].filter(Boolean).join(": "),n=t("sim_punkte",{p:e.punkte.toLocaleString(this.hass?.language??"en"),m:e.moeglich,proz:e.prozent??0});return`${this._datum(e.tag)}${i?` \xB7 ${i}`:""} \u2013 ${n}${e.vollstaendig?"":` (${t("sim_unvollstaendig")})`}`}_lektionText(e){return`${e.fach} \xB7 ${e.lektion}: ${this._t("fehlerquote_n",{n:e.fehlerquote,f:e.falsch,g:e.richtig+e.falsch})}`}_spalten(e,t,i){let n=(e.b-S-Q)/i,a=this._zeiger?.diagramm===t?this._zeiger.index:-1;return R`
+    `]}get _t(){return Z(this.hass?.language??"en")}get _api(){return new q(this.hass)}get _dunkel(){return!!this.hass?.themes?.darkMode}willUpdate(e){(e.has("kindId")||e.has("stand"))&&this._lade(),e.has("kindId")&&(this._reportOffen=!1)}_mass(e,t){return{b:Math.max(240,this._breiten[e]??600),h:t}}connectedCallback(){super.connectedCallback(),this._beobachter=new ResizeObserver(e=>{let t={...this._breiten},i=!1;for(let n of e){let a=n.target.dataset.name??"",o=Math.round(n.contentRect.width);a&&o&&t[a]!==o&&(t[a]=o,i=!0)}i&&(this._breiten=t)})}disconnectedCallback(){super.disconnectedCallback(),this._beobachter?.disconnect()}updated(){for(let e of this.renderRoot.querySelectorAll(".diagramm"))this._beobachter?.observe(e)}async _lade(){if(!(!this.hass||!this.kindId))try{this._daten=await this._api.fortschritt(this.kindId,this._tage),this._fehler=""}catch(e){this._fehler=y(this._t,e)}}async _setzeTage(e){this._tage=e,this._zeiger=null,await this._lade()}_datum(e,t=!1){return e?new Date(`${e.slice(0,10)}T00:00:00`).toLocaleDateString(this.hass?.language??"en",t?{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"}:{day:"2-digit",month:"2-digit"}):""}_prozent(e){return e==null?"\u2013":`${e} %`}_simText(e){let t=this._t,i=[e.fach,e.thema].filter(Boolean).join(": "),n=t("sim_punkte",{p:e.punkte.toLocaleString(this.hass?.language??"en"),m:e.moeglich,proz:e.prozent??0});return`${this._datum(e.tag)}${i?` \xB7 ${i}`:""} \u2013 ${n}${e.vollstaendig?"":` (${t("sim_unvollstaendig")})`}`}_lektionText(e){return`${e.fach} \xB7 ${e.lektion}: ${this._t("fehlerquote_n",{n:e.fehlerquote,f:e.falsch,g:e.richtig+e.falsch})}`}_spalten(e,t,i){let n=(e.b-S-Q)/i,a=this._zeiger?.diagramm===t?this._zeiger.index:-1;return R`
       ${a>=0?R`<line class="fadenkreuz"
               x1=${S+(a+.5)*n} x2=${S+(a+.5)*n}
-              y1=${X} y2=${e.h-M}></line>`:u}
+              y1=${X} y2=${e.h-M}></line>`:c}
       ${Array.from({length:i},(o,l)=>R`<rect
           x=${S+l*n} y=${X}
           width=${n} height=${e.h-X-M}
@@ -711,8 +736,8 @@ var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e
             ${Math.round(h*t)}${i}
           </text>`})}
       ${n.map((h,_)=>_%l===0?R`<text x=${S+(_+.5)*o} y=${e.h-6}
-              text-anchor="middle">${this._datum(h)}</text>`:u)}
-    `}_tooltip(e,t,i,n){let a=this._zeiger;if(!a||a.diagramm!==t)return u;let o=(S+(a.index+.5)*(e.b-S-Q)/i)/e.b,l=o>.5?`right: calc(${(1-o)*100}% + 10px)`:`left: calc(${o*100}% + 10px)`;return r`<div class="tooltip" style=${l}>${n(a.index)}</div>`}_antworten(e){let t=this._t,i=this._mass("antworten",Rt),n=this._dunkel?It:Ft,a=e.reihe,o=g=>g.richtig+g.teilweise+g.falsch+g.unbeantwortet,l=Bt(Math.max(...a.map(o))),h=i.h-X-M,_=(i.b-S-Q)/a.length,c=Math.max(2,Math.min(Nt,_-et)),f=a.map((g,v)=>{let m=S+v*_+(_-c)/2,x=i.h-M,p=oe.filter(N=>g[N]>0);return p.map((N,Fe)=>{let Ie=g[N]/l*h,pe=Math.max(1,Ie-(Fe>0?et:0));x-=Ie;let P=Fe===p.length-1?Math.min(4,c/2,pe):0,ct=`M${m},${x+pe} V${x+P} q0,${-P} ${P},${-P} H${m+c-P} q${P},0 ${P},${P} V${x+pe} Z`;return R`<path d=${ct} fill=${n[N]}></path>`})});return r`
+              text-anchor="middle">${this._datum(h)}</text>`:c)}
+    `}_tooltip(e,t,i,n){let a=this._zeiger;if(!a||a.diagramm!==t)return c;let o=(S+(a.index+.5)*(e.b-S-Q)/i)/e.b,l=o>.5?`right: calc(${(1-o)*100}% + 10px)`:`left: calc(${o*100}% + 10px)`;return r`<div class="tooltip" style=${l}>${n(a.index)}</div>`}_antworten(e){let t=this._t,i=this._mass("antworten",Rt),n=this._dunkel?It:Ft,a=e.reihe,o=g=>g.richtig+g.teilweise+g.falsch+g.unbeantwortet,l=Bt(Math.max(...a.map(o))),h=i.h-X-M,_=(i.b-S-Q)/a.length,u=Math.max(2,Math.min(Nt,_-tt)),f=a.map((g,v)=>{let p=S+v*_+(_-u)/2,x=i.h-M,m=oe.filter(N=>g[N]>0);return m.map((N,Ie)=>{let De=g[N]/l*h,pe=Math.max(1,De-(Ie>0?tt:0));x-=De;let P=Ie===m.length-1?Math.min(4,u/2,pe):0,ct=`M${p},${x+pe} V${x+P} q0,${-P} ${P},${-P} H${p+u-P} q${P},0 ${P},${P} V${x+pe} Z`;return R`<path d=${ct} fill=${n[N]}></path>`})});return r`
       <h3>${t("fortschritt_antworten")}</h3>
       <div
         class="diagramm"
@@ -726,9 +751,9 @@ var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e
         </svg>
         ${this._tooltip(i,"antworten",a.length,g=>{let v=a[g];return v?r`
             <div class="tag">${this._datum(v.tag,!0)}</div>
-            ${oe.map(m=>r`<div>
-                  <span class="punkt" style="background: ${n[m]}"></span>
-                  ${t(`reihe_${m}`)}: ${v[m]}
+            ${oe.map(p=>r`<div>
+                  <span class="punkt" style="background: ${n[p]}"></span>
+                  ${t(`reihe_${p}`)}: ${v[p]}
                 </div>`)}
           `:r``})}
       </div>
@@ -738,13 +763,13 @@ var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e
               ${t(`reihe_${g}`)}
             </span>`)}
       </div>
-    `}_linie(e,t,i,n){let a=e.h-X-M,o=(e.b-S-Q)/t.length,l=(g,v)=>[S+(v+.5)*o,e.h-M-g/100*a],h="",_=!1,c=[];t.forEach((g,v)=>{if(g===null){_=!1;return}let[m,x]=l(g,v);h+=`${_?"L":"M"}${m},${x} `,!_&&(v===t.length-1||t[v+1]===null)&&c.push([m,x]),_=!0});let f=n>=0?t[n]:null;return R`
+    `}_linie(e,t,i,n){let a=e.h-X-M,o=(e.b-S-Q)/t.length,l=(g,v)=>[S+(v+.5)*o,e.h-M-g/100*a],h="",_=!1,u=[];t.forEach((g,v)=>{if(g===null){_=!1;return}let[p,x]=l(g,v);h+=`${_?"L":"M"}${p},${x} `,!_&&(v===t.length-1||t[v+1]===null)&&u.push([p,x]),_=!0});let f=n>=0?t[n]:null;return R`
       <path d=${h} fill="none" stroke=${i} stroke-width="2"
         stroke-linejoin="round" stroke-linecap="round"></path>
-      ${c.map(([g,v])=>R`<circle cx=${g} cy=${v} r="3" fill=${i}></circle>`)}
+      ${u.map(([g,v])=>R`<circle cx=${g} cy=${v} r="3" fill=${i}></circle>`)}
       ${f!=null?R`<circle cx=${l(f,n)[0]} cy=${l(f,n)[1]}
-              r="4" fill=${i} stroke="var(--lh-card)" stroke-width="2"></circle>`:u}
-    `}_quote(e){let t=this._t,i=this._mass("quote",Ye),n=(this._dunkel?Xe:Qe)[0],a=e.reihe,o=a.map(h=>h.trefferquote),l=this._zeiger?.diagramm==="quote"?this._zeiger.index:-1;return r`
+              r="4" fill=${i} stroke="var(--lh-card)" stroke-width="2"></circle>`:c}
+    `}_quote(e){let t=this._t,i=this._mass("quote",et),n=(this._dunkel?Ye:Xe)[0],a=e.reihe,o=a.map(h=>h.trefferquote),l=this._zeiger?.diagramm==="quote"?this._zeiger.index:-1;return r`
       <h3>${t("fortschritt_quote")}</h3>
       <div class="klein">${t("fortschritt_quote_hilfe")}</div>
       <div
@@ -762,7 +787,7 @@ var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e
           <div>${t("fortschritt_quote")}: ${this._prozent(a[h]?.trefferquote)}</div>
         `)}
       </div>
-    `}_lernstand(e){let t=this._t,i=this._mass("lernstand",Ye),n=this._dunkel?Xe:Qe,a=e.faecher.slice(0,n.length),o=e.reihe.map(h=>h.tag),l=this._zeiger?.diagramm==="lernstand"?this._zeiger.index:-1;return r`
+    `}_lernstand(e){let t=this._t,i=this._mass("lernstand",et),n=this._dunkel?Ye:Xe,a=e.faecher.slice(0,n.length),o=e.reihe.map(h=>h.tag),l=this._zeiger?.diagramm==="lernstand"?this._zeiger.index:-1;return r`
       <h3>${t("fortschritt_lernstand")}</h3>
       <div class="klein">${t("fortschritt_lernstand_hilfe")}</div>
       <div
@@ -782,8 +807,8 @@ var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e
         </svg>
         ${this._tooltip(i,"lernstand",o.length,h=>r`
           <div class="tag">${this._datum(o[h],!0)}</div>
-          ${a.map((_,c)=>r`<div>
-                <span class="punkt" style="background: ${n[c]}"></span>
+          ${a.map((_,u)=>r`<div>
+                <span class="punkt" style="background: ${n[u]}"></span>
                 ${_.name}: ${this._prozent(_.lernstand[h])}
               </div>`)}
         `)}
@@ -793,7 +818,7 @@ var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e
                   <span class="punkt" style="background: ${n[_]}"></span>
                   ${h.name}
                 </span>`)}
-          </div>`:u}
+          </div>`:c}
     `}_alsTabelle(e){let t=this._t,i=e.reihe.map((n,a)=>({tag:n,index:a})).filter(({tag:n})=>n.gefragt||n.richtig||n.falsch||n.teilweise).reverse();return i.length?r`
       <div class="tabelle">
         <table>
@@ -824,13 +849,13 @@ var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e
           </li>`)}
     </ul>`}_schwach(e){let t=this._t;return r`
       <h3>${t("fortschritt_schwach")}</h3>
-      ${!e.lektionen.length&&!e.aufgaben.length?r`<div class="leer">${t("fortschritt_keine_schwach")}</div>`:u}
+      ${!e.lektionen.length&&!e.aufgaben.length?r`<div class="leer">${t("fortschritt_keine_schwach")}</div>`:c}
       ${e.lektionen.length?r`<h4>${t("fortschritt_lektionen")}</h4>
             <ul>
               ${e.lektionen.map(i=>r`<li>${this._lektionText(i)}</li>`)}
-            </ul>`:u}
+            </ul>`:c}
       ${e.aufgaben.length?r`<h4>${t("fortschritt_aufgaben")}</h4>
-            ${this._aufgabenListe(e.aufgaben)}`:u}
+            ${this._aufgabenListe(e.aufgaben)}`:c}
     `}_simulationen(e){let t=this._t;return r`
       <h3>${t("fortschritt_simulationen")}</h3>
       ${e.simulationen.length?r`<ul>
@@ -840,7 +865,7 @@ var ut=Object.defineProperty;var dt=Object.getOwnPropertyDescriptor;var b=(d,s,e
 ${t.titel}
 ${t.zeilen.map(i=>`- ${i}`).join(`
 `)}`)].join(`
-`)}async _kopiereReport(){if(this._report)try{await navigator.clipboard.writeText(this._reportText(this._report)),this._reportHinweis=this._t("report_kopiert")}catch{this._reportHinweis=this._t("report_kopieren_fehler")}}_druckeReport(){let e=this._report;if(!e)return;let t=window.open("","_blank");if(!t){this._reportHinweis=this._t("report_druck_blockiert");return}let i=t.document;i.title=this._t("wochenreport");let n=i.createElement("style");n.textContent="body{font-family:sans-serif;margin:24px;color:#000}h1{font-size:20px}h2{font-size:15px;margin:18px 0 4px}li{margin:3px 0}",i.head.append(n);let a=i.createElement("h1");a.textContent=`${this._t("wochenreport")} \u2013 ${this._reportTitel(e)}`,i.body.append(a);for(let o of this._abschnitte(e)){let l=i.createElement("h2");l.textContent=o.titel;let h=i.createElement("ul");for(let _ of o.zeilen){let c=i.createElement("li");c.textContent=_,h.append(c)}i.body.append(l,h)}t.focus(),t.print()}_reportDialog(e){let t=this._t;return r`
+`)}async _kopiereReport(){if(this._report)try{await navigator.clipboard.writeText(this._reportText(this._report)),this._reportHinweis=this._t("report_kopiert")}catch{this._reportHinweis=this._t("report_kopieren_fehler")}}_druckeReport(){let e=this._report;if(!e)return;let t=window.open("","_blank");if(!t){this._reportHinweis=this._t("report_druck_blockiert");return}let i=t.document;i.title=this._t("wochenreport");let n=i.createElement("style");n.textContent="body{font-family:sans-serif;margin:24px;color:#000}h1{font-size:20px}h2{font-size:15px;margin:18px 0 4px}li{margin:3px 0}",i.head.append(n);let a=i.createElement("h1");a.textContent=`${this._t("wochenreport")} \u2013 ${this._reportTitel(e)}`,i.body.append(a);for(let o of this._abschnitte(e)){let l=i.createElement("h2");l.textContent=o.titel;let h=i.createElement("ul");for(let _ of o.zeilen){let u=i.createElement("li");u.textContent=_,h.append(u)}i.body.append(l,h)}t.focus(),t.print()}_reportDialog(e){let t=this._t;return r`
       <div
         class="overlay"
         @click=${i=>{i.target===i.currentTarget&&(this._reportOffen=!1)}}
@@ -869,14 +894,14 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           </div>
           ${e.seit&&e.seit>e.bis?r`<p class="klein">
                 ${t("fortschritt_seit",{datum:this._datum(e.seit,!0)})}
-              </p>`:u}
+              </p>`:c}
           ${this._abschnitte(e).map(i=>r`<h3>${i.titel}</h3>
                 <ul>
                   ${i.zeilen.map(n=>r`<li>${n}</li>`)}
                 </ul>`)}
           ${this._reportHinweis?r`<div class="meldung" role="status" style="margin-top: 12px">
                 <span>${this._reportHinweis}</span>
-              </div>`:u}
+              </div>`:c}
           <div class="aktionen">
             <button @click=${this._kopiereReport}>${t("report_kopieren")}</button>
             <button @click=${this._druckeReport}>${t("report_drucken")}</button>
@@ -907,9 +932,9 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
         </button>
         ${this.wochenreport?r`<button class="primaer" @click=${()=>this._oeffneReport()}>
               ${e("wochenreport")}
-            </button>`:u}
+            </button>`:c}
       </div>
-      ${this._fehler?r`<div class="meldung fehler" role="alert"><span>${this._fehler}</span></div>`:u}
+      ${this._fehler?r`<div class="meldung fehler" role="alert"><span>${this._fehler}</span></div>`:c}
       ${t?t.seit?r`
               <div class="klein" style="margin-bottom: 8px">
                 ${e("fortschritt_seit",{datum:this._datum(t.seit,!0)})}
@@ -923,9 +948,9 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                 <div class="card">${this._schwach(t)}</div>
                 <div class="card">${this._simulationen(t)}</div>
               </div>
-            `:r`<div class="card leer">${e("fortschritt_leer")}</div>`:u}
-      ${this._reportOffen&&this._report?this._reportDialog(this._report):u}
-    `}};b([E({attribute:!1})],A.prototype,"hass",2),b([E({type:Boolean,reflect:!0})],A.prototype,"narrow",2),b([E()],A.prototype,"kindId",2),b([E({type:Boolean})],A.prototype,"wochenreport",2),b([E({attribute:!1})],A.prototype,"stand",2),b([k()],A.prototype,"_tage",2),b([k()],A.prototype,"_daten",2),b([k()],A.prototype,"_fehler",2),b([k()],A.prototype,"_tabelle",2),b([k()],A.prototype,"_zeiger",2),b([k()],A.prototype,"_report",2),b([k()],A.prototype,"_reportVersatz",2),b([k()],A.prototype,"_reportOffen",2),b([k()],A.prototype,"_reportHinweis",2),b([k()],A.prototype,"_breiten",2);customElements.get("lh-fortschritt")||customElements.define("lh-fortschritt",A);var tt=["#86b6ef","#5598e7","#2a78d6","#1c5cab","#104281"],it=["#184f95","#256abf","#3987e5","#6da7ec","#b7d3f6"],Lt=6e4,nt=20,Pt=5,qt=["learnbuddy_question_sent","learnbuddy_answer_evaluated"],D=class extends I{constructor(){super(...arguments);this.narrow=!1;this.kindId="";this._fehler="";this._kalenderLaeuft=!1;this._erfolg="";this._abfrage=null;this._zaehlung=0;this._beschaeftigt=!1;this._abos=[]}static{this.styles=[J,U`
+            `:r`<div class="card leer">${e("fortschritt_leer")}</div>`:c}
+      ${this._reportOffen&&this._report?this._reportDialog(this._report):c}
+    `}};b([E({attribute:!1})],A.prototype,"hass",2),b([E({type:Boolean,reflect:!0})],A.prototype,"narrow",2),b([E()],A.prototype,"kindId",2),b([E({type:Boolean})],A.prototype,"wochenreport",2),b([E({attribute:!1})],A.prototype,"stand",2),b([k()],A.prototype,"_tage",2),b([k()],A.prototype,"_daten",2),b([k()],A.prototype,"_fehler",2),b([k()],A.prototype,"_tabelle",2),b([k()],A.prototype,"_zeiger",2),b([k()],A.prototype,"_report",2),b([k()],A.prototype,"_reportVersatz",2),b([k()],A.prototype,"_reportOffen",2),b([k()],A.prototype,"_reportHinweis",2),b([k()],A.prototype,"_breiten",2);customElements.get("lh-fortschritt")||customElements.define("lh-fortschritt",A);var it=["#86b6ef","#5598e7","#2a78d6","#1c5cab","#104281"],nt=["#184f95","#256abf","#3987e5","#6da7ec","#b7d3f6"],Lt=6e4,st=20,Pt=5,jt=["learnbuddy_question_sent","learnbuddy_answer_evaluated"],D=class extends I{constructor(){super(...arguments);this.narrow=!1;this.kindId="";this._fehler="";this._kalenderLaeuft=!1;this._erfolg="";this._abfrage=null;this._zaehlung=0;this._beschaeftigt=!1;this._abos=[]}static{this.styles=[J,U`
       :host {
         min-height: 0;
         background: none;
@@ -1123,14 +1148,14 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
         padding: 12px 14px;
         white-space: normal;
       }
-    `]}get _t(){return Z(this.hass?.language??"en")}get _api(){return new j(this.hass)}connectedCallback(){super.connectedCallback(),this._timer=window.setInterval(()=>void this._lade(),Lt)}_abonniere(){let e=this.hass?.connection;!e||this._abos.length||(this._abos=qt.map(t=>e.subscribeEvents(()=>void this._lade(),t)))}disconnectedCallback(){super.disconnectedCallback(),window.clearInterval(this._timer);for(let e of this._abos)e.then(t=>t()).catch(()=>{});this._abos=[]}willUpdate(e){this._abonniere(),e.has("kindId")&&(this._daten=void 0,this._fehler="",this._erfolg="",this._lade())}async _lade(){if(!this.hass||!this.kindId)return;let e=this.kindId;try{let t=await this._api.dashboard(e);e===this.kindId&&(this._daten=t,this._fehler="")}catch(t){this._fehler=y(this._t,t)}}async _frage(e,t={},i=1){this._abfrage=null,this._beschaeftigt=!0,this._erfolg="";try{await this._api.frageStellen(this.kindId,e,t,i),this._fehler="",this._erfolg=this._t(i>1?"fragen_gesendet":"frage_gesendet")}catch(n){this._fehler=y(this._t,n)}finally{this._beschaeftigt=!1,await this._lade()}}_jetztFragen(e=null){let t=this._daten?.faecher??[],i=t.find(n=>n.id===e)??(t.length===1?t[0]:void 0);this._setzeAbfrage({fachId:i?.id??null,lektionen:new Set((i?.lektionsliste??[]).map(n=>n.name)),seiten:{},seiteVon:"",seiteBis:"",fehlerquote:"",frist:"",anzahl:Pt,umfang:null,fehler:""})}async _brichFrageAb(){if(window.confirm(this._t("frage_abbrechen_frage"))){try{await this._api.frageAbbrechen(this.kindId),this._fehler=""}catch(e){this._fehler=y(this._t,e)}await this._lade()}}async _brichSimulationAb(){if(window.confirm(this._t("sim_abbrechen_frage"))){try{await this._api.simulationAbbrechen(this.kindId),this._fehler=""}catch(e){this._fehler=y(this._t,e)}await this._lade()}}async _setzeAktiv(e){try{await this._api.setzeAktiv(this.kindId,e),this._fehler=""}catch(t){this._fehler=y(this._t,t)}await this._lade()}_oeffne(e,t){this.dispatchEvent(new CustomEvent("lh-oeffnen",{detail:{ziel:e,fachId:t}}))}_zeit(e){if(!e)return"";let t=new Date(e),i=this.hass?.language??"en",n=new Date().toDateString()===t.toDateString();return t.toLocaleString(i,{...n?{}:{weekday:"short",day:"2-digit",month:"2-digit"},hour:"2-digit",minute:"2-digit"})}_uhr(e){return e?new Date(e).toLocaleTimeString(this.hass?.language??"en",{hour:"2-digit",minute:"2-digit"}):""}_datum(e){return new Date(`${e}T00:00:00`).toLocaleDateString(this.hass?.language??"en",{weekday:"short",day:"2-digit",month:"2-digit"})}_tage(e){return e<=0?this._t("heute"):e===1?this._t("morgen"):this._t("in_tagen",{n:e})}_balken(e,t=!1){let i=this.hass?.themes?.darkMode?it:tt,n=e.reduce((l,h)=>l+h,0),a=this._t,o=e.map((l,h)=>`${a("box",{n:h+1})}: ${l}`).join(", ");return r`
+    `]}get _t(){return Z(this.hass?.language??"en")}get _api(){return new q(this.hass)}connectedCallback(){super.connectedCallback(),this._timer=window.setInterval(()=>void this._lade(),Lt)}_abonniere(){let e=this.hass?.connection;!e||this._abos.length||(this._abos=jt.map(t=>e.subscribeEvents(()=>void this._lade(),t)))}disconnectedCallback(){super.disconnectedCallback(),window.clearInterval(this._timer);for(let e of this._abos)e.then(t=>t()).catch(()=>{});this._abos=[]}willUpdate(e){this._abonniere(),e.has("kindId")&&(this._daten=void 0,this._fehler="",this._erfolg="",this._lade())}async _lade(){if(!this.hass||!this.kindId)return;let e=this.kindId;try{let t=await this._api.dashboard(e);e===this.kindId&&(this._daten=t,this._fehler="")}catch(t){this._fehler=y(this._t,t)}}async _frage(e,t={},i=1){this._abfrage=null,this._beschaeftigt=!0,this._erfolg="";try{await this._api.frageStellen(this.kindId,e,t,i),this._fehler="",this._erfolg=this._t(i>1?"fragen_gesendet":"frage_gesendet")}catch(n){this._fehler=y(this._t,n)}finally{this._beschaeftigt=!1,await this._lade()}}_jetztFragen(e=null){let t=this._daten?.faecher??[],i=t.find(n=>n.id===e)??(t.length===1?t[0]:void 0);this._setzeAbfrage({fachId:i?.id??null,lektionen:new Set((i?.lektionsliste??[]).map(n=>n.name)),seiten:{},seiteVon:"",seiteBis:"",fehlerquote:"",frist:"",anzahl:Pt,umfang:null,fehler:""})}async _brichFrageAb(){if(window.confirm(this._t("frage_abbrechen_frage"))){try{await this._api.frageAbbrechen(this.kindId),this._fehler=""}catch(e){this._fehler=y(this._t,e)}await this._lade()}}async _brichSimulationAb(){if(window.confirm(this._t("sim_abbrechen_frage"))){try{await this._api.simulationAbbrechen(this.kindId),this._fehler=""}catch(e){this._fehler=y(this._t,e)}await this._lade()}}async _setzeAktiv(e){try{await this._api.setzeAktiv(this.kindId,e),this._fehler=""}catch(t){this._fehler=y(this._t,t)}await this._lade()}_oeffne(e,t){this.dispatchEvent(new CustomEvent("lh-oeffnen",{detail:{ziel:e,fachId:t}}))}_zeit(e){if(!e)return"";let t=new Date(e),i=this.hass?.language??"en",n=new Date().toDateString()===t.toDateString();return t.toLocaleString(i,{...n?{}:{weekday:"short",day:"2-digit",month:"2-digit"},hour:"2-digit",minute:"2-digit"})}_uhr(e){return e?new Date(e).toLocaleTimeString(this.hass?.language??"en",{hour:"2-digit",minute:"2-digit"}):""}_datum(e){return new Date(`${e}T00:00:00`).toLocaleDateString(this.hass?.language??"en",{weekday:"short",day:"2-digit",month:"2-digit"})}_tage(e){return e<=0?this._t("heute"):e===1?this._t("morgen"):this._t("in_tagen",{n:e})}_balken(e,t=!1){let i=this.hass?.themes?.darkMode?nt:it,n=e.reduce((l,h)=>l+h,0),a=this._t,o=e.map((l,h)=>`${a("box",{n:h+1})}: ${l}`).join(", ");return r`
       <div class="balken ${t?"gross":""}" role="img" aria-label=${o}>
-        ${n===0?u:e.map((l,h)=>l===0?u:r`<span
+        ${n===0?c:e.map((l,h)=>l===0?c:r`<span
                     style="flex: ${l}; background: ${i[h]??""}"
                     title="${a("box",{n:h+1})}: ${a("karten",{n:l})}"
                   ></span>`)}
       </div>
-    `}_legende(e){let t=this.hass?.themes?.darkMode?it:tt;return r`
+    `}_legende(e){let t=this.hass?.themes?.darkMode?nt:it;return r`
       <div class="legende">
         ${e.map((i,n)=>r`
             <span>
@@ -1142,7 +1167,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
     `}render(){let e=this._t,t=this._daten;return r`
       ${this._fehler?r`<div class="meldung fehler" role="alert">
             <span>${this._fehler}</span>
-          </div>`:u}
+          </div>`:c}
       ${this._erfolg?r`<div class="meldung" role="status">
             <span>${this._erfolg}</span>
             <button
@@ -1152,7 +1177,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             >
               <ha-icon icon="mdi:close"></ha-icon>
             </button>
-          </div>`:u}
+          </div>`:c}
       ${t?r`
             <div class="raster">
               <div class="card breit">${this._status(t)}</div>
@@ -1168,9 +1193,9 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                   .kindId=${this.kindId}
                   .wochenreport=${t.wochenreport??!1}
                   .stand=${t}
-                ></lh-fortschritt>`:u}
-          `:this._fehler?u:r`<div class="leer">${e("laden")}</div>`}
-      ${this._abfrage&&t?this._abfrageDialog(t,this._abfrage):u}
+                ></lh-fortschritt>`:c}
+          `:this._fehler?c:r`<div class="leer">${e("laden")}</div>`}
+      ${this._abfrage&&t?this._abfrageDialog(t,this._abfrage):c}
     `}_status(e){let t=this._t,i=e.zustand,n=i.offene_frage,a=i.pausiert?i.pausiert_bis?t("status_pausiert_bis",{zeit:this._zeit(i.pausiert_bis)}):t("status_pausiert"):n||i.naechste_abfrage||i.simulation?t("status_aktiv"):t("status_nichts_geplant"),o=!i.pausiert&&!n&&!i.naechste_abfrage&&!i.simulation,l=(h,_)=>r`
       <div class="fakt">
         <div class="klein">${h}</div>
@@ -1185,24 +1210,24 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           ${a}
         </div>
         <div class="fakten">
-          ${i.simulation?l(t("sim_laeuft"),t("sim_laeuft_text",{nr:Math.min(i.simulation.nummer,i.simulation.anzahl),n:i.simulation.anzahl})):u}
+          ${i.simulation?l(t("sim_laeuft"),t("sim_laeuft_text",{nr:Math.min(i.simulation.nummer,i.simulation.anzahl),n:i.simulation.anzahl})):c}
           ${l(t("offene_frage"),n?t(n.angehalten?"offene_frage_angehalten":n.timeout_um?"offene_frage_text":"offene_frage_ohne_frist",{fach:n.fach,von:this._uhr(n.gestellt_um),bis:this._uhr(n.timeout_um)}):t("keine_offene_frage"))}
-          ${i.abfrage&&n?l(t("abfrage_laeuft"),this._abfrageText(n.fach,i.abfrage)):u}
+          ${i.abfrage&&n?l(t("abfrage_laeuft"),this._abfrageText(n.fach,i.abfrage)):c}
           ${l(t("naechste_abfrage"),n&&!i.pausiert?t("nach_offener_frage"):i.naechste_abfrage&&!i.pausiert?this._zeit(i.naechste_abfrage):t("keine_geplant"))}
           ${l(t("letzte_frage"),i.letzte_frage_um?this._zeit(i.letzte_frage_um):t("noch_nie"))}
         </div>
         <div class="knoepfe">
-          ${o?u:r`<button
+          ${o?c:r`<button
                 @click=${()=>this._setzeAktiv(!i.aktiv||i.pausiert)}
               >
                 ${t(i.pausiert?"fortsetzen":"pausieren")}
               </button>`}
           ${n&&!i.simulation?r`<button class="gefahr" @click=${this._brichFrageAb}>
                 ${t("frage_abbrechen")}
-              </button>`:u}
+              </button>`:c}
           ${i.simulation?r`<button class="gefahr" @click=${this._brichSimulationAb}>
                 ${t("sim_abbrechen")}
-              </button>`:u}
+              </button>`:c}
         </div>
       </div>
     `}_kacheln(e){let t=this._t,i=e.statistik,n=(a,o,l)=>r`
@@ -1214,11 +1239,11 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
       ${n(t("kz_gefragt"),String(i.gefragt),"mdi:chat-question")}
       ${n(t("kz_richtig"),String(i.richtig),"mdi:check")}
       ${n(t("kz_falsch"),String(i.falsch),"mdi:close")}
-      ${i.teilweise?n(t("kz_teilweise"),String(i.teilweise),"mdi:circle-half-full"):u}
+      ${i.teilweise?n(t("kz_teilweise"),String(i.teilweise),"mdi:circle-half-full"):c}
       ${n(t("kz_unbeantwortet"),String(i.unbeantwortet),"mdi:timer-sand")}
       ${n(t("kz_trefferquote"),i.trefferquote===null?"\u2013":`${Math.round(i.trefferquote)} %`,"mdi:bullseye-arrow")}
       ${n(t("kz_aufgaben"),String(i.aufgaben),"mdi:cards-outline")}
-    `}_sicher(e){return e===null?u:r`<span class="klein" title=${this._t("sicher_hinweis")}>
+    `}_sicher(e){return e===null?c:r`<span class="klein" title=${this._t("sicher_hinweis")}>
           ${this._t("sicher",{n:e})}
         </span>`}_arbeiten(e){let t=this._t,i=n=>r`
       <div class="zeile">
@@ -1252,7 +1277,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
       <h2>${t("anstehend")}</h2>
       ${e.arbeiten.length?e.arbeiten.map(i):r`<div class="leer">${t("keine_anstehend")}</div>`}
       ${this._vorschlaege(e)}
-    `}_vorschlaege(e){let t=e.kalender;if(!t)return u;let i=this._t,n=e.vorschlaege??[],a=o=>r`
+    `}_vorschlaege(e){let t=e.kalender;if(!t)return c;let i=this._t,n=e.vorschlaege??[],a=o=>r`
       <div class="zeile">
         <div class="countdown">
           <div class="klein">${this._datum(o.datum)}</div>
@@ -1266,7 +1291,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           </div>
           ${o.gleicher_tag.length?r`<div class="klein">
                 ${i("vorschlag_gleicher_tag",{arbeiten:o.gleicher_tag.join(", ")})}
-              </div>`:u}
+              </div>`:c}
         </div>
         <button class="primaer" @click=${()=>this._trageEin(o)}>
           ${i("vorschlag_eintragen")}
@@ -1277,7 +1302,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
       </div>
     `;return r`
       <h2 class="abstand">${i("vorschlaege")}</h2>
-      ${t.fehler?r`<div class="klein warnung" role="status">${i("kalender_fehler")}</div>`:u}
+      ${t.fehler?r`<div class="klein warnung" role="status">${i("kalender_fehler")}</div>`:c}
       ${n.length?n.map(a):r`<div class="leer">${i("keine_vorschlaege")}</div>`}
       <div class="kalenderfuss">
         <span class="klein">
@@ -1288,7 +1313,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
         </button>
         ${t.ignoriert?r`<button @click=${this._zeigeIgnorierte}>
               ${i("kalender_ignorierte",{n:t.ignoriert})}
-            </button>`:u}
+            </button>`:c}
       </div>
     `}_trageEin(e){this.dispatchEvent(new CustomEvent("lh-vorschlag",{detail:{vorschlag:e}}))}async _ignoriere(e){try{await this._api.kalenderIgnorieren(this.kindId,e.uid),this._fehler=""}catch(t){this._fehler=y(this._t,t)}await this._lade()}async _zeigeIgnorierte(){try{await this._api.kalenderWiederherstellen(this.kindId),this._fehler=""}catch(e){this._fehler=y(this._t,e)}await this._lade()}async _pruefeKalender(){this._kalenderLaeuft=!0;try{await this._api.kalenderPruefen(this.kindId),this._fehler=""}catch(e){this._fehler=y(this._t,e)}finally{this._kalenderLaeuft=!1}await this._lade()}_faecher(e){let t=this._t,i=this.hass?.language??"en",n=a=>r`
       <div class="zeile">
@@ -1301,8 +1326,8 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           </div>
           <div class="klein">
             ${t("fach_aufgaben",{n:a.aufgaben,l:a.lektionen})}
-            ${a.ungeprueft?r` · ${t("ungeprueft",{n:a.ungeprueft})}`:u}
-            ${a.trefferquote===null?u:r` · ${t("kz_trefferquote")} ${Math.round(a.trefferquote)} %`}
+            ${a.ungeprueft?r` · ${t("ungeprueft",{n:a.ungeprueft})}`:c}
+            ${a.trefferquote===null?c:r` · ${t("kz_trefferquote")} ${Math.round(a.trefferquote)} %`}
           </div>
           <div class="mini">${this._balken(a.boxen)} ${this._sicher(a.sicher)}</div>
         </div>
@@ -1346,31 +1371,31 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                 </span>
               </div>
             `):r`<div class="leer">${t("keine_schwierig")}</div>`}
-    `}_abfrageText(e,t){let i=this._t,n=[],a=(c,f)=>c!=null&&f!=null?i("abfrage_seiten",{von:c,bis:f}):c!=null?i("abfrage_ab_seite",{n:c}):f!=null?i("abfrage_bis_seite",{n:f}):"",o=new Map((t.lektion_seiten??[]).map(c=>[c.lektion,a(c.von,c.bis)])),l=t.lektionen?.length?t.lektionen:[...o.keys()];l.length&&n.push(l.map(c=>o.get(c)?`${c} ${o.get(c)}`:c).join(", "));let h=a(t.seite_von,t.seite_bis);h&&n.push(h),t.fehlerquote_ab!=null&&n.push(i("abfrage_ab_fehlerquote",{n:t.fehlerquote_ab}));let _=n.length?`${e} (${n.join(" \xB7 ")})`:e;return i("abfrage_laeuft_text",{ort:_,n:t.weitere})}_auswahl(e,t){let i=e.faecher.find(h=>h.id===t.fachId);if(!i)return{};let n=i.lektionsliste.map(h=>h.name),a=n.filter(h=>t.lektionen.has(h));if(n.length>0&&a.length===0)return null;let o=(h,_)=>{let c=Math.round(Number(h));return h.trim()!==""&&Number.isFinite(c)&&c>=1?Math.min(c,_):null},l=n.length===0;return{lektionen:a.length===n.length?[]:a,seite_von:l?o(t.seiteVon,9999):null,seite_bis:l?o(t.seiteBis,9999):null,lektion_seiten:a.map(h=>({lektion:h,von:o(t.seiten[h]?.von??"",9999),bis:o(t.seiten[h]?.bis??"",9999)})).filter(h=>h.von!==null||h.bis!==null),fehlerquote_ab:o(t.fehlerquote,100)}}_setzeAbfrage(e){let t=this._daten;if(!t)return;let i=this._auswahl(t,e),n=++this._zaehlung;this._abfrage={...e,umfang:i===null?0:null,fehler:""},i!==null&&this._api.abfrageUmfang(this.kindId,e.fachId,i).then(a=>{n===this._zaehlung&&this._abfrage&&(this._abfrage={...this._abfrage,umfang:a})}).catch(a=>{n===this._zaehlung&&this._abfrage&&(this._abfrage={...this._abfrage,umfang:0,fehler:y(this._t,a)})})}_abfrageDialog(e,t){let i=this._t,n=()=>{this._abfrage=null},a=e.faecher.find(m=>m.id===t.fachId)??null,o=a?.lektionsliste??[],l=t.umfang,h=m=>{this._setzeAbfrage({...t,...m})},_=m=>{let x=e.faecher.find(p=>p.id===m);h({fachId:x?x.id:null,lektionen:new Set((x?.lektionsliste??[]).map(p=>p.name)),seiten:{},seiteVon:"",seiteBis:""})},c=(m,x)=>{let p=new Set(t.lektionen);x?p.add(m):p.delete(m),h({lektionen:p})},f=()=>{let m=Math.min(nt,Math.max(1,Math.round(t.anzahl)||1)),x=this._auswahl(e,t);if(x!==null){let p=t.frist.trim()===""?NaN:Math.round(Number(t.frist));this._frage(t.fachId,Number.isFinite(p)&&p>=0?{...x,frist_minuten:p}:x,m)}},g=(m,x)=>r`
+    `}_abfrageText(e,t){let i=this._t,n=[],a=(u,f)=>u!=null&&f!=null?i("abfrage_seiten",{von:u,bis:f}):u!=null?i("abfrage_ab_seite",{n:u}):f!=null?i("abfrage_bis_seite",{n:f}):"",o=new Map((t.lektion_seiten??[]).map(u=>[u.lektion,a(u.von,u.bis)])),l=t.lektionen?.length?t.lektionen:[...o.keys()];l.length&&n.push(l.map(u=>o.get(u)?`${u} ${o.get(u)}`:u).join(", "));let h=a(t.seite_von,t.seite_bis);h&&n.push(h),t.fehlerquote_ab!=null&&n.push(i("abfrage_ab_fehlerquote",{n:t.fehlerquote_ab}));let _=n.length?`${e} (${n.join(" \xB7 ")})`:e;return i("abfrage_laeuft_text",{ort:_,n:t.weitere})}_auswahl(e,t){let i=e.faecher.find(h=>h.id===t.fachId);if(!i)return{};let n=i.lektionsliste.map(h=>h.name),a=n.filter(h=>t.lektionen.has(h));if(n.length>0&&a.length===0)return null;let o=(h,_)=>{let u=Math.round(Number(h));return h.trim()!==""&&Number.isFinite(u)&&u>=1?Math.min(u,_):null},l=n.length===0;return{lektionen:a.length===n.length?[]:a,seite_von:l?o(t.seiteVon,9999):null,seite_bis:l?o(t.seiteBis,9999):null,lektion_seiten:a.map(h=>({lektion:h,von:o(t.seiten[h]?.von??"",9999),bis:o(t.seiten[h]?.bis??"",9999)})).filter(h=>h.von!==null||h.bis!==null),fehlerquote_ab:o(t.fehlerquote,100)}}_setzeAbfrage(e){let t=this._daten;if(!t)return;let i=this._auswahl(t,e),n=++this._zaehlung;this._abfrage={...e,umfang:i===null?0:null,fehler:""},i!==null&&this._api.abfrageUmfang(this.kindId,e.fachId,i).then(a=>{n===this._zaehlung&&this._abfrage&&(this._abfrage={...this._abfrage,umfang:a})}).catch(a=>{n===this._zaehlung&&this._abfrage&&(this._abfrage={...this._abfrage,umfang:0,fehler:y(this._t,a)})})}_abfrageDialog(e,t){let i=this._t,n=()=>{this._abfrage=null},a=e.faecher.find(p=>p.id===t.fachId)??null,o=a?.lektionsliste??[],l=t.umfang,h=p=>{this._setzeAbfrage({...t,...p})},_=p=>{let x=e.faecher.find(m=>m.id===p);h({fachId:x?x.id:null,lektionen:new Set((x?.lektionsliste??[]).map(m=>m.name)),seiten:{},seiteVon:"",seiteBis:""})},u=(p,x)=>{let m=new Set(t.lektionen);x?m.add(p):m.delete(p),h({lektionen:m})},f=()=>{let p=Math.min(st,Math.max(1,Math.round(t.anzahl)||1)),x=this._auswahl(e,t);if(x!==null){let m=t.frist.trim()===""?NaN:Math.round(Number(t.frist));this._frage(t.fachId,Number.isFinite(m)&&m>=0?{...x,frist_minuten:m}:x,p)}},g=(p,x)=>r`
       <input
         type="number"
         min="1"
         max="9999"
         aria-label=${i(x==="von"?"abfrage_seite_von":"abfrage_seite_bis")}
-        ?disabled=${!t.lektionen.has(m)}
-        .value=${t.seiten[m]?.[x]??""}
-        @input=${p=>{let N=t.seiten[m]??{von:"",bis:""};h({seiten:{...t.seiten,[m]:{...N,[x]:p.target.value}}})}}
+        ?disabled=${!t.lektionen.has(p)}
+        .value=${t.seiten[p]?.[x]??""}
+        @input=${m=>{let N=t.seiten[p]??{von:"",bis:""};h({seiten:{...t.seiten,[p]:{...N,[x]:m.target.value}}})}}
       />
-    `,v=(m,x,p)=>r`
+    `,v=(p,x,m)=>r`
       <label class="feld">
         ${i(x)}
         <input
           type="number"
           min="1"
-          max=${p}
-          .value=${t[m]}
-          @input=${N=>h({[m]:N.target.value})}
+          max=${m}
+          .value=${t[p]}
+          @input=${N=>h({[p]:N.target.value})}
         />
       </label>
     `;return r`
       <div
         class="overlay"
-        @click=${m=>{m.target===m.currentTarget&&n()}}
+        @click=${p=>{p.target===p.currentTarget&&n()}}
       >
         <div class="dialog" role="dialog" aria-modal="true" style="width: min(440px, 100%)">
           <h2>${i("abfrage_titel")}</h2>
@@ -1378,18 +1403,18 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             ${i("abfrage_fach")}
             <select
               .value=${t.fachId??""}
-              @change=${m=>_(m.target.value)}
+              @change=${p=>_(p.target.value)}
             >
               ${e.faecher.length>1?r`<option value="" ?selected=${t.fachId===null}>
                     ${i("egal_welches")}
-                  </option>`:u}
-              ${e.faecher.map(m=>r`
+                  </option>`:c}
+              ${e.faecher.map(p=>r`
                   <option
-                    value=${m.id}
-                    ?selected=${m.id===t.fachId}
-                    ?disabled=${m.aufgaben===0}
+                    value=${p.id}
+                    ?selected=${p.id===t.fachId}
+                    ?disabled=${p.aufgaben===0}
                   >
-                    ${m.name} (${m.aufgaben})
+                    ${p.name} (${p.aufgaben})
                   </option>
                 `)}
             </select>
@@ -1397,43 +1422,43 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           ${o.length>0?r`
                 <fieldset class="lektionswahl">
                   <legend>${i("abfrage_lektionen")}</legend>
-                  ${o.map(m=>r`
+                  ${o.map(p=>r`
                       <div class="lektionszeile">
                         <label>
                           <input
                             type="checkbox"
-                            .checked=${t.lektionen.has(m.name)}
-                            @change=${x=>c(m.name,x.target.checked)}
+                            .checked=${t.lektionen.has(p.name)}
+                            @change=${x=>u(p.name,x.target.checked)}
                           />
-                          ${m.name}
-                          <span class="klein">${i("arbeit_umfang",{n:m.aufgaben})}</span>
+                          ${p.name}
+                          <span class="klein">${i("arbeit_umfang",{n:p.aufgaben})}</span>
                         </label>
                         <span class="seiten">
-                          ${i("abfrage_seite_kurz")} ${g(m.name,"von")} – ${g(m.name,"bis")}
+                          ${i("abfrage_seite_kurz")} ${g(p.name,"von")} – ${g(p.name,"bis")}
                         </span>
                       </div>
                     `)}
                   ${a&&a.ohne_lektion>0?r`<div class="klein">
                         ${i("abfrage_ohne_lektion",{n:a.ohne_lektion})}
-                      </div>`:u}
+                      </div>`:c}
                 </fieldset>
-              `:u}
+              `:c}
           ${a?r`
                 <div class="raster">
                   ${o.length===0?r`${v("seiteVon","abfrage_seite_von",9999)}
-                      ${v("seiteBis","abfrage_seite_bis",9999)}`:u}
+                      ${v("seiteBis","abfrage_seite_bis",9999)}`:c}
                   ${v("fehlerquote","abfrage_fehlerquote",100)}
                 </div>
                 <div class="klein">${i("abfrage_filter_hinweis")}</div>
-              `:u}
+              `:c}
           <label class="feld">
             ${i("abfrage_anzahl")}
             <input
               type="number"
               min="1"
-              max=${nt}
+              max=${st}
               .value=${String(t.anzahl)}
-              @input=${m=>{this._abfrage={...t,anzahl:Number(m.target.value)}}}
+              @input=${p=>{this._abfrage={...t,anzahl:Number(p.target.value)}}}
             />
           </label>
           <label class="feld">
@@ -1443,11 +1468,11 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
               min="0"
               max="1440"
               .value=${t.frist}
-              @input=${m=>{this._abfrage={...t,frist:m.target.value}}}
+              @input=${p=>{this._abfrage={...t,frist:p.target.value}}}
             />
           </label>
           <div class="klein">${i("abfrage_frist_hinweis")}</div>
-          ${t.fehler?r`<div class="fehler">${t.fehler}</div>`:u}
+          ${t.fehler?r`<div class="fehler">${t.fehler}</div>`:c}
           <div class="klein">
             ${l===null?i("abfrage_umfang_laedt"):i("abfrage_umfang",{n:l})}
           </div>
@@ -1463,12 +1488,12 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           </div>
         </div>
       </div>
-    `}};b([E({attribute:!1})],D.prototype,"hass",2),b([E({type:Boolean,reflect:!0})],D.prototype,"narrow",2),b([E()],D.prototype,"kindId",2),b([k()],D.prototype,"_daten",2),b([k()],D.prototype,"_fehler",2),b([k()],D.prototype,"_kalenderLaeuft",2),b([k()],D.prototype,"_erfolg",2),b([k()],D.prototype,"_abfrage",2),b([k()],D.prototype,"_beschaeftigt",2);customElements.get("lh-uebersicht")||customElements.define("lh-uebersicht",D);var O="standard";var he=30,T=4;function jt(d){if(!d)return"";let s=new Date(d);if(Number.isNaN(s.getTime()))return"";let e=t=>String(t).padStart(2,"0");return`${s.getFullYear()}-${e(s.getMonth()+1)}-${e(s.getDate())}T${e(s.getHours())}:${e(s.getMinutes())}`}function st(d){return d.split(`
-`).map(s=>s.trim()).filter(s=>s.length>0)}var at={aufgabe:"",loesung:"",alternativen:""},Mt=["fremdsprache","mathe","sach"],Ut=["en","fr","es","it","la","de"],rt={typ:"fremdsprache",name:"",sprache:"en"},B="\0ohne",Y={suche:"",lektion:"",quelle:"",geprueft:"",fehlerquote:"",von:"",bis:"",seiteVon:"",seiteBis:""};function lt(d,s,e){let t=s.trim()===""?null:Number(s),i=e.trim()===""?null:Number(e);return t===null&&i===null?!0:d===null?!1:(t===null||d>=t)&&(i===null||d<=i)}function ot(d,s,e){return d.typ==="mathe"?`${d.aufgabe} = ${d.loesung}`:d.typ==="sach"?`${d.frage} \u2013 ${d.antwort}`:`${d.frage[s]??""} \u2013 ${d.frage[e]??""}`}function $(d){return d.target.value}function F(d){return d.target.checked}function ce(d){return d.split("|").map(s=>s.trim()).filter(s=>s.length>0)}var ht=(()=>{try{return new URL(import.meta.url).searchParams.get("v")}catch{return null}})();function Kt(d){return new Promise(s=>setTimeout(s,d))}var w=class extends I{constructor(){super(...arguments);this.narrow=!1;this._kindId="";this._fachId="";this._aufgaben=[];this._tab="uebersicht";this._filter={...Y};this._auswahl=new Set;this._entwurf=null;this._dialog=null;this._generieren=null;this._bildEntwurf=null;this._bildAdressen={};this._grossbild="";this._bildText="";this._seiten=null;this._saetze=null;this._foto=null;this._sim=null;this._veraltet=!1;this._nachgerechnet=null;this._nurIds=null;this._meldung=null;this._laedt=!0;this._beschaeftigt=!1;this._importText="";this._importLektion="";this._importTrenner="";this._importGeprueft=!0;this._vorschau=null;this._mitStatistik=!1;this._jsonDaten=null;this._arbeit=null;this._neuesFach=null;this._dialogFehler="";this._lektionName="";this._bereichId="";this._bereichName="";this._bereichArt="vokabel";this._bereichUmbenennen=null;this._jsonLektion="";this._gestartet=!1;this._taste=e=>{e.key==="Escape"&&(this._dialog?this._schliesseDialog():this._entwurf&&(this._entwurf=null))}}static{this.styles=J}get _t(){return Z(this.hass?.language??"en")}get _api(){return new j(this.hass)}get _fach(){return this._uebersicht?.faecher.find(e=>e.id===this._fachId)}get _faecherDesKindes(){return(this._uebersicht?.faecher??[]).filter(e=>e.kind_id===this._kindId)}get _arbeitenDesFachs(){return(this._uebersicht?.arbeiten??[]).filter(e=>e.fach_id===this._fachId).sort((e,t)=>e.datum.localeCompare(t.datum))}connectedCallback(){super.connectedCallback(),window.addEventListener("keydown",this._taste)}disconnectedCallback(){super.disconnectedCallback(),window.removeEventListener("keydown",this._taste)}updated(e){e.has("hass")&&this.hass&&!this._gestartet&&(this._gestartet=!0,this._ladeUebersicht())}async _ladeUebersicht(e=0){let t=0;for(;;)try{this._uebersicht=await this._api.uebersicht();break}catch(n){if(n.code==="not_loaded"&&t<e){t+=1,await Kt(500);continue}this._zeigeFehler(n),this._laedt=!1;return}let i=this._uebersicht;this._veraltet=!!(ht&&i.panel_version&&i.panel_version!==ht),i.kinder.some(n=>n.id===this._kindId)||(this._kindId=i.kinder[0]?.id??""),this._faecherDesKindes.some(n=>n.id===this._fachId)||(this._fachId=this._faecherDesKindes[0]?.id??""),await this._ladeAufgaben(),this._laedt=!1}async _ladeAufgaben(){if(!this._fachId){this._aufgaben=[];return}try{this._aufgaben=await this._api.aufgaben(this._fachId)}catch(t){this._aufgaben=[],this._zeigeFehler(t)}let e=new Set(this._aufgaben.map(t=>t.id));this._auswahl=new Set([...this._auswahl].filter(t=>e.has(t))),this._ladeBildAdressen()}async _ladeBildAdressen(){let e=new Set;for(let t of this._aufgaben){let i=t.typ==="mathe"?t.bild:t.typ==="sach"?t.quelle_bild:null;i&&!(i in this._bildAdressen)&&e.add(i)}for(let t of e)try{let i=await this._api.bildAdresse(t);this._bildAdressen={...this._bildAdressen,[t]:i}}catch{}}async _neuLaden(e=0){await this._ladeUebersicht(e)}_zeigeFehler(e){this._meldung={text:y(this._t,e),fehler:!0}}_zeigeErfolg(e){this._meldung={text:e,fehler:!1}}_gefiltert(){let e=this._filter,t=e.suche.trim().toLowerCase(),i=e.fehlerquote===""?null:Number(e.fehlerquote),n=this._nurIds&&this._aufgaben.some(a=>this._nurIds?.has(a.id))?this._nurIds:null;return this._aufgaben.filter(a=>{if(n&&!n.has(a.id)||this._aktiverBereich&&(a.bereich??O)!==this._aktiverBereich||t&&![...a.typ==="mathe"?[a.aufgabe,a.loesung,...a.alternativen]:a.typ==="sach"?[a.frage,a.antwort,...a.kernpunkte,...a.falsche_optionen]:[...Object.values(a.frage),...Object.values(a.alternativen).flat()],a.hinweis??""].join(" ").toLowerCase().includes(t)||e.lektion===B&&a.lektion||e.lektion&&e.lektion!==B&&a.lektion!==e.lektion||e.quelle&&a.quelle!==e.quelle||e.geprueft&&a.geprueft!==(e.geprueft==="ja")||i!==null&&!Number.isNaN(i)&&(a.fehlerquote===null||a.fehlerquote<i))return!1;let o=a.erstellt.slice(0,10);return!(e.von&&o<e.von||e.bis&&o>e.bis||!lt(a.seite,e.seiteVon,e.seiteBis))})}async _waehleKind(e){e!==this._kindId&&(this._kindId=e,this._fachId=this._faecherDesKindes[0]?.id??"",this._zuruecksetzen(),await this._ladeAufgaben())}async _waehleFach(e){this._fachId=e,this._zuruecksetzen(),await this._ladeAufgaben()}_zuruecksetzen(){this._auswahl=new Set,this._entwurf=null,this._bereichId="",this._filter={...Y}}get _bereiche(){return this._fach?.bereiche??[]}get _hatBereiche(){return this._bereiche.length>0}get _mehrere(){return this._bereiche.length>1}get _aktiverBereich(){return this._hatBereiche?this._bereiche.some(e=>e.id===this._bereichId)?this._bereichId:this._mehrere?"":this._bereiche[0]?.id??"":""}_ansichtVon(e){return e.art==="satz"?"sach":this._fach?.typ??"vokabel"}get _ansicht(){return this._bereiche.find(t=>t.id===this._aktiverBereich)?.art==="satz"?"sach":this._fach?.typ??"vokabel"}get _satzAnsicht(){return this._ansicht==="sach"&&this._fach?.typ==="vokabel"}_neuBereich(){let e=this._aktiverBereich;return e&&e!==O?e:null}_bereichName_(e){return e.name??this._t(`bereich_standard_${e.art}`)}_oeffneBereiche(){this._bereichName="",this._bereichUmbenennen=null,this._dialogFehler="",this._dialog="bereiche"}async _bereichAnlegen(){let e=this._bereichName.trim();if(!(!e||!this._fachId)){this._dialogFehler="";try{await this._api.bereichHinzufuegen(this._fachId,e,this._fach?.typ==="vokabel"?this._bereichArt:null),this._bereichName="",this._zeigeErfolg(this._t("bereich_angelegt",{name:e})),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}}}async _bereichUmbenennenSpeichern(){let e=this._bereichUmbenennen;if(!(!e||!e.name.trim())){this._dialogFehler="";try{await this._api.bereichUmbenennen(this._fachId,e.id,e.name.trim()),this._bereichUmbenennen=null,await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}}}async _bereichLoeschen(e){this._dialogFehler="";try{await this._api.bereichLoeschen(this._fachId,e),this._bereichId===e&&(this._bereichId=""),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}}async _setzeHilfeSenden(e,t){let i=this._aufgaben.filter(n=>e.includes(n.id)&&n.typ==="sach"&&(n.form==="luecke"||n.form==="auswahl")&&n.hilfe&&(n.hilfe_senden??!1)!==t);if(!(!i.length||!this._fachId)){this._beschaeftigt=!0;try{for(let n of i)await this._api.aufgabeAendern(this._fachId,n.id,{hilfe_senden:t});this._zeigeErfolg(this._t("hilfe_gesetzt",{n:i.length})),await this._neuLaden()}catch(n){this._zeigeFehler(n)}finally{this._beschaeftigt=!1}}}async _verschiebe(e){let t=[...this._auswahl];if(!(!e||!t.length||!this._fachId)){this._beschaeftigt=!0;try{for(let i of t)await this._api.aufgabeAendern(this._fachId,i,{bereich:e});this._auswahl=new Set,this._zeigeErfolg(this._t("verschoben",{n:t.length})),await this._neuLaden()}catch(i){this._zeigeFehler(i)}finally{this._beschaeftigt=!1}}}_setzeFilter(e,t){this._filter={...this._filter,[e]:t},this._nurIds=null}_umschalten(e,t){let i=new Set(this._auswahl);t?i.add(e):i.delete(e),this._auswahl=i}_alleUmschalten(e,t){let i=new Set(this._auswahl);for(let n of e)t?i.add(n.id):i.delete(n.id);this._auswahl=i}_bearbeite(e){let[t="",i=""]=this._fach?.sprachen??[],n=e?.typ==="mathe"?e:null,a=e?.typ==="vokabel"?e:null,o=e?.typ==="sach"?e:null;this._entwurf={id:e?.id??null,art:e?.typ??this._ansicht,a:n?n.aufgabe:o?o.frage:a?.frage[t]??"",b:n?n.loesung:o?o.antwort:a?.frage[i]??"",form:o?.form??(this._satzAnsicht&&!e?"luecke":"kurz"),kernpunkte:(o?.kernpunkte??[]).join(`
+    `}};b([E({attribute:!1})],D.prototype,"hass",2),b([E({type:Boolean,reflect:!0})],D.prototype,"narrow",2),b([E()],D.prototype,"kindId",2),b([k()],D.prototype,"_daten",2),b([k()],D.prototype,"_fehler",2),b([k()],D.prototype,"_kalenderLaeuft",2),b([k()],D.prototype,"_erfolg",2),b([k()],D.prototype,"_abfrage",2),b([k()],D.prototype,"_beschaeftigt",2);customElements.get("lh-uebersicht")||customElements.define("lh-uebersicht",D);var O="standard";var he=30,T=4;function qt(d){if(!d)return"";let s=new Date(d);if(Number.isNaN(s.getTime()))return"";let e=t=>String(t).padStart(2,"0");return`${s.getFullYear()}-${e(s.getMonth()+1)}-${e(s.getDate())}T${e(s.getHours())}:${e(s.getMinutes())}`}function at(d){return d.split(`
+`).map(s=>s.trim()).filter(s=>s.length>0)}var rt={aufgabe:"",loesung:"",alternativen:""},Mt=["fremdsprache","mathe","sach"],Ut=["en","fr","es","it","la","de"],Fe={typ:"fremdsprache",name:"",sprache:"en"},B="\0ohne",Y={suche:"",lektion:"",quelle:"",geprueft:"",fehlerquote:"",von:"",bis:"",seiteVon:"",seiteBis:""};function lt(d,s,e){let t=s.trim()===""?null:Number(s),i=e.trim()===""?null:Number(e);return t===null&&i===null?!0:d===null?!1:(t===null||d>=t)&&(i===null||d<=i)}function ot(d,s,e){return d.typ==="mathe"?`${d.aufgabe} = ${d.loesung}`:d.typ==="sach"?`${d.frage} \u2013 ${d.antwort}`:`${d.frage[s]??""} \u2013 ${d.frage[e]??""}`}function $(d){return d.target.value}function F(d){return d.target.checked}function ce(d){return d.split("|").map(s=>s.trim()).filter(s=>s.length>0)}var ht=(()=>{try{return new URL(import.meta.url).searchParams.get("v")}catch{return null}})();function Kt(d){return new Promise(s=>setTimeout(s,d))}var w=class extends I{constructor(){super(...arguments);this.narrow=!1;this._kindId="";this._fachId="";this._aufgaben=[];this._tab="uebersicht";this._filter={...Y};this._auswahl=new Set;this._entwurf=null;this._dialog=null;this._generieren=null;this._bildEntwurf=null;this._bildAdressen={};this._grossbild="";this._bildText="";this._seiten=null;this._saetze=null;this._foto=null;this._sim=null;this._veraltet=!1;this._nachgerechnet=null;this._nurIds=null;this._meldung=null;this._laedt=!0;this._beschaeftigt=!1;this._importText="";this._importLektion="";this._importTrenner="";this._importGeprueft=!0;this._vorschau=null;this._mitStatistik=!1;this._jsonDaten=null;this._arbeit=null;this._neuesFach=null;this._dialogFehler="";this._lektionName="";this._bereichId="";this._bereichName="";this._bereichArt="vokabel";this._bereichUmbenennen=null;this._jsonLektion="";this._gestartet=!1;this._taste=e=>{e.key==="Escape"&&(this._dialog?this._schliesseDialog():this._entwurf&&(this._entwurf=null))}}static{this.styles=J}get _t(){return Z(this.hass?.language??"en")}get _api(){return new q(this.hass)}get _fach(){return this._uebersicht?.faecher.find(e=>e.id===this._fachId)}get _faecherDesKindes(){return(this._uebersicht?.faecher??[]).filter(e=>e.kind_id===this._kindId)}get _arbeitenDesFachs(){return(this._uebersicht?.arbeiten??[]).filter(e=>e.fach_id===this._fachId).sort((e,t)=>e.datum.localeCompare(t.datum))}connectedCallback(){super.connectedCallback(),window.addEventListener("keydown",this._taste)}disconnectedCallback(){super.disconnectedCallback(),window.removeEventListener("keydown",this._taste)}updated(e){e.has("hass")&&this.hass&&!this._gestartet&&(this._gestartet=!0,this._ladeUebersicht())}async _ladeUebersicht(e=0){let t=0;for(;;)try{this._uebersicht=await this._api.uebersicht();break}catch(n){if(n.code==="not_loaded"&&t<e){t+=1,await Kt(500);continue}this._zeigeFehler(n),this._laedt=!1;return}let i=this._uebersicht;this._veraltet=!!(ht&&i.panel_version&&i.panel_version!==ht),i.kinder.some(n=>n.id===this._kindId)||(this._kindId=i.kinder[0]?.id??""),this._faecherDesKindes.some(n=>n.id===this._fachId)||(this._fachId=this._faecherDesKindes[0]?.id??""),await this._ladeAufgaben(),this._laedt=!1}async _ladeAufgaben(){if(!this._fachId){this._aufgaben=[];return}try{this._aufgaben=await this._api.aufgaben(this._fachId)}catch(t){this._aufgaben=[],this._zeigeFehler(t)}let e=new Set(this._aufgaben.map(t=>t.id));this._auswahl=new Set([...this._auswahl].filter(t=>e.has(t))),this._ladeBildAdressen()}async _ladeBildAdressen(){let e=new Set;for(let t of this._aufgaben){let i=t.typ==="mathe"?t.bild:t.typ==="sach"?t.quelle_bild:null;i&&!(i in this._bildAdressen)&&e.add(i)}for(let t of e)try{let i=await this._api.bildAdresse(t);this._bildAdressen={...this._bildAdressen,[t]:i}}catch{}}async _neuLaden(e=0){await this._ladeUebersicht(e)}_zeigeFehler(e){this._meldung={text:y(this._t,e),fehler:!0}}_zeigeErfolg(e){this._meldung={text:e,fehler:!1}}_gefiltert(){let e=this._filter,t=e.suche.trim().toLowerCase(),i=e.fehlerquote===""?null:Number(e.fehlerquote),n=this._nurIds&&this._aufgaben.some(a=>this._nurIds?.has(a.id))?this._nurIds:null;return this._aufgaben.filter(a=>{if(n&&!n.has(a.id)||this._aktiverBereich&&(a.bereich??O)!==this._aktiverBereich||t&&![...a.typ==="mathe"?[a.aufgabe,a.loesung,...a.alternativen]:a.typ==="sach"?[a.frage,a.antwort,...a.kernpunkte,...a.falsche_optionen]:[...Object.values(a.frage),...Object.values(a.alternativen).flat()],a.hinweis??""].join(" ").toLowerCase().includes(t)||e.lektion===B&&a.lektion||e.lektion&&e.lektion!==B&&a.lektion!==e.lektion||e.quelle&&a.quelle!==e.quelle||e.geprueft&&a.geprueft!==(e.geprueft==="ja")||i!==null&&!Number.isNaN(i)&&(a.fehlerquote===null||a.fehlerquote<i))return!1;let o=a.erstellt.slice(0,10);return!(e.von&&o<e.von||e.bis&&o>e.bis||!lt(a.seite,e.seiteVon,e.seiteBis))})}async _waehleKind(e){e!==this._kindId&&(this._kindId=e,this._fachId=this._faecherDesKindes[0]?.id??"",this._zuruecksetzen(),await this._ladeAufgaben())}async _waehleFach(e){this._fachId=e,this._zuruecksetzen(),await this._ladeAufgaben()}_zuruecksetzen(){this._auswahl=new Set,this._entwurf=null,this._bereichId="",this._filter={...Y}}get _bereiche(){return this._fach?.bereiche??[]}get _hatBereiche(){return this._bereiche.length>0}get _mehrere(){return this._bereiche.length>1}get _aktiverBereich(){return this._hatBereiche?this._bereiche.some(e=>e.id===this._bereichId)?this._bereichId:this._mehrere?"":this._bereiche[0]?.id??"":""}_ansichtVon(e){return e.art==="satz"?"sach":this._fach?.typ??"vokabel"}get _ansicht(){return this._bereiche.find(t=>t.id===this._aktiverBereich)?.art==="satz"?"sach":this._fach?.typ??"vokabel"}get _satzAnsicht(){return this._ansicht==="sach"&&this._fach?.typ==="vokabel"}_neuBereich(){let e=this._aktiverBereich;return e&&e!==O?e:null}_bereichName_(e){return e.name??this._t(`bereich_standard_${e.art}`)}_oeffneBereiche(){this._bereichName="",this._bereichUmbenennen=null,this._dialogFehler="",this._dialog="bereiche"}async _bereichAnlegen(){let e=this._bereichName.trim();if(!(!e||!this._fachId)){this._dialogFehler="";try{await this._api.bereichHinzufuegen(this._fachId,e,this._fach?.typ==="vokabel"?this._bereichArt:null),this._bereichName="",this._zeigeErfolg(this._t("bereich_angelegt",{name:e})),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}}}async _bereichUmbenennenSpeichern(){let e=this._bereichUmbenennen;if(!(!e||!e.name.trim())){this._dialogFehler="";try{await this._api.bereichUmbenennen(this._fachId,e.id,e.name.trim()),this._bereichUmbenennen=null,await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}}}async _bereichLoeschen(e){this._dialogFehler="";try{await this._api.bereichLoeschen(this._fachId,e),this._bereichId===e&&(this._bereichId=""),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}}async _setzeHilfeSenden(e,t){let i=this._aufgaben.filter(n=>e.includes(n.id)&&n.typ==="sach"&&(n.form==="luecke"||n.form==="auswahl")&&n.hilfe&&(n.hilfe_senden??!1)!==t);if(!(!i.length||!this._fachId)){this._beschaeftigt=!0;try{for(let n of i)await this._api.aufgabeAendern(this._fachId,n.id,{hilfe_senden:t});this._zeigeErfolg(this._t("hilfe_gesetzt",{n:i.length})),await this._neuLaden()}catch(n){this._zeigeFehler(n)}finally{this._beschaeftigt=!1}}}async _verschiebe(e){let t=[...this._auswahl];if(!(!e||!t.length||!this._fachId)){this._beschaeftigt=!0;try{for(let i of t)await this._api.aufgabeAendern(this._fachId,i,{bereich:e});this._auswahl=new Set,this._zeigeErfolg(this._t("verschoben",{n:t.length})),await this._neuLaden()}catch(i){this._zeigeFehler(i)}finally{this._beschaeftigt=!1}}}_setzeFilter(e,t){this._filter={...this._filter,[e]:t},this._nurIds=null}_umschalten(e,t){let i=new Set(this._auswahl);t?i.add(e):i.delete(e),this._auswahl=i}_alleUmschalten(e,t){let i=new Set(this._auswahl);for(let n of e)t?i.add(n.id):i.delete(n.id);this._auswahl=i}_bearbeite(e){let[t="",i=""]=this._fach?.sprachen??[],n=e?.typ==="mathe"?e:null,a=e?.typ==="vokabel"?e:null,o=e?.typ==="sach"?e:null;this._entwurf={id:e?.id??null,art:e?.typ??this._ansicht,a:n?n.aufgabe:o?o.frage:a?.frage[t]??"",b:n?n.loesung:o?o.antwort:a?.frage[i]??"",form:o?.form??(this._satzAnsicht&&!e?"luecke":"kurz"),kernpunkte:(o?.kernpunkte??[]).join(`
 `),falsche:(o?.falsche_optionen??[]).join(`
 `),altA:(a?.alternativen[t]??[]).join(" | "),altB:(n?n.alternativen:o?o.alternativen:a?.alternativen[i]??[]).join(" | "),rechenweg:(n?.rechenweg??[]).join(`
 `),schwierigkeit:n?.schwierigkeit?.toString()??"",hinweis:e?.hinweis??"",hilfe:o?.hilfe??"",hilfeSenden:o?.hilfe_senden??!1,seite:e?.seite?.toString()??"",lektion:e?.lektion??(this._filter.lektion===B?"":this._filter.lektion),geprueft:e?.geprueft??!0}}_setzeEntwurf(e,t){this._entwurf&&(this._entwurf={...this._entwurf,[e]:t})}async _speichereAufgabe(){let e=this._entwurf,t=this._fach;if(!e||!t)return;let[i="",n=""]=t.sprachen,a={...t.typ==="mathe"?{aufgabe:e.a,loesung:e.b,alternativen:ce(e.altB),rechenweg:e.rechenweg.split(`
-`).map(o=>o.trim()).filter(o=>o.length>0),schwierigkeit:e.schwierigkeit===""?null:Number(e.schwierigkeit)}:e.art==="sach"?{frage:e.a,antwort:e.b,form:e.form,kernpunkte:e.form==="kurz"?st(e.kernpunkte):[],falsche_optionen:e.form==="auswahl"?st(e.falsche):[],alternativen:e.form==="luecke"||e.form==="uebersetzung"?ce(e.altB):[],hilfe:(e.form==="luecke"||e.form==="auswahl")&&e.hilfe.trim()||null,hilfe_senden:(e.form==="luecke"||e.form==="auswahl")&&e.hilfeSenden}:{frage:{[i]:e.a,[n]:e.b},alternativen:{[i]:ce(e.altA),[n]:ce(e.altB)}},hinweis:e.hinweis||null,seite:e.seite.trim()===""?null:Number(e.seite),lektion:e.lektion||null,geprueft:e.geprueft,...e.id?{}:{bereich:this._neuBereich()}};this._beschaeftigt=!0;try{e.id?await this._api.aufgabeAendern(t.id,e.id,a):await this._api.aufgabeAnlegen(t.id,a),this._entwurf=null,this._zeigeErfolg(this._t("gespeichert")),await this._neuLaden()}catch(o){this._zeigeFehler(o)}finally{this._beschaeftigt=!1}}async _setzeGeprueft(e,t){try{await this._api.aufgabeAendern(e.fach_id,e.id,{geprueft:t}),await this._ladeAufgaben()}catch(i){this._zeigeFehler(i)}}async _freigeben(){let e=this._aufgaben.filter(t=>this._auswahl.has(t.id)&&!t.geprueft);if(e.length){this._beschaeftigt=!0;try{for(let t of e)await this._api.aufgabeAendern(t.fach_id,t.id,{geprueft:!0});this._auswahl=new Set,this._zeigeErfolg(this._t("freigegeben",{n:e.length}))}catch(t){this._zeigeFehler(t)}finally{this._beschaeftigt=!1,await this._neuLaden()}}}async _nachrechnen(){let e=[...this._auswahl];if(!(!e.length||!this._fachId)){this._beschaeftigt=!0,this._meldung={text:this._t("nachrechnen_laeuft"),fehler:!1};try{let t=await this._api.nachrechnen(this._fachId,e);await this._ladeAufgaben(),t.abweichend.length?(this._meldung=null,this._nachgerechnet=t,this._dialogFehler="",this._dialog="nachrechnen"):this._zeigeErfolg(this._t("nachgerechnet",{bestaetigt:t.bestaetigt,abweichend:0,offen:t.nicht_pruefbar}))}catch(t){this._zeigeFehler(t)}finally{this._beschaeftigt=!1}}}_neueAufgabe(){this._fach?.typ==="mathe"?(this._dialogFehler="",this._dialog="aufgabenart"):this._bearbeite(null)}_oeffneBildaufgabe(){let e=this._filter.lektion===B?"":this._filter.lektion;this._bildEntwurf={datei:null,vorschau:"",einleitung:"",lektion:e,seite:"",teile:[{...at}]},this._dialogFehler="",this._dialog="bildaufgabe"}_setzeBild(e,t){this._bildEntwurf&&(this._bildEntwurf={...this._bildEntwurf,[e]:t})}_bildGewaehlt(e){let t=e.target.files?.[0]??null,i=this._bildEntwurf;i&&(i.vorschau&&URL.revokeObjectURL(i.vorschau),this._bildEntwurf={...i,datei:t,vorschau:t?URL.createObjectURL(t):""})}_setzeTeil(e,t,i){let n=this._bildEntwurf;if(!n)return;let a=n.teile.map((o,l)=>l===e?{...o,[t]:i}:o);this._bildEntwurf={...n,teile:a}}async _speichereBildaufgabe(){let e=this._bildEntwurf,t=this._fach;if(!e||!t)return;let i=e.teile.filter(a=>a.aufgabe.trim()!==""&&a.loesung.trim()!=="");if(!e.datei){this._dialogFehler=this._t("bild_fehlt");return}if(!i.length){this._dialogFehler=this._t("teil_fehlt");return}this._beschaeftigt=!0,this._dialogFehler="";let n=0;try{let a=await this._api.bildHochladen(e.datei),o=e.einleitung.trim();for(let l of i)await this._api.aufgabeAnlegen(t.id,{aufgabe:o?`${o} ${l.aufgabe.trim()}`:l.aufgabe.trim(),loesung:l.loesung,alternativen:ce(l.alternativen),bild:a,lektion:e.lektion||null,bereich:this._neuBereich(),seite:e.seite.trim()===""?null:Number(e.seite)}),n+=1;this._schliesseDialog(),this._zeigeErfolg(this._t("bildaufgaben_gespeichert",{n}))}catch(a){this._dialogFehler=y(this._t,a)}finally{this._beschaeftigt=!1,n&&await this._neuLaden()}}async _erzeugeRechenwege(){let e=[...this._auswahl];if(!(!e.length||!this._fachId)){this._beschaeftigt=!0,this._meldung={text:this._t("rechenweg_erzeugen_laeuft"),fehler:!1};try{let t=await this._api.rechenwegeErzeugen(this._fachId,e);await this._ladeAufgaben(),this._zeigeErfolg(this._t("rechenwege_erzeugt",t))}catch(t){this._zeigeFehler(t)}finally{this._beschaeftigt=!1}}}async _markiereGeprueft(){let e=[...this._auswahl];if(!(!e.length||!this._fachId)){this._beschaeftigt=!0;try{let t=await this._api.alsGeprueftMarkieren(this._fachId,e);await this._ladeAufgaben(),this._zeigeErfolg(this._t("selbst_nachgerechnet_fertig",{n:t}))}catch(t){this._zeigeFehler(t)}finally{this._beschaeftigt=!1}}}async _uebernimmVorschlag(e){if(!(!e.length||!this._fachId)){this._beschaeftigt=!0;try{let t=await this._api.vorschlagUebernehmen(this._fachId,e),i=new Set(e);if(this._nachgerechnet){let n=this._nachgerechnet.abweichend.filter(a=>!i.has(a.id));this._nachgerechnet={...this._nachgerechnet,abweichend:n},!n.length&&this._dialog==="nachrechnen"&&this._schliesseDialog()}this._zeigeErfolg(this._t("uebernommen",{n:t})),await this._ladeAufgaben()}catch(t){this._dialog==="nachrechnen"?this._dialogFehler=y(this._t,t):this._zeigeFehler(t)}finally{this._beschaeftigt=!1}}}_uebernimmAlle(){let e=this._nachgerechnet?.abweichend??[],t=this._t("alle_uebernehmen_frage",{n:e.length,ki:e.filter(i=>i.durch==="ki").length});window.confirm(t)&&this._uebernimmVorschlag(e.map(i=>i.id))}_oeffneGenerieren(){let e=this._filter.lektion===B?"":this._filter.lektion;this._generieren={lektion:e,anzahl:10,schwierigkeit:"",beschreibung:""},this._dialogFehler="",this._dialog="generieren"}async _generiere(){let e=this._generieren;if(!(!e||!this._fachId)){this._beschaeftigt=!0,this._dialogFehler="";try{let t=await this._api.generieren(this._fachId,{anzahl:e.anzahl,lektion:e.lektion||null,schwierigkeit:e.schwierigkeit===""?null:Number(e.schwierigkeit),beschreibung:e.beschreibung.trim()||null,beispiel_ids:[...this._auswahl],bereich:this._neuBereich()});this._schliesseDialog(),this._auswahl=new Set,t.erzeugt&&(this._filter={...Y,geprueft:"nein"}),this._zeigeErfolg(this._t("generiert",{erzeugt:t.erzeugt,verworfen:t.verworfen,doppelt:t.uebersprungen})),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}finally{this._beschaeftigt=!1}}}async _loesche(e){if(!(!e.length||!this._fachId)&&window.confirm(this._t("loeschen_frage",{n:e.length}))){this._beschaeftigt=!0;try{let t=await this._api.aufgabenLoeschen(this._fachId,e,!1),i=Object.keys(t.zugeordnet);if(i.length){let n=new Set(Object.values(t.zugeordnet).flat()),a=(this._uebersicht?.arbeiten??[]).filter(l=>n.has(l.id)).map(l=>`${l.thema} (${this._datum(l.datum)})`).join(", "),o=this._t("loeschen_warnung",{n:i.length,arbeiten:a});if(!window.confirm(o))return;t=await this._api.aufgabenLoeschen(this._fachId,e,!0)}this._zeigeErfolg(this._t("geloescht",{n:t.geloescht})),await this._neuLaden()}catch(t){this._zeigeFehler(t)}finally{this._beschaeftigt=!1}}}_schliesseDialog(){this._dialog=null,this._vorschau=null,this._jsonDaten=null,this._arbeit=null,this._neuesFach=null,this._generieren=null,this._nachgerechnet=null,this._bildEntwurf?.vorschau&&URL.revokeObjectURL(this._bildEntwurf.vorschau),this._bildEntwurf=null,this._grossbild="",this._bildText="";for(let e of this._seiten?.vorschauen??[])URL.revokeObjectURL(e);this._seiten=null;for(let e of this._foto?.vorschauen??[])URL.revokeObjectURL(e);this._foto=null,this._sim=null,this._dialogFehler=""}_simVerfuegbar(e){return e.arbeit.simulierbar?.[e.weg]??he}_oeffneSimulation(e){let t={arbeit:e,anzahl:10,weg:"ausdruck",seiten:null};t.anzahl=Math.max(1,Math.min(10,this._simVerfuegbar(t))),this._sim=t,this._dialogFehler="",this._dialog="simulation"}async _simuliere(){let e=this._sim;if(e){this._beschaeftigt=!0,this._dialogFehler="";try{let t=await this._api.simulieren(e.arbeit.id,e.anzahl,e.weg);if(t.weg==="messenger"){this._schliesseDialog(),this._zeigeErfolg(this._t("sim_gestartet",{n:t.anzahl})),this._tab="uebersicht";return}let i=[];for(let n of t.bilder)i.push(await this._api.bildAdresse(n));this._sim={...e,anzahl:t.anzahl,seiten:i}}catch(t){this._dialogFehler=y(this._t,t)}finally{this._beschaeftigt=!1}}}_druckeSimulation(){let e=this._sim?.seiten??[],t=window.open("","_blank");if(!t){this._dialogFehler=this._t("sim_druck_blockiert");return}let i=t.document;i.title=this._sim?.arbeit.thema??"";let n=i.createElement("style");n.textContent="@page{size:A4;margin:0}body{margin:0}img{display:block;width:100%;page-break-after:always}",i.head.append(n);let a=e.length;for(let o of e){let l=i.createElement("img");l.addEventListener("load",()=>{a-=1,a===0&&(t.focus(),t.print())}),l.src=new URL(o,window.location.origin).href,i.body.append(l)}}_oeffneFoto(){this._foto={dateien:[],vorschauen:[],lektion:this._filter.lektion===B?"":this._filter.lektion,zeilen:null},this._dialogFehler="",this._dialog="foto"}_fotoGewaehlt(e){let t=this._foto;if(!t)return;let i=[...e.target.files??[]];for(let a of t.vorschauen)URL.revokeObjectURL(a);let n=i.slice(0,T);this._dialogFehler=i.length>T?this._t("seiten_zu_viele",{n:T}):"",this._foto={...t,dateien:n,vorschauen:n.map(a=>URL.createObjectURL(a))}}async _leseFoto(){let e=this._foto,t=this._fach;if(!e||!e.dateien.length||!t)return;let[i="",n=""]=t.sprachen;this._beschaeftigt=!0,this._dialogFehler="";try{let a=[];for(let l of e.dateien)a.push(await this._api.bildHochladen(l,!0));let o=await this._api.fotoAuslesen(t.id,a);if(!o.zeilen.length){this._dialogFehler=this._t("foto_leer");return}this._foto={...e,zeilen:o.zeilen.map(l=>({an:!l.vorhanden&&!l.braucht_bild,a:o.typ==="mathe"?l.aufgabe??"":l.frage?.[i]??"",b:o.typ==="mathe"?l.loesung??"":l.frage?.[n]??"",hinweis:l.hinweis??"",seite:l.seite?.toString()??"",geaendert:!1,roh:l}))}}catch(a){this._dialogFehler=y(this._t,a)}finally{this._beschaeftigt=!1}}_setzeFotoZeile(e,t){let i=this._foto;i?.zeilen&&(this._foto={...i,zeilen:i.zeilen.map((n,a)=>a===e?{...n,...t}:n)})}async _uebernimmFoto(){let e=this._foto,t=this._fach;if(!e?.zeilen||!t)return;let[i="",n=""]=t.sprachen,a=e.zeilen.filter(o=>o.an).map(o=>{let l=o.seite.trim()===""?null:Number(o.seite);return t.typ==="mathe"?{aufgabe:o.a,loesung:o.b,seite:l,verifikation:o.geaendert?"keine":o.roh.verifikation}:{frage:{[i]:o.a,[n]:o.b},alternativen:o.geaendert?{}:o.roh.alternativen??{},hinweis:o.hinweis||null,seite:l}});if(a.length){this._beschaeftigt=!0,this._dialogFehler="";try{let o=await this._api.fotoUebernehmen(t.id,a,e.lektion||null,this._neuBereich());if(o.fehler.length&&!o.importiert){this._dialogFehler=this._t("foto_fehler",{n:o.fehler.length});return}this._schliesseDialog(),this._zeigeErfolg(this._t("foto_fertig",{n:o.importiert,doppelt:o.uebersprungen,fehler:o.fehler.length})),await this._neuLaden()}catch(o){this._dialogFehler=y(this._t,o)}finally{this._beschaeftigt=!1}}}_oeffneSeiten(){this._seiten={dateien:[],vorschauen:[],lektion:this._filter.lektion===B?"":this._filter.lektion,anzahl:8,form:"gemischt",schwerpunkt:""},this._dialogFehler="",this._dialog="seiten"}_seitenGewaehlt(e){let t=this._seiten;if(!t)return;let i=[...e.target.files??[]];for(let a of t.vorschauen)URL.revokeObjectURL(a);let n=i.slice(0,T);this._dialogFehler=i.length>T?this._t("seiten_zu_viele",{n:T}):"",this._seiten={...t,dateien:n,vorschauen:n.map(a=>URL.createObjectURL(a))}}async _erzeugeFragen(){let e=this._seiten;if(!(!e||!e.dateien.length||!this._fachId)){this._beschaeftigt=!0,this._dialogFehler="";try{let t=[];for(let n of e.dateien)t.push(await this._api.bildHochladen(n,!0));let i=await this._api.fragenAusSeiten(this._fachId,{seiten:t,anzahl:e.anzahl,form:e.form,lektion:e.lektion||null,schwerpunkt:e.schwerpunkt.trim()||null,bereich:this._neuBereich()});this._schliesseDialog(),this._auswahl=new Set,i.erzeugt&&(this._filter={...Y,geprueft:"nein"}),this._zeigeErfolg(this._t("seiten_fertig",{erzeugt:i.erzeugt,verworfen:i.verworfen,doppelt:i.uebersprungen})),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}finally{this._beschaeftigt=!1}}}_oeffneSaetze(e){let t=this._bereiche.filter(n=>n.art==="satz"),i=t.find(n=>n.id===this._aktiverBereich);this._saetze={foto:e,bereich:(i??t[0])?.id??"",dateien:[],vorschauen:[],lektion:this._filter.lektion===B?"":this._filter.lektion,anzahl:8,form:"gemischt",beschreibung:"",uebernehmen:!1},this._dialogFehler="",this._dialog="saetze"}_saetzeSeitenGewaehlt(e){let t=this._saetze;if(!t)return;let i=[...e.target.files??[]];for(let a of t.vorschauen)URL.revokeObjectURL(a);let n=i.slice(0,T);this._dialogFehler=i.length>T?this._t("seiten_zu_viele",{n:T}):"",this._saetze={...t,dateien:n,vorschauen:n.map(a=>URL.createObjectURL(a))}}async _erzeugeSaetze(){let e=this._saetze;if(!(!e||!this._fachId)){this._beschaeftigt=!0,this._dialogFehler="";try{let t=[];if(e.foto)for(let n of e.dateien)t.push(await this._api.bildHochladen(n,!0));let i=await this._api.satzaufgabenErzeugen(this._fachId,{bereich:e.bereich,anzahl:e.anzahl,form:e.form,beschreibung:e.beschreibung.trim()||null,seiten:t,uebernehmen:e.foto&&e.uebernehmen,lektion:e.lektion||null});this._schliesseDialog(),this._auswahl=new Set,this._bereichId=e.bereich,i.erzeugt&&(this._filter={...Y,geprueft:"nein"}),this._zeigeErfolg(this._t("saetze_fertig",{erzeugt:i.erzeugt,verworfen:i.verworfen,doppelt:i.uebersprungen})),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}finally{this._beschaeftigt=!1}}}_oeffneLektionen(){this._lektionName="",this._dialogFehler="",this._dialog="lektion"}async _lektionAnlegen(){let e=this._lektionName.trim();if(!(!e||!this._fachId)){this._dialogFehler="";try{await this._api.lektionHinzufuegen(this._fachId,e),this._lektionName="",this._zeigeErfolg(this._t("lektion_angelegt",{name:e})),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}}}async _lektionLoeschen(e){this._dialogFehler="";try{await this._api.lektionLoeschen(this._fachId,e),this._filter.lektion===e&&this._setzeFilter("lektion",""),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}}_lektionAuswahl(e,t,i){let n=[...this._fach?.lektionen??[]];return e&&!n.includes(e)&&n.push(e),r`
+`).map(o=>o.trim()).filter(o=>o.length>0),schwierigkeit:e.schwierigkeit===""?null:Number(e.schwierigkeit)}:e.art==="sach"?{frage:e.a,antwort:e.b,form:e.form,kernpunkte:e.form==="kurz"?at(e.kernpunkte):[],falsche_optionen:e.form==="auswahl"?at(e.falsche):[],alternativen:e.form==="luecke"||e.form==="uebersetzung"?ce(e.altB):[],hilfe:(e.form==="luecke"||e.form==="auswahl")&&e.hilfe.trim()||null,hilfe_senden:(e.form==="luecke"||e.form==="auswahl")&&e.hilfeSenden}:{frage:{[i]:e.a,[n]:e.b},alternativen:{[i]:ce(e.altA),[n]:ce(e.altB)}},hinweis:e.hinweis||null,seite:e.seite.trim()===""?null:Number(e.seite),lektion:e.lektion||null,geprueft:e.geprueft,...e.id?{}:{bereich:this._neuBereich()}};this._beschaeftigt=!0;try{e.id?await this._api.aufgabeAendern(t.id,e.id,a):await this._api.aufgabeAnlegen(t.id,a),this._entwurf=null,this._zeigeErfolg(this._t("gespeichert")),await this._neuLaden()}catch(o){this._zeigeFehler(o)}finally{this._beschaeftigt=!1}}async _setzeGeprueft(e,t){try{await this._api.aufgabeAendern(e.fach_id,e.id,{geprueft:t}),await this._ladeAufgaben()}catch(i){this._zeigeFehler(i)}}async _freigeben(){let e=this._aufgaben.filter(t=>this._auswahl.has(t.id)&&!t.geprueft);if(e.length){this._beschaeftigt=!0;try{for(let t of e)await this._api.aufgabeAendern(t.fach_id,t.id,{geprueft:!0});this._auswahl=new Set,this._zeigeErfolg(this._t("freigegeben",{n:e.length}))}catch(t){this._zeigeFehler(t)}finally{this._beschaeftigt=!1,await this._neuLaden()}}}async _nachrechnen(){let e=[...this._auswahl];if(!(!e.length||!this._fachId)){this._beschaeftigt=!0,this._meldung={text:this._t("nachrechnen_laeuft"),fehler:!1};try{let t=await this._api.nachrechnen(this._fachId,e);await this._ladeAufgaben(),t.abweichend.length?(this._meldung=null,this._nachgerechnet=t,this._dialogFehler="",this._dialog="nachrechnen"):this._zeigeErfolg(this._t("nachgerechnet",{bestaetigt:t.bestaetigt,abweichend:0,offen:t.nicht_pruefbar}))}catch(t){this._zeigeFehler(t)}finally{this._beschaeftigt=!1}}}_neueAufgabe(){this._fach?.typ==="mathe"?(this._dialogFehler="",this._dialog="aufgabenart"):this._bearbeite(null)}_oeffneBildaufgabe(){let e=this._filter.lektion===B?"":this._filter.lektion;this._bildEntwurf={datei:null,vorschau:"",einleitung:"",lektion:e,seite:"",teile:[{...rt}]},this._dialogFehler="",this._dialog="bildaufgabe"}_setzeBild(e,t){this._bildEntwurf&&(this._bildEntwurf={...this._bildEntwurf,[e]:t})}_bildGewaehlt(e){let t=e.target.files?.[0]??null,i=this._bildEntwurf;i&&(i.vorschau&&URL.revokeObjectURL(i.vorschau),this._bildEntwurf={...i,datei:t,vorschau:t?URL.createObjectURL(t):""})}_setzeTeil(e,t,i){let n=this._bildEntwurf;if(!n)return;let a=n.teile.map((o,l)=>l===e?{...o,[t]:i}:o);this._bildEntwurf={...n,teile:a}}async _speichereBildaufgabe(){let e=this._bildEntwurf,t=this._fach;if(!e||!t)return;let i=e.teile.filter(a=>a.aufgabe.trim()!==""&&a.loesung.trim()!=="");if(!e.datei){this._dialogFehler=this._t("bild_fehlt");return}if(!i.length){this._dialogFehler=this._t("teil_fehlt");return}this._beschaeftigt=!0,this._dialogFehler="";let n=0;try{let a=await this._api.bildHochladen(e.datei),o=e.einleitung.trim();for(let l of i)await this._api.aufgabeAnlegen(t.id,{aufgabe:o?`${o} ${l.aufgabe.trim()}`:l.aufgabe.trim(),loesung:l.loesung,alternativen:ce(l.alternativen),bild:a,lektion:e.lektion||null,bereich:this._neuBereich(),seite:e.seite.trim()===""?null:Number(e.seite)}),n+=1;this._schliesseDialog(),this._zeigeErfolg(this._t("bildaufgaben_gespeichert",{n}))}catch(a){this._dialogFehler=y(this._t,a)}finally{this._beschaeftigt=!1,n&&await this._neuLaden()}}async _erzeugeRechenwege(){let e=[...this._auswahl];if(!(!e.length||!this._fachId)){this._beschaeftigt=!0,this._meldung={text:this._t("rechenweg_erzeugen_laeuft"),fehler:!1};try{let t=await this._api.rechenwegeErzeugen(this._fachId,e);await this._ladeAufgaben(),this._zeigeErfolg(this._t("rechenwege_erzeugt",t))}catch(t){this._zeigeFehler(t)}finally{this._beschaeftigt=!1}}}async _markiereGeprueft(){let e=[...this._auswahl];if(!(!e.length||!this._fachId)){this._beschaeftigt=!0;try{let t=await this._api.alsGeprueftMarkieren(this._fachId,e);await this._ladeAufgaben(),this._zeigeErfolg(this._t("selbst_nachgerechnet_fertig",{n:t}))}catch(t){this._zeigeFehler(t)}finally{this._beschaeftigt=!1}}}async _uebernimmVorschlag(e){if(!(!e.length||!this._fachId)){this._beschaeftigt=!0;try{let t=await this._api.vorschlagUebernehmen(this._fachId,e),i=new Set(e);if(this._nachgerechnet){let n=this._nachgerechnet.abweichend.filter(a=>!i.has(a.id));this._nachgerechnet={...this._nachgerechnet,abweichend:n},!n.length&&this._dialog==="nachrechnen"&&this._schliesseDialog()}this._zeigeErfolg(this._t("uebernommen",{n:t})),await this._ladeAufgaben()}catch(t){this._dialog==="nachrechnen"?this._dialogFehler=y(this._t,t):this._zeigeFehler(t)}finally{this._beschaeftigt=!1}}}_uebernimmAlle(){let e=this._nachgerechnet?.abweichend??[],t=this._t("alle_uebernehmen_frage",{n:e.length,ki:e.filter(i=>i.durch==="ki").length});window.confirm(t)&&this._uebernimmVorschlag(e.map(i=>i.id))}_oeffneGenerieren(){let e=this._filter.lektion===B?"":this._filter.lektion;this._generieren={lektion:e,anzahl:10,schwierigkeit:"",beschreibung:""},this._dialogFehler="",this._dialog="generieren"}async _generiere(){let e=this._generieren;if(!(!e||!this._fachId)){this._beschaeftigt=!0,this._dialogFehler="";try{let t=await this._api.generieren(this._fachId,{anzahl:e.anzahl,lektion:e.lektion||null,schwierigkeit:e.schwierigkeit===""?null:Number(e.schwierigkeit),beschreibung:e.beschreibung.trim()||null,beispiel_ids:[...this._auswahl],bereich:this._neuBereich()});this._schliesseDialog(),this._auswahl=new Set,t.erzeugt&&(this._filter={...Y,geprueft:"nein"}),this._zeigeErfolg(this._t("generiert",{erzeugt:t.erzeugt,verworfen:t.verworfen,doppelt:t.uebersprungen})),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}finally{this._beschaeftigt=!1}}}async _loesche(e){if(!(!e.length||!this._fachId)&&window.confirm(this._t("loeschen_frage",{n:e.length}))){this._beschaeftigt=!0;try{let t=await this._api.aufgabenLoeschen(this._fachId,e,!1),i=Object.keys(t.zugeordnet);if(i.length){let n=new Set(Object.values(t.zugeordnet).flat()),a=(this._uebersicht?.arbeiten??[]).filter(l=>n.has(l.id)).map(l=>`${l.thema} (${this._datum(l.datum)})`).join(", "),o=this._t("loeschen_warnung",{n:i.length,arbeiten:a});if(!window.confirm(o))return;t=await this._api.aufgabenLoeschen(this._fachId,e,!0)}this._zeigeErfolg(this._t("geloescht",{n:t.geloescht})),await this._neuLaden()}catch(t){this._zeigeFehler(t)}finally{this._beschaeftigt=!1}}}_schliesseDialog(){this._dialog=null,this._vorschau=null,this._jsonDaten=null,this._arbeit=null,this._neuesFach=null,this._generieren=null,this._nachgerechnet=null,this._bildEntwurf?.vorschau&&URL.revokeObjectURL(this._bildEntwurf.vorschau),this._bildEntwurf=null,this._grossbild="",this._bildText="";for(let e of this._seiten?.vorschauen??[])URL.revokeObjectURL(e);this._seiten=null;for(let e of this._foto?.vorschauen??[])URL.revokeObjectURL(e);this._foto=null,this._sim=null,this._dialogFehler=""}_simVerfuegbar(e){return e.arbeit.simulierbar?.[e.weg]??he}_oeffneSimulation(e){let t={arbeit:e,anzahl:10,weg:"ausdruck",seiten:null};t.anzahl=Math.max(1,Math.min(10,this._simVerfuegbar(t))),this._sim=t,this._dialogFehler="",this._dialog="simulation"}async _simuliere(){let e=this._sim;if(e){this._beschaeftigt=!0,this._dialogFehler="";try{let t=await this._api.simulieren(e.arbeit.id,e.anzahl,e.weg);if(t.weg==="messenger"){this._schliesseDialog(),this._zeigeErfolg(this._t("sim_gestartet",{n:t.anzahl})),this._tab="uebersicht";return}let i=[];for(let n of t.bilder)i.push(await this._api.bildAdresse(n));this._sim={...e,anzahl:t.anzahl,seiten:i}}catch(t){this._dialogFehler=y(this._t,t)}finally{this._beschaeftigt=!1}}}_druckeSimulation(){let e=this._sim?.seiten??[],t=window.open("","_blank");if(!t){this._dialogFehler=this._t("sim_druck_blockiert");return}let i=t.document;i.title=this._sim?.arbeit.thema??"";let n=i.createElement("style");n.textContent="@page{size:A4;margin:0}body{margin:0}img{display:block;width:100%;page-break-after:always}",i.head.append(n);let a=e.length;for(let o of e){let l=i.createElement("img");l.addEventListener("load",()=>{a-=1,a===0&&(t.focus(),t.print())}),l.src=new URL(o,window.location.origin).href,i.body.append(l)}}_oeffneFoto(){this._foto={dateien:[],vorschauen:[],lektion:this._filter.lektion===B?"":this._filter.lektion,zeilen:null},this._dialogFehler="",this._dialog="foto"}_fotoGewaehlt(e){let t=this._foto;if(!t)return;let i=[...e.target.files??[]];for(let a of t.vorschauen)URL.revokeObjectURL(a);let n=i.slice(0,T);this._dialogFehler=i.length>T?this._t("seiten_zu_viele",{n:T}):"",this._foto={...t,dateien:n,vorschauen:n.map(a=>URL.createObjectURL(a))}}async _leseFoto(){let e=this._foto,t=this._fach;if(!e||!e.dateien.length||!t)return;let[i="",n=""]=t.sprachen;this._beschaeftigt=!0,this._dialogFehler="";try{let a=[];for(let l of e.dateien)a.push(await this._api.bildHochladen(l,!0));let o=await this._api.fotoAuslesen(t.id,a);if(!o.zeilen.length){this._dialogFehler=this._t("foto_leer");return}this._foto={...e,zeilen:o.zeilen.map(l=>({an:!l.vorhanden&&!l.braucht_bild,a:o.typ==="mathe"?l.aufgabe??"":l.frage?.[i]??"",b:o.typ==="mathe"?l.loesung??"":l.frage?.[n]??"",hinweis:l.hinweis??"",seite:l.seite?.toString()??"",geaendert:!1,roh:l}))}}catch(a){this._dialogFehler=y(this._t,a)}finally{this._beschaeftigt=!1}}_setzeFotoZeile(e,t){let i=this._foto;i?.zeilen&&(this._foto={...i,zeilen:i.zeilen.map((n,a)=>a===e?{...n,...t}:n)})}async _uebernimmFoto(){let e=this._foto,t=this._fach;if(!e?.zeilen||!t)return;let[i="",n=""]=t.sprachen,a=e.zeilen.filter(o=>o.an).map(o=>{let l=o.seite.trim()===""?null:Number(o.seite);return t.typ==="mathe"?{aufgabe:o.a,loesung:o.b,seite:l,verifikation:o.geaendert?"keine":o.roh.verifikation}:{frage:{[i]:o.a,[n]:o.b},alternativen:o.geaendert?{}:o.roh.alternativen??{},hinweis:o.hinweis||null,seite:l}});if(a.length){this._beschaeftigt=!0,this._dialogFehler="";try{let o=await this._api.fotoUebernehmen(t.id,a,e.lektion||null,this._neuBereich());if(o.fehler.length&&!o.importiert){this._dialogFehler=this._t("foto_fehler",{n:o.fehler.length});return}this._schliesseDialog(),this._zeigeErfolg(this._t("foto_fertig",{n:o.importiert,doppelt:o.uebersprungen,fehler:o.fehler.length})),await this._neuLaden()}catch(o){this._dialogFehler=y(this._t,o)}finally{this._beschaeftigt=!1}}}_oeffneSeiten(){this._seiten={dateien:[],vorschauen:[],lektion:this._filter.lektion===B?"":this._filter.lektion,anzahl:8,form:"gemischt",schwerpunkt:""},this._dialogFehler="",this._dialog="seiten"}_seitenGewaehlt(e){let t=this._seiten;if(!t)return;let i=[...e.target.files??[]];for(let a of t.vorschauen)URL.revokeObjectURL(a);let n=i.slice(0,T);this._dialogFehler=i.length>T?this._t("seiten_zu_viele",{n:T}):"",this._seiten={...t,dateien:n,vorschauen:n.map(a=>URL.createObjectURL(a))}}async _erzeugeFragen(){let e=this._seiten;if(!(!e||!e.dateien.length||!this._fachId)){this._beschaeftigt=!0,this._dialogFehler="";try{let t=[];for(let n of e.dateien)t.push(await this._api.bildHochladen(n,!0));let i=await this._api.fragenAusSeiten(this._fachId,{seiten:t,anzahl:e.anzahl,form:e.form,lektion:e.lektion||null,schwerpunkt:e.schwerpunkt.trim()||null,bereich:this._neuBereich()});this._schliesseDialog(),this._auswahl=new Set,i.erzeugt&&(this._filter={...Y,geprueft:"nein"}),this._zeigeErfolg(this._t("seiten_fertig",{erzeugt:i.erzeugt,verworfen:i.verworfen,doppelt:i.uebersprungen})),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}finally{this._beschaeftigt=!1}}}_oeffneSaetze(e){let t=this._bereiche.filter(n=>n.art==="satz"),i=t.find(n=>n.id===this._aktiverBereich);this._saetze={foto:e,bereich:(i??t[0])?.id??"",dateien:[],vorschauen:[],lektion:this._filter.lektion===B?"":this._filter.lektion,anzahl:8,form:"gemischt",beschreibung:"",uebernehmen:!1},this._dialogFehler="",this._dialog="saetze"}_saetzeSeitenGewaehlt(e){let t=this._saetze;if(!t)return;let i=[...e.target.files??[]];for(let a of t.vorschauen)URL.revokeObjectURL(a);let n=i.slice(0,T);this._dialogFehler=i.length>T?this._t("seiten_zu_viele",{n:T}):"",this._saetze={...t,dateien:n,vorschauen:n.map(a=>URL.createObjectURL(a))}}async _erzeugeSaetze(){let e=this._saetze;if(!(!e||!this._fachId)){this._beschaeftigt=!0,this._dialogFehler="";try{let t=[];if(e.foto)for(let n of e.dateien)t.push(await this._api.bildHochladen(n,!0));let i=await this._api.satzaufgabenErzeugen(this._fachId,{bereich:e.bereich,anzahl:e.anzahl,form:e.form,beschreibung:e.beschreibung.trim()||null,seiten:t,uebernehmen:e.foto&&e.uebernehmen,lektion:e.lektion||null});this._schliesseDialog(),this._auswahl=new Set,this._bereichId=e.bereich,i.erzeugt&&(this._filter={...Y,geprueft:"nein"}),this._zeigeErfolg(this._t("saetze_fertig",{erzeugt:i.erzeugt,verworfen:i.verworfen,doppelt:i.uebersprungen})),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}finally{this._beschaeftigt=!1}}}_oeffneLektionen(){this._lektionName="",this._dialogFehler="",this._dialog="lektion"}async _lektionAnlegen(){let e=this._lektionName.trim();if(!(!e||!this._fachId)){this._dialogFehler="";try{await this._api.lektionHinzufuegen(this._fachId,e),this._lektionName="",this._zeigeErfolg(this._t("lektion_angelegt",{name:e})),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}}}async _lektionLoeschen(e){this._dialogFehler="";try{await this._api.lektionLoeschen(this._fachId,e),this._filter.lektion===e&&this._setzeFilter("lektion",""),await this._neuLaden()}catch(t){this._dialogFehler=y(this._t,t)}}_lektionAuswahl(e,t,i){let n=[...this._fach?.lektionen??[]];return e&&!n.includes(e)&&n.push(e),r`
       <select
         aria-label=${i}
         .value=${e}
@@ -1481,11 +1506,11 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
               ${a}
             </option>`)}
       </select>
-    `}_oeffneImport(){this._importText="",this._importTrenner="",this._importGeprueft=!0,this._importLektion=this._filter.lektion===B?"":this._filter.lektion,this._vorschau=null,this._dialogFehler="",this._dialog="import"}async _importVorschau(){this._dialogFehler="";try{this._vorschau=await this._api.importVorschau(this._fachId,this._importText,this._importTrenner||null)}catch(e){this._dialogFehler=y(this._t,e)}}async _importUebernehmen(){this._beschaeftigt=!0,this._dialogFehler="";try{let e=await this._api.importText(this._fachId,this._importText,this._importLektion.trim()||null,this._importTrenner||null,this._importGeprueft,this._neuBereich());this._schliesseDialog(),this._zeigeErfolg(this._t("import_ergebnis",{n:e.importiert,u:e.uebersprungen})),await this._neuLaden()}catch(e){this._dialogFehler=y(this._t,e)}finally{this._beschaeftigt=!1}}async _exportiere(){let e=this._fach;if(e)try{let t=await this._api.export(e.id,this._mitStatistik),i=new Blob([JSON.stringify(t,null,2)],{type:"application/json"}),n=document.createElement("a");n.href=URL.createObjectURL(i);let a=e.name.replace(/[^\p{L}\p{N}_-]+/gu,"_");n.download=`learnbuddy-${a}-${new Date().toISOString().slice(0,10)}.json`,n.click(),URL.revokeObjectURL(n.href),this._schliesseDialog();let o=Number(t.ausgelassen_mit_bild??0);o&&this._zeigeErfolg(this._t("export_ohne_bild",{n:o}))}catch(t){this._dialogFehler=y(this._t,t)}}async _dateiGewaehlt(e){let t=e.target,i=t.files?.[0];if(t.value="",!!i)try{let n=JSON.parse(await i.text());if(typeof n!="object"||n===null||Array.isArray(n))throw new Error("no object");this._jsonDaten=n,this._jsonLektion="",this._dialogFehler="",this._dialog="importJson"}catch{this._meldung={text:this._t("datei_ungueltig"),fehler:!0}}}async _importiereJson(){if(this._jsonDaten){this._beschaeftigt=!0;try{let e=await this._api.importJson(this._fachId,this._jsonDaten,this._mitStatistik,this._jsonLektion||null,this._neuBereich());this._schliesseDialog();let t=this._t("import_ergebnis",{n:e.importiert,u:e.uebersprungen});e.fehler.length&&(t+=` ${this._t("import_fehler",{n:e.fehler.length})}`),this._zeigeErfolg(t),await this._neuLaden()}catch(e){this._dialogFehler=y(this._t,e)}finally{this._beschaeftigt=!1}}}_oeffneArbeit(e,t=[]){let i=e?e.lektionen.length>0||e.aufgaben_ids.length>0:t.length>0;this._arbeit={id:e?.id??null,art:e?.art??"arbeit",datum:e?.datum??"",thema:e?.thema??"",abfragen:e?.abfragen_pro_tag??3,start:e?.start_tage_vorher??7,intensivierung:e?.intensivierung??!0,frist:e?.antwortfrist_minuten??null,simAktiv:!!e?.simulation_um,simUm:jt(e?.simulation_um??null),simAnzahl:e?.simulation_anzahl??10,kalenderUid:null,fachOffen:!1,modus:i?"auswahl":"alle",lektionen:new Set(e?.lektionen??[]),bereiche:new Set(e?.bereiche??[]),ids:new Set(e?.aufgaben_ids??t),seit:"",seiteVon:"",seiteBis:""},this._neuesFach=null,this._dialogFehler="",this._dialog="arbeit"}async _oeffneVorschlag(e){let{vorschlag:t}=e.detail,i=this._faecherDesKindes,n=(t.fach_id&&i.some(a=>a.id===t.fach_id)?t.fach_id:null)??(i.some(a=>a.id===this._fachId)?this._fachId:i[0]?.id)??"";n!==this._fachId&&(this._fachId=n,this._zuruecksetzen(),await this._ladeAufgaben()),this._oeffneArbeit(null),this._arbeit&&(this._arbeit={...this._arbeit,art:t.art,datum:t.datum,thema:t.text,kalenderUid:t.uid,fachOffen:n!==t.fach_id}),n||(this._neuesFach={...rt})}async _wechsleFachImDialog(e){if(!(!this._arbeit||!e)){if(e===this._fachId){this._arbeit={...this._arbeit,fachOffen:!1};return}this._fachId=e,this._zuruecksetzen(),await this._ladeAufgaben(),this._arbeit={...this._arbeit,fachOffen:!1,modus:"alle",lektionen:new Set,bereiche:new Set,ids:new Set,seit:"",seiteVon:"",seiteBis:""}}}async _legeFachAn(){let e=this._neuesFach;if(e){this._beschaeftigt=!0,this._dialogFehler="";try{let t=await this._api.fachAnlegen(this._kindId,e.typ,e.name.trim(),e.typ==="fremdsprache"?e.sprache:null);this._uebersicht=await this._api.uebersicht(),this._neuesFach=null,this._fachId="",await this._wechsleFachImDialog(t)}catch(t){this._dialogFehler=y(this._t,t)}finally{this._beschaeftigt=!1}}}_setzeArbeit(e,t){this._arbeit&&(this._arbeit={...this._arbeit,[e]:t})}_arbeitMenge(e,t,i){if(!this._arbeit)return;let n=new Set(this._arbeit[e]);i?n.add(t):n.delete(t),this._setzeArbeit(e,n),e==="lektionen"&&i&&!this._arbeit.thema.trim()&&this._setzeArbeit("thema",t)}_arbeitSeit(){let e=this._arbeit;if(!e?.seit)return;let t=new Set(e.ids);for(let i of this._aufgaben)i.erstellt.slice(0,10)>=e.seit&&t.add(i.id);this._setzeArbeit("ids",t)}_arbeitSeiten(){let e=this._arbeit;if(!e||!e.seiteVon&&!e.seiteBis)return;let t=new Set(e.ids);for(let i of this._aufgaben)lt(i.seite,e.seiteVon,e.seiteBis)&&t.add(i.id);this._setzeArbeit("ids",t)}_arbeitUmfang(e){let t=new Set(e.lektionen),i=new Set(e.bereiche??[]),n=new Set(e.ids);return!t.size&&!i.size&&!n.size?null:this._aufgaben.filter(a=>n.has(a.id)||a.lektion!==null&&t.has(a.lektion)||i.has(a.bereich??O)).length}async _speichereArbeit(){let e=this._arbeit;if(!e)return;if(e.simAktiv&&!e.simUm){this._zeigeFehler({message:"simulation_um_ungueltig"});return}let t=e.modus==="auswahl",i={datum:e.datum,thema:e.thema,art:e.art,lektionen:t?[...e.lektionen]:[],bereiche:t?[...e.bereiche]:[],aufgaben_ids:t?[...e.ids]:[],abfragen_pro_tag:e.abfragen,start_tage_vorher:e.start,intensivierung:e.intensivierung,antwortfrist_minuten:e.frist,simulation_um:e.simAktiv&&e.simUm?new Date(e.simUm).toISOString():null,simulation_anzahl:e.simAnzahl};e.kalenderUid&&(i.kalender_uid=e.kalenderUid),e.id||(i.fach_id=this._fachId),this._beschaeftigt=!0,this._dialogFehler="";try{await this._api.arbeitSpeichern(e.id,i),this._schliesseDialog(),this._auswahl=new Set,this._tab="arbeiten",this._zeigeErfolg(this._t("gespeichert")),await this._neuLaden(20)}catch(n){this._dialogFehler=y(this._t,n)}finally{this._beschaeftigt=!1}}async _loescheArbeit(e){if(window.confirm(this._t("arbeit_loeschen_frage",{thema:e.thema})))try{await this._api.arbeitLoeschen(e.id),this._zeigeErfolg(this._t("geloescht_arbeit")),await this._neuLaden(20)}catch(t){this._zeigeFehler(t)}}_datum(e){let t=new Date(`${e.slice(0,10)}T00:00:00`);return Number.isNaN(t.getTime())?e:t.toLocaleDateString(this.hass?.language??"en",{year:"numeric",month:"2-digit",day:"2-digit"})}_zeitpunkt(e){let t=new Date(e);return Number.isNaN(t.getTime())?e:t.toLocaleString(this.hass?.language??"en",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"})}_menue(){this.dispatchEvent(new CustomEvent("hass-toggle-menu",{bubbles:!0,composed:!0}))}render(){let e=this._t,t=this._uebersicht;return r`
+    `}_oeffneImport(){this._importText="",this._importTrenner="",this._importGeprueft=!0,this._importLektion=this._filter.lektion===B?"":this._filter.lektion,this._vorschau=null,this._dialogFehler="",this._dialog="import"}async _importVorschau(){this._dialogFehler="";try{this._vorschau=await this._api.importVorschau(this._fachId,this._importText,this._importTrenner||null)}catch(e){this._dialogFehler=y(this._t,e)}}async _importUebernehmen(){this._beschaeftigt=!0,this._dialogFehler="";try{let e=await this._api.importText(this._fachId,this._importText,this._importLektion.trim()||null,this._importTrenner||null,this._importGeprueft,this._neuBereich());this._schliesseDialog(),this._zeigeErfolg(this._t("import_ergebnis",{n:e.importiert,u:e.uebersprungen})),await this._neuLaden()}catch(e){this._dialogFehler=y(this._t,e)}finally{this._beschaeftigt=!1}}async _exportiere(){let e=this._fach;if(e)try{let t=await this._api.export(e.id,this._mitStatistik),i=new Blob([JSON.stringify(t,null,2)],{type:"application/json"}),n=document.createElement("a");n.href=URL.createObjectURL(i);let a=e.name.replace(/[^\p{L}\p{N}_-]+/gu,"_");n.download=`learnbuddy-${a}-${new Date().toISOString().slice(0,10)}.json`,n.click(),URL.revokeObjectURL(n.href),this._schliesseDialog();let o=Number(t.ausgelassen_mit_bild??0);o&&this._zeigeErfolg(this._t("export_ohne_bild",{n:o}))}catch(t){this._dialogFehler=y(this._t,t)}}async _dateiGewaehlt(e){let t=e.target,i=t.files?.[0];if(t.value="",!!i)try{let n=JSON.parse(await i.text());if(typeof n!="object"||n===null||Array.isArray(n))throw new Error("no object");this._jsonDaten=n,this._jsonLektion="",this._dialogFehler="",this._dialog="importJson"}catch{this._meldung={text:this._t("datei_ungueltig"),fehler:!0}}}async _importiereJson(){if(this._jsonDaten){this._beschaeftigt=!0;try{let e=await this._api.importJson(this._fachId,this._jsonDaten,this._mitStatistik,this._jsonLektion||null,this._neuBereich());this._schliesseDialog();let t=this._t("import_ergebnis",{n:e.importiert,u:e.uebersprungen});e.fehler.length&&(t+=` ${this._t("import_fehler",{n:e.fehler.length})}`),this._zeigeErfolg(t),await this._neuLaden()}catch(e){this._dialogFehler=y(this._t,e)}finally{this._beschaeftigt=!1}}}_oeffneArbeit(e,t=[]){let i=e?e.lektionen.length>0||e.aufgaben_ids.length>0:t.length>0;this._arbeit={id:e?.id??null,art:e?.art??"arbeit",datum:e?.datum??"",thema:e?.thema??"",abfragen:e?.abfragen_pro_tag??3,start:e?.start_tage_vorher??7,intensivierung:e?.intensivierung??!0,frist:e?.antwortfrist_minuten??null,simAktiv:!!e?.simulation_um,simUm:qt(e?.simulation_um??null),simAnzahl:e?.simulation_anzahl??10,kalenderUid:null,fachOffen:!1,modus:i?"auswahl":"alle",lektionen:new Set(e?.lektionen??[]),bereiche:new Set(e?.bereiche??[]),ids:new Set(e?.aufgaben_ids??t),seit:"",seiteVon:"",seiteBis:""},this._neuesFach=null,this._dialogFehler="",this._dialog="arbeit"}async _oeffneVorschlag(e){let{vorschlag:t}=e.detail,i=this._faecherDesKindes,n=(t.fach_id&&i.some(a=>a.id===t.fach_id)?t.fach_id:null)??(i.some(a=>a.id===this._fachId)?this._fachId:i[0]?.id)??"";n!==this._fachId&&(this._fachId=n,this._zuruecksetzen(),await this._ladeAufgaben()),this._oeffneArbeit(null),this._arbeit&&(this._arbeit={...this._arbeit,art:t.art,datum:t.datum,thema:t.text,kalenderUid:t.uid,fachOffen:n!==t.fach_id}),n||(this._neuesFach={...Fe})}async _wechsleFachImDialog(e){if(!(!this._arbeit||!e)){if(e===this._fachId){this._arbeit={...this._arbeit,fachOffen:!1};return}this._fachId=e,this._zuruecksetzen(),await this._ladeAufgaben(),this._arbeit={...this._arbeit,fachOffen:!1,modus:"alle",lektionen:new Set,bereiche:new Set,ids:new Set,seit:"",seiteVon:"",seiteBis:""}}}async _legeFachAn(){let e=this._neuesFach;if(e){this._beschaeftigt=!0,this._dialogFehler="";try{let t=await this._api.fachAnlegen(this._kindId,e.typ,e.name.trim(),e.typ==="fremdsprache"?e.sprache:null);this._uebersicht=await this._api.uebersicht(),this._neuesFach=null,this._fachId="",await this._wechsleFachImDialog(t)}catch(t){this._dialogFehler=y(this._t,t)}finally{this._beschaeftigt=!1}}}_setzeArbeit(e,t){this._arbeit&&(this._arbeit={...this._arbeit,[e]:t})}_arbeitMenge(e,t,i){if(!this._arbeit)return;let n=new Set(this._arbeit[e]);i?n.add(t):n.delete(t),this._setzeArbeit(e,n),e==="lektionen"&&i&&!this._arbeit.thema.trim()&&this._setzeArbeit("thema",t)}_arbeitSeit(){let e=this._arbeit;if(!e?.seit)return;let t=new Set(e.ids);for(let i of this._aufgaben)i.erstellt.slice(0,10)>=e.seit&&t.add(i.id);this._setzeArbeit("ids",t)}_arbeitSeiten(){let e=this._arbeit;if(!e||!e.seiteVon&&!e.seiteBis)return;let t=new Set(e.ids);for(let i of this._aufgaben)lt(i.seite,e.seiteVon,e.seiteBis)&&t.add(i.id);this._setzeArbeit("ids",t)}_arbeitUmfang(e){let t=new Set(e.lektionen),i=new Set(e.bereiche??[]),n=new Set(e.ids);return!t.size&&!i.size&&!n.size?null:this._aufgaben.filter(a=>n.has(a.id)||a.lektion!==null&&t.has(a.lektion)||i.has(a.bereich??O)).length}async _speichereArbeit(){let e=this._arbeit;if(!e)return;if(e.simAktiv&&!e.simUm){this._zeigeFehler({message:"simulation_um_ungueltig"});return}let t=e.modus==="auswahl",i={datum:e.datum,thema:e.thema,art:e.art,lektionen:t?[...e.lektionen]:[],bereiche:t?[...e.bereiche]:[],aufgaben_ids:t?[...e.ids]:[],abfragen_pro_tag:e.abfragen,start_tage_vorher:e.start,intensivierung:e.intensivierung,antwortfrist_minuten:e.frist,simulation_um:e.simAktiv&&e.simUm?new Date(e.simUm).toISOString():null,simulation_anzahl:e.simAnzahl};e.kalenderUid&&(i.kalender_uid=e.kalenderUid),e.id||(i.fach_id=this._fachId),this._beschaeftigt=!0,this._dialogFehler="";try{await this._api.arbeitSpeichern(e.id,i),this._schliesseDialog(),this._auswahl=new Set,this._tab="arbeiten",this._zeigeErfolg(this._t("gespeichert")),await this._neuLaden(20)}catch(n){this._dialogFehler=y(this._t,n)}finally{this._beschaeftigt=!1}}async _loescheArbeit(e){if(window.confirm(this._t("arbeit_loeschen_frage",{thema:e.thema})))try{await this._api.arbeitLoeschen(e.id),this._zeigeErfolg(this._t("geloescht_arbeit")),await this._neuLaden(20)}catch(t){this._zeigeFehler(t)}}_datum(e){let t=new Date(`${e.slice(0,10)}T00:00:00`);return Number.isNaN(t.getTime())?e:t.toLocaleDateString(this.hass?.language??"en",{year:"numeric",month:"2-digit",day:"2-digit"})}_zeitpunkt(e){let t=new Date(e);return Number.isNaN(t.getTime())?e:t.toLocaleString(this.hass?.language??"en",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"})}_menue(){this.dispatchEvent(new CustomEvent("hass-toggle-menu",{bubbles:!0,composed:!0}))}render(){let e=this._t,t=this._uebersicht;return r`
       <header>
         ${this.narrow?r`<button class="icon" aria-label="Menu" @click=${this._menue}>
               <ha-icon icon="mdi:menu"></ha-icon>
-            </button>`:u}
+            </button>`:c}
         <h1>${e("titel")}</h1>
         ${t&&t.kinder.length>0?r`<div class="kinder" role="group" aria-label=${e("kind")}>
               ${t.kinder.map(i=>r`<button
@@ -1495,7 +1520,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                   >
                     ${i.name}
                   </button>`)}
-            </div>`:u}
+            </div>`:c}
       </header>
       <main>
         ${this._veraltet?r`<div class="meldung" role="status">
@@ -1503,10 +1528,10 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
               <button class="primaer" @click=${()=>window.location.reload()}>
                 ${e("neu_laden")}
               </button>
-            </div>`:u}
+            </div>`:c}
         ${this._uebersicht?.kinder.find(i=>i.id===this._kindId)?.absender===!1?r`<div class="meldung fehler" role="status">
               <span>${e("absender_fehlt")}</span>
-            </div>`:u}
+            </div>`:c}
         ${(this._uebersicht?.unbekannte_absender??[]).map(i=>r`<div class="meldung" role="status">
               <span>
                 ${e("absender_unbekannt",{kennung:i.kennung,quelle:e(`quelle_${i.quelle}`)})}
@@ -1533,7 +1558,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
               >
                 <ha-icon icon="mdi:close"></ha-icon>
               </button>
-            </div>`:u}
+            </div>`:c}
         ${this._inhalt()}
       </main>
       ${this._dialogInhalt()}
@@ -1547,6 +1572,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
               ${i[n]}${t[n]===null?"":` (${t[n]})`}
             </button>`)}
       </div>
+      ${this._tab==="aufgaben"&&this._fach?this._werkzeuge():c}
       ${this._tab==="uebersicht"?r`<lh-uebersicht
             .hass=${this.hass}
             .narrow=${this.narrow}
@@ -1554,7 +1580,11 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             @lh-oeffnen=${this._oeffne}
             @lh-vorschlag=${this._oeffneVorschlag}
           ></lh-uebersicht>`:this._fachBereich()}
-    `}_fachBereich(){let e=this._t,t=this._faecherDesKindes;return this._fach?r`
+    `}_fachBereich(){let e=this._t,t=this._faecherDesKindes;return r`
+      <div class="abschnittskopf">
+        <h3 class="abschnitt">${e("faecher_titel")}</h3>
+        <button @click=${this._oeffneFaecher}>${e("faecher_verwalten")}</button>
+      </div>
       ${t.length>0?r`<div class="kinder fachwahl" role="group" aria-label=${e("fach")}>
             ${t.map(i=>r`<button
                   class="kindwahl"
@@ -1563,23 +1593,66 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                 >
                   ${i.name}
                 </button>`)}
-          </div>`:u}
-      ${this._tab==="aufgaben"?this._aufgabenAnsicht():this._arbeitenAnsicht()}
-    `:r`<div class="card leer">${e("keine_faecher")}</div>`}_aufgabenAnsicht(){let e=this._t,t=this._fach,i=this._gefiltert(),n=[...this._auswahl],[a="",o=""]=t.sprachen,l=this._filter,h=t.typ==="mathe",_=t.typ==="sach",c=this._satzAnsicht,f=this._uebersicht?.kinder.find(p=>p.id===this._kindId),g=t.ki_status??(t.ki?t.ki_bilder?"ok":"ohne_bilder":"keine"),v=g==="ok"||g==="ohne_bilder",m=g==="ok",x=g==="ok"?"":e(`ki_${g}`);return r`
+          </div>`:r`<div class="card leer">${e("keine_faecher")}</div>`}
+      ${this._fach?r`${this._tab==="aufgaben"?this._themenBereich():c}
+          ${this._tab==="aufgaben"?this._aufgabenAnsicht():this._arbeitenAnsicht()}`:c}
+    `}_werkzeuge(){let e=this._t,t=this._fach?.typ!=="sach"&&!this._satzAnsicht,i=(n,a,o,l=!1)=>r`<button
+      class="icon"
+      title=${a}
+      aria-label=${a}
+      ?disabled=${l}
+      @click=${o}
+    >
+      <ha-icon icon=${n}></ha-icon>
+    </button>`;return r`
+      <div class="werkzeuge">
+        ${t?i("mdi:text-box-plus-outline",e("import_aus_text"),()=>this._oeffneImport()):c}
+        ${i("mdi:file-export-outline",e("export_json"),()=>{this._mitStatistik=!1,this._dialogFehler="",this._dialog="export"},!this._aufgaben.length)}
+        ${i("mdi:file-import-outline",e("import_json"),()=>{this.renderRoot.querySelector("#datei")?.click()})}
+        <input
+          id="datei"
+          type="file"
+          accept="application/json,.json"
+          hidden
+          @change=${this._dateiGewaehlt}
+        />
+      </div>
+    `}_themenBereich(){let e=this._t,t=r`<h3 class="abschnitt trenner">${e("aufgabenverwaltung")}</h3>`;return this._hatBereiche?r`
+      <div class="abschnittskopf trenner">
+        <h3 class="abschnitt">${e("themen_titel")}</h3>
+        <button @click=${this._oeffneBereiche}>${e("bereiche_verwalten")}</button>
+      </div>
+      <div class="kinder fachwahl" role="group" aria-label=${e("bereich")}>
+            ${this._mehrere?r`<button
+                  class="kindwahl"
+                  aria-pressed=${this._aktiverBereich===""?"true":"false"}
+                  @click=${()=>{this._bereichId="",this._auswahl=new Set}}
+                >
+                  ${e("alle")} (${this._aufgaben.length})
+                </button>`:c}
+            ${this._bereiche.map(i=>r`<button
+                  class="kindwahl"
+                  aria-pressed=${this._aktiverBereich===i.id?"true":"false"}
+                  @click=${()=>{this._bereichId=i.id,this._auswahl=new Set}}
+                >
+                  ${this._bereichName_(i)} (${i.aufgaben})
+                </button>`)}
+          </div>
+      ${t}
+    `:t}_aufgabenAnsicht(){let e=this._t,t=this._fach,i=this._gefiltert(),n=[...this._auswahl],[a="",o=""]=t.sprachen,l=this._filter,h=t.typ==="mathe",_=t.typ==="sach",u=this._satzAnsicht,f=this._uebersicht?.kinder.find(m=>m.id===this._kindId),g=t.ki_status??(t.ki?t.ki_bilder?"ok":"ohne_bilder":"keine"),v=g==="ok"||g==="ohne_bilder",p=g==="ok",x=g==="ok"?"":e(`ki_${g}`);return r`
       <div class="leiste">
         <button class="primaer" @click=${this._neueAufgabe}>
           ${e(_?"neue_frage":"neue_aufgabe")}
         </button>
         <button @click=${this._oeffneLektionen}>${e("lektion_hinzufuegen")}</button>
-        <button @click=${this._oeffneBereiche}>${e("bereiche_verwalten")}</button>
         ${h?r`<button
               ?disabled=${!v}
               title=${v?"":x}
               @click=${this._oeffneGenerieren}
             >
               ${e("generieren")}
-            </button>`:u}
-        ${this._bereiche.some(p=>p.art==="satz")?r`
+            </button>`:c}
+        ${this._bereiche.some(m=>m.art==="satz")?r`
               <button
                 ?disabled=${!v}
                 title=${v?"":x}
@@ -1588,71 +1661,52 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                 ${e("saetze_generieren")}
               </button>
               <button
-                ?disabled=${!m}
+                ?disabled=${!p}
                 title=${x}
                 @click=${()=>this._oeffneSaetze(!0)}
               >
                 ${e("saetze_foto")}
               </button>
-            `:u}
-        ${c?u:_?r`<button
-              ?disabled=${!m}
+            `:c}
+        ${u?c:_?r`<button
+              ?disabled=${!p}
               title=${x}
               @click=${this._oeffneSeiten}
             >
               ${e("seiten")}
             </button>`:r`
-              <button @click=${this._oeffneImport}>${e("importieren")}</button>
               <button
-                ?disabled=${!m}
+                ?disabled=${!p}
                 title=${x}
                 @click=${this._oeffneFoto}
               >
                 ${e("foto_import")}
               </button>
             `}
-        <button
-          ?disabled=${!this._aufgaben.length}
-          @click=${()=>{this._mitStatistik=!1,this._dialogFehler="",this._dialog="export"}}
-        >
-          ${e("export_json")}
-        </button>
-        <button
-          @click=${()=>{this.renderRoot.querySelector("#datei")?.click()}}
-        >
-          ${e("import_json")}
-        </button>
-        <input
-          id="datei"
-          type="file"
-          accept="application/json,.json"
-          hidden
-          @change=${this._dateiGewaehlt}
-        />
         <span class="abstand"></span>
         ${n.length?r`
               <span>${e("ausgewaehlt",{n:n.length})}</span>
-              ${this._aufgaben.some(p=>this._auswahl.has(p.id)&&!p.geprueft)?r`<button ?disabled=${this._beschaeftigt} @click=${this._freigeben}>
+              ${this._aufgaben.some(m=>this._auswahl.has(m.id)&&!m.geprueft)?r`<button ?disabled=${this._beschaeftigt} @click=${this._freigeben}>
                     ${e("freigeben")}
-                  </button>`:u}
+                  </button>`:c}
               ${h?r`<button ?disabled=${this._beschaeftigt} @click=${this._nachrechnen}>
                     ${e("nachrechnen")}
-                  </button>`:u}
+                  </button>`:c}
               ${h?r`<button
                     ?disabled=${this._beschaeftigt}
                     title=${e("selbst_nachgerechnet_hinweis")}
                     @click=${this._markiereGeprueft}
                   >
                     ${e("selbst_nachgerechnet")}
-                  </button>`:u}
+                  </button>`:c}
               ${h?r`<button
                     ?disabled=${this._beschaeftigt||!v}
                     title=${v?"":x}
                     @click=${this._erzeugeRechenwege}
                   >
                     ${e("rechenweg_erzeugen")}
-                  </button>`:u}
-              ${this._aufgaben.some(p=>this._auswahl.has(p.id)&&p.typ==="sach"&&p.hilfe)?r`
+                  </button>`:c}
+              ${this._aufgaben.some(m=>this._auswahl.has(m.id)&&m.typ==="sach"&&m.hilfe)?r`
                     <button
                       ?disabled=${this._beschaeftigt}
                       @click=${()=>this._setzeHilfeSenden(n,!0)}
@@ -1665,17 +1719,17 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                     >
                       ${e("hilfe_alle_aus")}
                     </button>
-                  `:u}
+                  `:c}
               ${this._mehrere?r`<select
                     aria-label=${e("verschieben_nach")}
                     ?disabled=${this._beschaeftigt}
-                    @change=${p=>{let N=$(p);p.target.value="",this._verschiebe(N)}}
+                    @change=${m=>{let N=$(m);m.target.value="",this._verschiebe(N)}}
                   >
                     <option value="">${e("verschieben_nach")}</option>
-                    ${this._bereiche.map(p=>r`<option value=${p.id}>
-                          ${this._bereichName_(p)}
+                    ${this._bereiche.map(m=>r`<option value=${m.id}>
+                          ${this._bereichName_(m)}
                         </option>`)}
-                  </select>`:u}
+                  </select>`:c}
               <button @click=${()=>this._oeffneArbeit(null,n)}>
                 ${e("arbeit_aus_auswahl")}
               </button>
@@ -1686,7 +1740,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
               >
                 ${e("loeschen")}
               </button>
-            `:u}
+            `:c}
       </div>
 
       ${g==="nicht_verfuegbar"?r`<div class="meldung fehler" role="status">
@@ -1696,30 +1750,13 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             </span>
           </div>`:g==="keine"&&_?r`<div class="meldung fehler" role="status">
               <span>${e("sach_ohne_ki")}</span>
-            </div>`:g==="ok"?u:r`<p class="klein" role="note" style="margin: 0 0 12px">
+            </div>`:g==="ok"?c:r`<p class="klein" role="note" style="margin: 0 0 12px">
                 <ha-icon icon="mdi:information-outline" style="--mdc-icon-size: 16px"></ha-icon>
                 ${e(`ki_hinweis_${g}`)}
               </p>`}
-      ${h&&f&&!f.bilder&&this._aufgaben.some(p=>p.typ==="mathe"&&p.bild)?r`<div class="meldung fehler" role="status">
+      ${h&&f&&!f.bilder&&this._aufgaben.some(m=>m.typ==="mathe"&&m.bild)?r`<div class="meldung fehler" role="status">
             <span>${e("keine_bilder",{name:f.name})}</span>
-          </div>`:u}
-
-      ${this._hatBereiche?r`<div class="kinder fachwahl" role="group" aria-label=${e("bereich")}>
-            ${this._mehrere?r`<button
-                  class="kindwahl"
-                  aria-pressed=${this._aktiverBereich===""?"true":"false"}
-                  @click=${()=>{this._bereichId="",this._auswahl=new Set}}
-                >
-                  ${e("alle")} (${this._aufgaben.length})
-                </button>`:u}
-            ${this._bereiche.map(p=>r`<button
-                  class="kindwahl"
-                  aria-pressed=${this._aktiverBereich===p.id?"true":"false"}
-                  @click=${()=>{this._bereichId=p.id,this._auswahl=new Set}}
-                >
-                  ${this._bereichName_(p)} (${p.aufgaben})
-                </button>`)}
-          </div>`:u}
+          </div>`:c}
 
       <div class="card filter">
         <label class="feld">
@@ -1727,18 +1764,18 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           <input
             type="search"
             .value=${l.suche}
-            @input=${p=>this._setzeFilter("suche",$(p))}
+            @input=${m=>this._setzeFilter("suche",$(m))}
           />
         </label>
         <label class="feld">
           ${e("filter_lektion")}
           <select
             .value=${l.lektion}
-            @change=${p=>this._setzeFilter("lektion",$(p))}
+            @change=${m=>this._setzeFilter("lektion",$(m))}
           >
             <option value="">${e("alle")}</option>
-            ${t.lektionen.map(p=>r`<option value=${p} ?selected=${l.lektion===p}>
-                  ${p}
+            ${t.lektionen.map(m=>r`<option value=${m} ?selected=${l.lektion===m}>
+                  ${m}
                 </option>`)}
             <option value=${B}>${e("ohne_lektion")}</option>
           </select>
@@ -1747,7 +1784,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           ${e("filter_quelle")}
           <select
             .value=${l.quelle}
-            @change=${p=>this._setzeFilter("quelle",$(p))}
+            @change=${m=>this._setzeFilter("quelle",$(m))}
           >
             <option value="">${e("alle")}</option>
             <option value="manuell">${e("quelle_manuell")}</option>
@@ -1759,7 +1796,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           ${e("filter_geprueft")}
           <select
             .value=${l.geprueft}
-            @change=${p=>this._setzeFilter("geprueft",$(p))}
+            @change=${m=>this._setzeFilter("geprueft",$(m))}
           >
             <option value="">${e("alle")}</option>
             <option value="ja">${e("ja")}</option>
@@ -1773,7 +1810,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             min="0"
             max="100"
             .value=${l.fehlerquote}
-            @input=${p=>this._setzeFilter("fehlerquote",$(p))}
+            @input=${m=>this._setzeFilter("fehlerquote",$(m))}
           />
         </label>
         <label class="feld">
@@ -1781,7 +1818,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           <input
             type="date"
             .value=${l.von}
-            @change=${p=>this._setzeFilter("von",$(p))}
+            @change=${m=>this._setzeFilter("von",$(m))}
           />
         </label>
         <label class="feld">
@@ -1789,7 +1826,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           <input
             type="date"
             .value=${l.bis}
-            @change=${p=>this._setzeFilter("bis",$(p))}
+            @change=${m=>this._setzeFilter("bis",$(m))}
           />
         </label>
         <label class="feld">
@@ -1798,7 +1835,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             type="number"
             min="1"
             .value=${l.seiteVon}
-            @input=${p=>this._setzeFilter("seiteVon",$(p))}
+            @input=${m=>this._setzeFilter("seiteVon",$(m))}
           />
         </label>
         <label class="feld">
@@ -1807,7 +1844,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             type="number"
             min="1"
             .value=${l.seiteBis}
-            @input=${p=>this._setzeFilter("seiteBis",$(p))}
+            @input=${m=>this._setzeFilter("seiteBis",$(m))}
           />
         </label>
         <button
@@ -1827,7 +1864,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           ${this._bereichName_(l)} <span class="klein">(${h.length})</span>
         </h3>
         ${this._tabelle(h,this._ansichtVon(l),t,i,l.id===a)}
-      `)}`}_tabelle(e,t,i,n,a){let o=this._t,l=this.hass?.language??"en",h=t==="mathe",_=t==="sach",c=e.length>0&&e.every(g=>this._auswahl.has(g.id)),f=e;return r`
+      `)}`}_tabelle(e,t,i,n,a){let o=this._t,l=this.hass?.language??"en",h=t==="mathe",_=t==="sach",u=e.length>0&&e.every(g=>this._auswahl.has(g.id)),f=e;return r`
       <div class="card tabelle-rahmen">
         <table>
           <thead>
@@ -1836,7 +1873,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                 <input
                   type="checkbox"
                   aria-label=${o("alle_auswaehlen")}
-                  .checked=${c}
+                  .checked=${u}
                   @change=${g=>this._alleUmschalten(f,F(g))}
                 />
               </th>
@@ -1848,7 +1885,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
               </th>
               ${h?r`<th class="schmal" title=${o("schwierigkeit_hinweis")}>
                     ${o("spalte_schwierigkeit")}
-                  </th>`:u}
+                  </th>`:c}
               <th>${o("spalte_hinweis")}</th>
               <th class="schmal">${o("spalte_seite")}</th>
               <th>${o("spalte_lektion")}</th>
@@ -1860,17 +1897,17 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             </tr>
           </thead>
           <tbody>
-            ${a&&this._entwurf&&this._entwurf.id===null?this._editorZeile(this._entwurf,i,n):u}
+            ${a&&this._entwurf&&this._entwurf.id===null?this._editorZeile(this._entwurf,i,n):c}
             ${f.map(g=>this._entwurf?.id===g.id?this._editorZeile(this._entwurf,i,n):this._zeile(g,i,n))}
           </tbody>
         </table>
         ${f.length===0&&!(a&&this._entwurf)?r`<div class="leer">
               ${o(this._aufgaben.length?"keine_treffer":"keine_aufgaben")}
-            </div>`:u}
+            </div>`:c}
       </div>
-    `}_zeile(e,t,i){let n=this._t,a=this.hass?.language??"en",o=e.typ==="mathe"?e:null,l=e.typ==="sach"?e:null,h=(o?["mathe"]:l?["sach"]:[`${t}>${i}`,`${i}>${t}`]).map(c=>e.statistik[c]?.box??1).join(" \xB7 "),_=c=>e.typ!=="vokabel"?r``:r`
-            ${e.frage[c]??""}
-            ${e.alternativen[c]?.length?r`<div class="klein">${e.alternativen[c]?.join(" | ")}</div>`:u}
+    `}_zeile(e,t,i){let n=this._t,a=this.hass?.language??"en",o=e.typ==="mathe"?e:null,l=e.typ==="sach"?e:null,h=(o?["mathe"]:l?["sach"]:[`${t}>${i}`,`${i}>${t}`]).map(u=>e.statistik[u]?.box??1).join(" \xB7 "),_=u=>e.typ!=="vokabel"?r``:r`
+            ${e.frage[u]??""}
+            ${e.alternativen[u]?.length?r`<div class="klein">${e.alternativen[u]?.join(" | ")}</div>`:c}
           `;return r`
       <tr class=${this._auswahl.has(e.id)?"gewaehlt":""}>
         <td class="schmal">
@@ -1878,7 +1915,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             type="checkbox"
             aria-label=${ot(e,t,i)}
             .checked=${this._auswahl.has(e.id)}
-            @change=${c=>this._umschalten(e.id,F(c))}
+            @change=${u=>this._umschalten(e.id,F(u))}
           />
         </td>
         ${o?this._matheZellen(o):l?this._sachZellen(l):r`
@@ -1895,7 +1932,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                   icon="mdi:calendar-star"
                   style="--mdc-icon-size: 12px"
                 ></ha-icon>
-              </span>`:u}
+              </span>`:c}
         </td>
         <td class="schmal" data-label=${n("spalte_box")} title=${n("box_hinweis")}>
           ${h}
@@ -1910,7 +1947,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             type="checkbox"
             aria-label=${n("spalte_geprueft")}
             .checked=${e.geprueft}
-            @change=${c=>this._setzeGeprueft(e,F(c))}
+            @change=${u=>this._setzeGeprueft(e,F(u))}
           />
         </td>
         <td class="schmal klein" data-label=${n("spalte_erstellt")}>
@@ -1946,7 +1983,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
               @click=${()=>{this._grossbild=i,this._bildText=e.stelle?`${t("belegstelle")}: \u201E${e.stelle}\u201C`:"",this._dialogFehler="",this._dialog="bild"}}
             >
               <img class="vorschaubild" src=${i} alt="" loading="lazy" />
-            </button>`:u}
+            </button>`:c}
         ${e.frage}
         ${e.hilfe&&(e.form==="luecke"||e.form==="auswahl")?r`<div class="klein">
               (${e.hilfe})
@@ -1959,7 +1996,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                 />
                 ${t("hilfe_senden_kurz")}
               </label>
-            </div>`:u}
+            </div>`:c}
         <div class="klein">
           <span class="marke">${t(`form_${e.form}`)}</span>
           ${e.stelle&&!i?r`<span class="marke" title=${e.stelle}>
@@ -1968,17 +2005,17 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                   style="--mdc-icon-size: 12px"
                 ></ha-icon>
                 ${t("belegstelle")}
-              </span>`:u}
+              </span>`:c}
         </div>
       </td>
       <td data-label=${t(n?"spalte_satz_loesung":"spalte_musterantwort")}>
         ${e.antwort}
-        ${e.alternativen?.length?r`<div class="klein">${e.alternativen.join(" | ")}</div>`:u}
+        ${e.alternativen?.length?r`<div class="klein">${e.alternativen.join(" | ")}</div>`:c}
         ${e.form==="auswahl"?r`<div class="klein">
               ${e.falsche_optionen.map(a=>r`<div>✗ ${a}</div>`)}
             </div>`:e.kernpunkte.length?r`<div class="klein">
                 ${e.kernpunkte.map(a=>r`<div>• ${a}</div>`)}
-              </div>`:u}
+              </div>`:c}
       </td>
     `}_matheZellen(e){let t=this._t,i=e.bild?this._bildAdressen[e.bild]:void 0;return r`
       <td data-label=${t("spalte_aufgabe")}>
@@ -1993,10 +2030,10 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             </button>`:e.bild?r`<ha-icon
                 icon="mdi:image-outline"
                 style="float: right; --mdc-icon-size: 18px"
-              ></ha-icon>`:u}
+              ></ha-icon>`:c}
         ${e.aufgabe}
         <div class="klein">
-          ${e.verifikation==="keine"?u:e.verifikation==="abweichung"?r`<span class="marke warn">
+          ${e.verifikation==="keine"?c:e.verifikation==="abweichung"?r`<span class="marke warn">
                   <ha-icon icon="mdi:alert" style="--mdc-icon-size: 12px"></ha-icon>
                   ${t("verifikation_abweichung")}
                 </span>`:r`<span class="marke ok">
@@ -2010,12 +2047,12 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
 `)}>
                 <ha-icon icon="mdi:stairs" style="--mdc-icon-size: 12px"></ha-icon>
                 ${t("rechenweg_vorhanden")}
-              </span>`:u}
+              </span>`:c}
         </div>
       </td>
       <td data-label=${t("spalte_loesung")}>
         ${e.loesung}
-        ${e.alternativen.length?r`<div class="klein">${e.alternativen.join(" | ")}</div>`:u}
+        ${e.alternativen.length?r`<div class="klein">${e.alternativen.join(" | ")}</div>`:c}
         ${e.vorschlag?r`<div class="klein" style="margin-top: 4px">
               ${t(e.vorschlag_durch==="ki"?"vorschlag_ki":"vorschlag")}:
               <strong>${e.vorschlag}</strong>
@@ -2027,7 +2064,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
               >
                 ${t("uebernehmen_loesung")}
               </button>
-            </div>`:u}
+            </div>`:c}
       </td>
       <td
         class="schmal"
@@ -2036,20 +2073,20 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
       >
         ${e.schwierigkeit??r`<span class="klein">–</span>`}
       </td>
-    `}_editorZeile(e,t,i){let n=this._t,a=this._fach?.typ==="mathe",o=e.art==="sach",l=o&&this._fach?.typ==="vokabel",h=this.hass?.language??"en",_=(g,v,m=64)=>r`
+    `}_editorZeile(e,t,i){let n=this._t,a=this._fach?.typ==="mathe",o=e.art==="sach",l=o&&this._fach?.typ==="vokabel",h=this.hass?.language??"en",_=(g,v,p=64)=>r`
       <textarea
-        style="min-height: ${m}px"
+        style="min-height: ${p}px"
         aria-label=${v}
         placeholder=${v}
         maxlength="500"
         .value=${e[g]}
         @input=${x=>this._setzeEntwurf(g,$(x))}
       ></textarea>
-    `,c=(g,v,m="")=>r`
+    `,u=(g,v,p="")=>r`
       <input
         type="text"
         aria-label=${v}
-        placeholder=${m}
+        placeholder=${p}
         maxlength="500"
         .value=${e[g]}
         @input=${x=>this._setzeEntwurf(g,$(x))}
@@ -2060,7 +2097,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
         <td class="schmal"></td>
         ${a?r`
               <td data-label=${n("spalte_aufgabe")}>
-                ${c("a",n("spalte_aufgabe"))}
+                ${u("a",n("spalte_aufgabe"))}
                 <textarea
                   style="margin-top: 4px; min-height: 64px"
                   aria-label=${n("rechenweg")}
@@ -2070,8 +2107,8 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                 ></textarea>
               </td>
               <td data-label=${n("spalte_loesung")}>
-                ${c("b",n("spalte_loesung"))}
-                <div style="margin-top: 4px">${c("altB",f,f)}</div>
+                ${u("b",n("spalte_loesung"))}
+                <div style="margin-top: 4px">${u("altB",f,f)}</div>
               </td>
               <td class="schmal" data-label=${n("spalte_schwierigkeit")}>
                 <select
@@ -2103,7 +2140,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                             ?selected=${e.form==="uebersetzung"}
                           >
                             ${n("form_uebersetzung")}
-                          </option>`:u}
+                          </option>`:c}
                     <option value="kurz" ?selected=${e.form==="kurz"}>
                       ${n("form_kurz")}
                     </option>
@@ -2117,10 +2154,10 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                 >
                   ${_("b",n(e.form==="auswahl"?"richtige_antwort":l?"spalte_satz_loesung":"spalte_musterantwort"),e.form==="auswahl"?32:64)}
                   <div style="margin-top: 4px">
-                    ${e.form==="auswahl"?_("falsche",n("falsche_optionen")):e.form==="luecke"||e.form==="uebersetzung"?c("altB",f,f):_("kernpunkte",n("kernpunkte"))}
+                    ${e.form==="auswahl"?_("falsche",n("falsche_optionen")):e.form==="luecke"||e.form==="uebersetzung"?u("altB",f,f):_("kernpunkte",n("kernpunkte"))}
                   </div>
                   ${l&&(e.form==="luecke"||e.form==="auswahl")?r`<div style="margin-top: 4px">
-                        ${c("hilfe",n("hilfe_label",{sprache:z(h,t)}),n("hilfe_label",{sprache:z(h,t)}))}
+                        ${u("hilfe",n("hilfe_label",{sprache:z(h,t)}),n("hilfe_label",{sprache:z(h,t)}))}
                         <label class="feld zeile" style="margin-top: 4px">
                           <input
                             type="checkbox"
@@ -2129,20 +2166,20 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                           />
                           ${n("hilfe_senden")}
                         </label>
-                      </div>`:u}
+                      </div>`:c}
                 </td>
               `:r`
               <td data-label=${z(h,t)}>
-                ${c("a",z(h,t))}
-                <div style="margin-top: 4px">${c("altA",f,f)}</div>
+                ${u("a",z(h,t))}
+                <div style="margin-top: 4px">${u("altA",f,f)}</div>
               </td>
               <td data-label=${z(h,i)}>
-                ${c("b",z(h,i))}
-                <div style="margin-top: 4px">${c("altB",f,f)}</div>
+                ${u("b",z(h,i))}
+                <div style="margin-top: 4px">${u("altB",f,f)}</div>
               </td>
             `}
         <td data-label=${n("spalte_hinweis")}>
-          ${c("hinweis",n("spalte_hinweis"))}
+          ${u("hinweis",n("spalte_hinweis"))}
         </td>
         <td class="schmal" data-label=${n("spalte_seite")}>
           <input
@@ -2203,12 +2240,12 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                     <span class="marke">
                       ${e(n.art==="hue"?"art_hue":"art_arbeit")}
                     </span>
-                    ${n.datum<t?r`<span class="marke warn">${e("vergangen")}</span>`:u}
+                    ${n.datum<t?r`<span class="marke warn">${e("vergangen")}</span>`:c}
                   </div>
                   <div class="klein">
                     ${this._datum(n.datum)} ·
                     ${a===null?e("arbeit_alle"):e("arbeit_umfang",{n:a})}
-                    ${n.lektionen.length?r` · ${n.lektionen.join(", ")}`:u}
+                    ${n.lektionen.length?r` · ${n.lektionen.join(", ")}`:c}
                     · ${n.abfragen_pro_tag} × / ${n.start_tage_vorher} d
                   </div>
                   ${n.simulation_um?r`<div class="klein">
@@ -2217,7 +2254,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                           style="--mdc-icon-size: 14px"
                         ></ha-icon>
                         ${e(n.simulation_geplant?"sim_plan_offen":"sim_plan_erledigt",{zeit:this._zeitpunkt(n.simulation_um),n:n.simulation_anzahl??10})}
-                      </div>`:u}
+                      </div>`:c}
                 </div>
                 <button
                   ?disabled=${n.simulierbar?.ausdruck===0}
@@ -2234,15 +2271,15 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                 </button>
               </div>
             `})}
-    `}_dialogInhalt(){if(!this._dialog)return u;let e;switch(this._dialog){case"generieren":e=this._generierenDialog();break;case"aufgabenart":e=this._aufgabenartDialog();break;case"bildaufgabe":e=this._bildaufgabeDialog();break;case"bild":e=r`
+    `}_dialogInhalt(){if(!this._dialog)return c;let e;switch(this._dialog){case"generieren":e=this._generierenDialog();break;case"aufgabenart":e=this._aufgabenartDialog();break;case"bildaufgabe":e=this._bildaufgabeDialog();break;case"bild":e=r`
           <img class="grossbild" src=${this._grossbild} alt=${this._t("bild")} />
-          ${this._bildText?r`<p style="margin: 12px 0 0">${this._bildText}</p>`:u}
+          ${this._bildText?r`<p style="margin: 12px 0 0">${this._bildText}</p>`:c}
           <div class="aktionen">
             <button class="primaer" @click=${this._schliesseDialog}>
               ${this._t("schliessen")}
             </button>
           </div>
-        `;break;case"nachrechnen":e=this._nachrechnenDialog();break;case"seiten":e=this._seitenDialog();break;case"saetze":e=this._saetzeDialog();break;case"foto":e=this._fotoDialog();break;case"simulation":e=this._simulationDialog();break;case"import":e=this._importDialog();break;case"export":e=this._exportDialog();break;case"importJson":e=this._importJsonDialog();break;case"lektion":e=this._lektionDialog();break;case"bereiche":e=this._bereicheDialog();break;default:e=this._arbeitDialog()}return r`
+        `;break;case"nachrechnen":e=this._nachrechnenDialog();break;case"seiten":e=this._seitenDialog();break;case"saetze":e=this._saetzeDialog();break;case"foto":e=this._fotoDialog();break;case"simulation":e=this._simulationDialog();break;case"import":e=this._importDialog();break;case"export":e=this._exportDialog();break;case"importJson":e=this._importJsonDialog();break;case"lektion":e=this._lektionDialog();break;case"bereiche":e=this._bereicheDialog();break;case"faecher":e=this._faecherDialog();break;default:e=this._arbeitDialog()}return r`
       <div
         class="overlay"
         @click=${t=>{t.target===t.currentTarget&&this._schliesseDialog()}}
@@ -2255,26 +2292,26 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           ${e}
           ${this._dialogFehler?r`<div class="meldung fehler" role="alert" style="margin-top: 12px">
                 <span>${this._dialogFehler}</span>
-              </div>`:u}
+              </div>`:c}
         </div>
       </div>
     `}_simulationDialog(){let e=this._t,t=this._sim;if(!t)return r``;let i=t.arbeit.art==="hue",n=`${e(i?"sim_knopf_hue":"sim_knopf_arbeit")}: ${t.arbeit.thema}`;if(t.seiten)return r`
         <h2>${n}</h2>
         <p class="klein">${e("sim_blatt_hilfe",{n:t.anzahl})}</p>
-        ${t.seiten.map((_,c)=>r`
+        ${t.seiten.map((_,u)=>r`
             <img
               class="grossbild"
               style="max-height: 60vh; margin: 12px auto; border: 1px solid var(--lh-border)"
               src=${_}
-              alt=${`${e("spalte_seite")} ${c+1}`}
+              alt=${`${e("spalte_seite")} ${u+1}`}
             />
             <div class="aktionen" style="margin-top: 4px">
               <a
                 class="knopf"
                 href=${_}
-                download=${`${i?"hue":"klassenarbeit"}-${c+1}.png`}
+                download=${`${i?"hue":"klassenarbeit"}-${u+1}.png`}
               >
-                ${e("sim_herunterladen",{n:c+1})}
+                ${e("sim_herunterladen",{n:u+1})}
               </a>
             </div>
           `)}
@@ -2290,7 +2327,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             <button
               class=${t.weg===_?"primaer":""}
               aria-pressed=${t.weg===_?"true":"false"}
-              @click=${()=>{let c={...t,weg:_},f=Math.min(this._simVerfuegbar(c),he);this._sim={...c,anzahl:Math.max(1,Math.min(c.anzahl,f))}}}
+              @click=${()=>{let u={...t,weg:_},f=Math.min(this._simVerfuegbar(u),he);this._sim={...u,anzahl:Math.max(1,Math.min(u.anzahl,f))}}}
             >
               <strong>${e(`sim_weg_${_}`)}</strong>
               <span class="klein">
@@ -2306,13 +2343,13 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           min="1"
           max=${o}
           .value=${String(t.anzahl)}
-          @input=${_=>{let c=Math.round(Number($(_)))||1;this._sim={...t,anzahl:Math.max(1,Math.min(c,o))}}}
+          @input=${_=>{let u=Math.round(Number($(_)))||1;this._sim={...t,anzahl:Math.max(1,Math.min(u,o))}}}
         />
         <span class="klein">${e("sim_verfuegbar",{n:a})}</span>
       </label>
       ${a===0?r`<div class="meldung fehler" role="status" style="margin-top: 12px">
             <span>${e("sim_keine_aufgaben")}</span>
-          </div>`:u}
+          </div>`:c}
       <div class="aktionen">
         <button @click=${this._schliesseDialog}>${e("abbrechen")}</button>
         <button
@@ -2343,8 +2380,8 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                     src=${f}
                     alt=${`${e("spalte_seite")} ${g+1}`}
                   />`)}
-            </div>`:u}
-        ${this._beschaeftigt?r`<p class="klein" role="status">${e("seiten_laeuft")}</p>`:u}
+            </div>`:c}
+        ${this._beschaeftigt?r`<p class="klein" role="status">${e("seiten_laeuft")}</p>`:c}
         <div class="aktionen">
           <button @click=${this._schliesseDialog}>${e("abbrechen")}</button>
           <button
@@ -2355,12 +2392,12 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             ${e("foto_auslesen")}
           </button>
         </div>
-      `;let _=h.filter(f=>f.an).length,c=(f,g,v,m)=>r`
+      `;let _=h.filter(f=>f.an).length,u=(f,g,v,p)=>r`
       <input
         type="text"
         aria-label=${v}
         maxlength="500"
-        .value=${m}
+        .value=${p}
         @input=${x=>this._setzeFotoZeile(f,{[g]:$(x),geaendert:!0})}
       />
     `;return r`
@@ -2380,12 +2417,12 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
               </th>
               <th>${n?e("spalte_aufgabe"):z(l,a)}</th>
               <th>${n?e("spalte_loesung"):z(l,o)}</th>
-              ${n?u:r`<th>${e("spalte_hinweis")}</th>`}
+              ${n?c:r`<th>${e("spalte_hinweis")}</th>`}
               <th class="schmal">${e("spalte_seite")}</th>
             </tr>
           </thead>
           <tbody>
-            ${h.map((f,g)=>{let v=f.roh,m=!f.geaendert&&v.verifikation==="abweichung"&&v.vorschlag;return r`
+            ${h.map((f,g)=>{let v=f.roh,p=!f.geaendert&&v.verifikation==="abweichung"&&v.vorschlag;return r`
                 <tr class=${f.an?"gewaehlt":""}>
                   <td class="schmal">
                     <input
@@ -2396,16 +2433,16 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                     />
                   </td>
                   <td>
-                    ${c(g,"a",n?e("spalte_aufgabe"):z(l,a),f.a)}
+                    ${u(g,"a",n?e("spalte_aufgabe"):z(l,a),f.a)}
                     <div class="klein">
-                      ${v.vorhanden?r`<span class="marke">${e("foto_vorhanden")}</span>`:u}
-                      ${v.braucht_bild?r`<span class="marke warn">${e("foto_braucht_bild")}</span>`:u}
+                      ${v.vorhanden?r`<span class="marke">${e("foto_vorhanden")}</span>`:c}
+                      ${v.braucht_bild?r`<span class="marke warn">${e("foto_braucht_bild")}</span>`:c}
                     </div>
                   </td>
                   <td>
-                    ${c(g,"b",n?e("spalte_loesung"):z(l,o),f.b)}
+                    ${u(g,"b",n?e("spalte_loesung"):z(l,o),f.b)}
                     ${n&&!v.braucht_bild?r`<div class="klein">
-                          ${f.geaendert||v.verifikation==="keine"?r`<span class="marke">${e("foto_unbestaetigt")}</span>`:m?r`<span class="marke warn">
+                          ${f.geaendert||v.verifikation==="keine"?r`<span class="marke">${e("foto_unbestaetigt")}</span>`:p?r`<span class="marke warn">
                                     ${e(v.vorschlag_durch==="ki"?"nachrechnen_ki":"nachrechnen_berechnet")}:
                                     ${v.vorschlag}
                                   </span>
@@ -2416,12 +2453,12 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                                   </button>`:r`<span class="marke ok">
                                   ${e(`verifikation_${v.verifikation??"ki"}`)}
                                 </span>`}
-                        </div>`:u}
+                        </div>`:c}
                     ${!n&&!f.geaendert?r`<div class="klein">
                           ${Object.values(v.alternativen??{}).flat().join(" | ")}
-                        </div>`:u}
+                        </div>`:c}
                   </td>
-                  ${n?u:r`<td>${c(g,"hinweis",e("spalte_hinweis"),f.hinweis)}</td>`}
+                  ${n?c:r`<td>${u(g,"hinweis",e("spalte_hinweis"),f.hinweis)}</td>`}
                   <td class="schmal">
                     <input
                       type="number"
@@ -2472,7 +2509,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                   src=${a}
                   alt=${`${e("spalte_seite")} ${o+1}`}
                 />`)}
-          </div>`:u}
+          </div>`:c}
       <div class="raster" style="margin-top: 12px">
         <label class="feld">
           ${e("spalte_lektion")}
@@ -2510,7 +2547,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           @input=${a=>i("schwerpunkt",$(a))}
         />
       </label>
-      ${this._beschaeftigt?r`<p class="klein" role="status">${e("seiten_laeuft")}</p>`:u}
+      ${this._beschaeftigt?r`<p class="klein" role="status">${e("seiten_laeuft")}</p>`:c}
       <div class="aktionen">
         <button @click=${this._schliesseDialog}>${e("abbrechen")}</button>
         <button
@@ -2542,7 +2579,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                         src=${l}
                         alt=${`${e("spalte_seite")} ${h+1}`}
                       />`)}
-                </div>`:u}
+                </div>`:c}
             <div class="chips" style="margin: 12px 0">
               ${[!1,!0].map(l=>r`
                   <label class="feld zeile">
@@ -2556,7 +2593,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                   </label>
                 `)}
             </div>
-          `:u}
+          `:c}
       <label class="feld" style="margin-top: 12px">
         ${e("saetze_beschreibung")}${t.foto?"":" *"}
         <textarea
@@ -2604,7 +2641,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           </select>
         </label>
       </div>
-      ${this._beschaeftigt?r`<p class="klein" role="status">${e("saetze_laeuft")}</p>`:u}
+      ${this._beschaeftigt?r`<p class="klein" role="status">${e("saetze_laeuft")}</p>`:c}
       <div class="aktionen">
         <button @click=${this._schliesseDialog}>${e("abbrechen")}</button>
         <button
@@ -2636,7 +2673,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
       <h2>${e("bildaufgabe_titel")}</h2>
       ${i&&!i.bilder?r`<div class="meldung fehler" role="status" style="margin-bottom: 12px">
             <span>${e("keine_bilder",{name:i.name})}</span>
-          </div>`:u}
+          </div>`:c}
       <label class="feld">
         ${e("bild")} *
         <input
@@ -2652,7 +2689,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
             style="max-height: 240px; margin: 12px auto"
             src=${t.vorschau}
             alt=${e("bild_vorschau")}
-          />`:u}
+          />`:c}
       <label class="feld" style="margin-top: 12px">
         ${e("einleitung")}
         <textarea
@@ -2726,7 +2763,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
           `)}
         <button
           ?disabled=${t.teile.length>=8}
-          @click=${()=>this._setzeBild("teile",[...t.teile,{...at}])}
+          @click=${()=>this._setzeBild("teile",[...t.teile,{...rt}])}
         >
           ${e("teilaufgabe_hinzufuegen")}
         </button>
@@ -2765,7 +2802,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                     @click=${()=>this._uebernimmVorschlag([i.id])}
                   >
                     ${e("uebernehmen_loesung")}
-                  </button>`:u}
+                  </button>`:c}
             </div>
           `)}
       </div>
@@ -2826,7 +2863,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
       <p class="klein">
         ${n?e("generieren_beispiele_auswahl",{n}):e("generieren_beispiele_thema")}
       </p>
-      ${this._beschaeftigt?r`<p class="klein" role="status">${e("generieren_laeuft")}</p>`:u}
+      ${this._beschaeftigt?r`<p class="klein" role="status">${e("generieren_laeuft")}</p>`:c}
       <div class="aktionen">
         <button ?disabled=${this._beschaeftigt} @click=${this._schliesseDialog}>
           ${e("abbrechen")}
@@ -2879,7 +2916,7 @@ gehen; to go`}
                   <label>
                     <span style="flex: 1">
                       ${h.frage?`${h.frage[t]??""} \u2192 ${h.frage[i]??""}`:`${h.aufgabe??""} \u2192 ${h.loesung??""}`}
-                      ${h.hinweis?r`<span class="klein"> (${h.hinweis})</span>`:u}
+                      ${h.hinweis?r`<span class="klein"> (${h.hinweis})</span>`:c}
                     </span>
                     <span class="marke ${h.vorhanden?"":"ok"}">
                       ${e(h.vorhanden?"vorschau_vorhanden":"vorschau_neu")}
@@ -2889,8 +2926,8 @@ gehen; to go`}
             </div>
             ${a.fehlerzeilen.length?r`<p class="klein" style="color: var(--lh-error)">
                   ${e("vorschau_fehler",{zeilen:a.fehlerzeilen.join(", ")})}
-                </p>`:u}
-          `:u}
+                </p>`:c}
+          `:c}
       <div class="aktionen">
         <button @click=${this._schliesseDialog}>${e("abbrechen")}</button>
         <button ?disabled=${!this._importText.trim()} @click=${this._importVorschau}>
@@ -2976,7 +3013,7 @@ gehen; to go`}
                   ${e("bereich_art_satz")}
                 </option>
               </select>
-            </label>`:u}
+            </label>`:c}
         <button
           class="primaer"
           style="align-self: flex-end"
@@ -3074,104 +3111,126 @@ gehen; to go`}
           ${e("uebernehmen")}
         </button>
       </div>
-    `}_fachWahl(){let e=this._t,t=this.hass?.language??"en",i=this._neuesFach,n=this._faecherDesKindes,a=this._arbeit?.fachOffen??!1,o=l=>{this._neuesFach&&(this._neuesFach={...this._neuesFach,...l})};return r`
-      ${n.length?r`<div class="zeile" style="align-items: end; margin-bottom: 12px">
+    `}_fachFormular(e,t,i){let n=this._t,a=this.hass?.language??"en",o=l=>{this._neuesFach&&(this._neuesFach={...this._neuesFach,...l})};return r`<fieldset style="margin-bottom: 12px">
+      <legend>${n("fach_neu_titel")}</legend>
+      <div class="raster">
+        <label class="feld">
+          ${n("fach_neu_art")}
+          <select .value=${e.typ} @change=${l=>o({typ:$(l)})}>
+            ${Mt.map(l=>r`<option value=${l} ?selected=${l===e.typ}>
+                  ${n(`fachart_${l}`)}
+                </option>`)}
+          </select>
+        </label>
+        ${e.typ==="fremdsprache"?r`<label class="feld">
+              ${n("fach_neu_sprache")}
+              <select .value=${e.sprache} @change=${l=>o({sprache:$(l)})}>
+                ${Ut.map(l=>r`<option value=${l} ?selected=${l===e.sprache}>
+                      ${z(a,l)}
+                    </option>`)}
+              </select>
+            </label>`:c}
+        <label class="feld">
+          ${n(e.typ==="sach"?"fach_neu_name":"fach_neu_name_optional")}
+          <input
+            type="text"
+            maxlength="60"
+            .value=${e.name}
+            @input=${l=>o({name:$(l)})}
+          />
+        </label>
+      </div>
+      <div class="zeile" style="margin-top: 8px">
+        <button
+          class="primaer"
+          ?disabled=${this._beschaeftigt||e.typ==="sach"&&!e.name.trim()}
+          @click=${i}
+        >
+          ${n("fach_neu_anlegen")}
+        </button>
+        ${t?r`<button
+              @click=${()=>{this._neuesFach=null}}
+            >
+              ${n("abbrechen")}
+            </button>`:c}
+      </div>
+    </fieldset>`}_oeffneFaecher(){this._neuesFach=null,this._dialogFehler="",this._dialog="faecher"}async _legeFachNeuAn(){let e=this._neuesFach;if(e){this._beschaeftigt=!0,this._dialogFehler="";try{let t=await this._api.fachAnlegen(this._kindId,e.typ,e.name.trim(),e.typ==="fremdsprache"?e.sprache:null);this._uebersicht=await this._api.uebersicht(),this._neuesFach=null,await this._waehleFach(t),this._zeigeErfolg(this._t("fach_angelegt"))}catch(t){this._dialogFehler=y(this._t,t)}finally{this._beschaeftigt=!1}}}_faecherDialog(){let e=this._t,t=this._faecherDesKindes,i=this._neuesFach;return r`
+      <h2>${e("faecher_verwalten")}</h2>
+      <p class="klein">${e("faecher_hilfe")}</p>
+      ${t.length?r`<div class="liste">
+            ${t.map(n=>r`
+                <div class="eintrag">
+                  <span style="flex: 1">${n.name}</span>
+                  <span class="klein">
+                    ${e(`fachart_${n.typ==="vokabel"?"fremdsprache":n.typ}`)} ·
+                    ${e("lektion_anzahl",{n:n.anzahl_aufgaben})}
+                  </span>
+                </div>
+              `)}
+          </div>`:r`<div class="leer">${e("keine_faecher")}</div>`}
+      ${i?this._fachFormular(i,!0,this._legeFachNeuAn):r`<div class="zeile" style="margin: 12px 0">
+            <button
+              class="primaer"
+              @click=${()=>{this._neuesFach={...Fe}}}
+            >
+              + ${e("fach_neu")}
+            </button>
+          </div>`}
+      <p class="klein">
+        <a href="/config/integrations/integration/learnbuddy">${e("faecher_einstellungen")}</a>
+      </p>
+      <div class="aktionen">
+        <button class="primaer" @click=${this._schliesseDialog}>${e("schliessen")}</button>
+      </div>
+    `}_fachWahl(){let e=this._t,t=this._neuesFach,i=this._faecherDesKindes,n=this._arbeit?.fachOffen??!1;return r`
+      ${i.length?r`<div class="zeile" style="align-items: end; margin-bottom: 12px">
             <label class="feld" style="flex: 1">
               ${e("arbeit_fach")}
               <select
-                .value=${a?"":this._fachId}
-                @change=${l=>this._wechsleFachImDialog($(l))}
+                .value=${n?"":this._fachId}
+                @change=${a=>this._wechsleFachImDialog($(a))}
               >
-                ${a?r`<option value="" selected disabled>${e("arbeit_fach_waehlen")}</option>`:u}
-                ${n.map(l=>r`<option
-                      value=${l.id}
-                      ?selected=${!a&&l.id===this._fachId}
+                ${n?r`<option value="" selected disabled>${e("arbeit_fach_waehlen")}</option>`:c}
+                ${i.map(a=>r`<option
+                      value=${a.id}
+                      ?selected=${!n&&a.id===this._fachId}
                     >
-                      ${l.name}
+                      ${a.name}
                     </option>`)}
               </select>
             </label>
             <button
               title=${e("fach_neu")}
               aria-label=${e("fach_neu")}
-              ?disabled=${i!==null}
-              @click=${()=>{this._neuesFach={...rt}}}
+              ?disabled=${t!==null}
+              @click=${()=>{this._neuesFach={...Fe}}}
             >
               + ${e("fach_neu")}
             </button>
-          </div>`:u}
-      ${i?r`<fieldset style="margin-bottom: 12px">
-            <legend>${e("fach_neu_titel")}</legend>
-            <div class="raster">
-              <label class="feld">
-                ${e("fach_neu_art")}
-                <select
-                  .value=${i.typ}
-                  @change=${l=>o({typ:$(l)})}
-                >
-                  ${Mt.map(l=>r`<option value=${l} ?selected=${l===i.typ}>
-                        ${e(`fachart_${l}`)}
-                      </option>`)}
-                </select>
-              </label>
-              ${i.typ==="fremdsprache"?r`<label class="feld">
-                    ${e("fach_neu_sprache")}
-                    <select
-                      .value=${i.sprache}
-                      @change=${l=>o({sprache:$(l)})}
-                    >
-                      ${Ut.map(l=>r`<option value=${l} ?selected=${l===i.sprache}>
-                            ${z(t,l)}
-                          </option>`)}
-                    </select>
-                  </label>`:u}
-              <label class="feld">
-                ${e(i.typ==="sach"?"fach_neu_name":"fach_neu_name_optional")}
-                <input
-                  type="text"
-                  maxlength="60"
-                  .value=${i.name}
-                  @input=${l=>o({name:$(l)})}
-                />
-              </label>
-            </div>
-            <div class="zeile" style="margin-top: 8px">
-              <button
-                class="primaer"
-                ?disabled=${this._beschaeftigt||i.typ==="sach"&&!i.name.trim()}
-                @click=${this._legeFachAn}
-              >
-                ${e("fach_neu_anlegen")}
-              </button>
-              ${n.length?r`<button
-                    @click=${()=>{this._neuesFach=null}}
-                  >
-                    ${e("abbrechen")}
-                  </button>`:u}
-            </div>
-          </fieldset>`:u}
+          </div>`:c}
+      ${t?this._fachFormular(t,i.length>0,this._legeFachAn):c}
     `}_arbeitDialog(){let e=this._t,t=this._arbeit,i=this._fach;if(!t)return r``;if(!i)return r`
         <h2>${e("arbeit_titel_neu")}</h2>
         <p class="klein">${e("fach_neu_fehlt")}</p>
         ${this._fachWahl()}
-        ${this._dialogFehler?r`<div class="meldung fehler" role="alert">${this._dialogFehler}</div>`:u}
+        ${this._dialogFehler?r`<div class="meldung fehler" role="alert">${this._dialogFehler}</div>`:c}
         <div class="aktionen">
           <button @click=${this._schliesseDialog}>${e("abbrechen")}</button>
         </div>
-      `;let[n="",a=""]=i.sprachen,o=t.modus==="alle"?this._aufgaben.length:this._arbeitUmfang(t)??this._aufgaben.length,l=(c,f,g)=>r`
+      `;let[n="",a=""]=i.sprachen,o=t.modus==="alle"?this._aufgaben.length:this._arbeitUmfang(t)??this._aufgaben.length,l=(u,f,g)=>r`
       <label class="feld">
         ${f}
         <input
           type="number"
           min="1"
-          max=${g??u}
-          .value=${String(t[c])}
-          @input=${v=>this._setzeArbeit(c,Number($(v))||1)}
+          max=${g??c}
+          .value=${String(t[u])}
+          @input=${v=>this._setzeArbeit(u,Number($(v))||1)}
         />
       </label>
     `,h=!t.thema.trim(),_=t.fachOffen?"arbeit_fehlt_fach":h&&!t.datum?"arbeit_fehlt_beides":h?"arbeit_fehlt_thema":t.datum?null:"arbeit_fehlt_datum";return r`
       <h2>${e(t.id?"arbeit_titel_bearbeiten":"arbeit_titel_neu")}</h2>
-      ${t.kalenderUid?this._fachWahl():u}
+      ${t.kalenderUid?this._fachWahl():c}
       <div class="raster">
         <label class="feld">
           ${e("thema")} *
@@ -3180,7 +3239,7 @@ gehen; to go`}
             required
             maxlength="200"
             .value=${t.thema}
-            @input=${c=>this._setzeArbeit("thema",$(c))}
+            @input=${u=>this._setzeArbeit("thema",$(u))}
           />
         </label>
         <label class="feld">
@@ -3189,14 +3248,14 @@ gehen; to go`}
             type="date"
             required
             .value=${t.datum}
-            @change=${c=>this._setzeArbeit("datum",$(c))}
+            @change=${u=>this._setzeArbeit("datum",$(u))}
           />
         </label>
         <label class="feld">
           ${e("art")}
           <select
             .value=${t.art}
-            @change=${c=>this._setzeArbeit("art",$(c)==="hue"?"hue":"arbeit")}
+            @change=${u=>this._setzeArbeit("art",$(u)==="hue"?"hue":"arbeit")}
           >
             <option value="arbeit" ?selected=${t.art==="arbeit"}>
               ${e("art_arbeit")}
@@ -3216,7 +3275,7 @@ gehen; to go`}
             max="1440"
             placeholder=${e("antwortfrist_leer")}
             .value=${t.frist===null?"":String(t.frist)}
-            @input=${c=>{let f=Math.round(Number($(c)));this._setzeArbeit("frist",f>=1?Math.min(f,1440):null)}}
+            @input=${u=>{let f=Math.round(Number($(u)));this._setzeArbeit("frist",f>=1?Math.min(f,1440):null)}}
           />
           <span class="klein">${e("antwortfrist_hinweis")}</span>
         </label>
@@ -3225,7 +3284,7 @@ gehen; to go`}
         <input
           type="checkbox"
           .checked=${t.intensivierung}
-          @change=${c=>this._setzeArbeit("intensivierung",F(c))}
+          @change=${u=>this._setzeArbeit("intensivierung",F(u))}
         />
         ${e("intensivierung")}
       </label>
@@ -3236,7 +3295,7 @@ gehen; to go`}
           <input
             type="checkbox"
             .checked=${t.simAktiv}
-            @change=${c=>this._setzeArbeit("simAktiv",F(c))}
+            @change=${u=>this._setzeArbeit("simAktiv",F(u))}
           />
           ${e("sim_plan_aktiv")}
         </label>
@@ -3247,7 +3306,7 @@ gehen; to go`}
                   <input
                     type="datetime-local"
                     .value=${t.simUm}
-                    @change=${c=>this._setzeArbeit("simUm",$(c))}
+                    @change=${u=>this._setzeArbeit("simUm",$(u))}
                   />
                 </label>
                 <label class="feld">
@@ -3257,10 +3316,10 @@ gehen; to go`}
                     min="1"
                     max=${he}
                     .value=${String(t.simAnzahl)}
-                    @input=${c=>this._setzeArbeit("simAnzahl",Math.max(1,Math.min(Math.round(Number($(c)))||1,he)))}
+                    @input=${u=>this._setzeArbeit("simAnzahl",Math.max(1,Math.min(Math.round(Number($(u)))||1,he)))}
                   />
                 </label>
-              </div>`:u}
+              </div>`:c}
       </fieldset>
 
       <fieldset>
@@ -3268,15 +3327,15 @@ gehen; to go`}
           ${e("aufgaben_der_arbeit")} – ${e("arbeit_umfang",{n:o})}
         </legend>
         <div class="chips" style="margin-bottom: 10px">
-          ${["alle","auswahl"].map(c=>r`
+          ${["alle","auswahl"].map(u=>r`
               <label class="feld zeile">
                 <input
                   type="radio"
                   name="modus"
-                  .checked=${t.modus===c}
-                  @change=${()=>this._setzeArbeit("modus",c)}
+                  .checked=${t.modus===u}
+                  @change=${()=>this._setzeArbeit("modus",u)}
                 />
-                ${e(c==="alle"?"auswahl_alle":"auswahl_gezielt")}
+                ${e(u==="alle"?"auswahl_alle":"auswahl_gezielt")}
               </label>
             `)}
         </div>
@@ -3284,40 +3343,40 @@ gehen; to go`}
               ${(i.bereiche?.length??0)>1?r`
                     <div class="klein">${e("schnell_bereiche")}</div>
                     <div class="chips" style="margin: 6px 0 12px">
-                      ${(i.bereiche??[]).map(c=>r`
+                      ${(i.bereiche??[]).map(u=>r`
                           <label class="feld zeile">
                             <input
                               type="checkbox"
-                              .checked=${t.bereiche.has(c.id)}
-                              @change=${f=>this._arbeitMenge("bereiche",c.id,F(f))}
+                              .checked=${t.bereiche.has(u.id)}
+                              @change=${f=>this._arbeitMenge("bereiche",u.id,F(f))}
                             />
-                            ${this._bereichName_(c)}
+                            ${this._bereichName_(u)}
                           </label>
                         `)}
                     </div>
-                  `:u}
+                  `:c}
               ${i.lektionen.length?r`
                     <div class="klein">${e("schnell_lektionen")}</div>
                     <div class="chips" style="margin: 6px 0 12px">
-                      ${i.lektionen.map(c=>r`
+                      ${i.lektionen.map(u=>r`
                           <label class="feld zeile">
                             <input
                               type="checkbox"
-                              .checked=${t.lektionen.has(c)}
-                              @change=${f=>this._arbeitMenge("lektionen",c,F(f))}
+                              .checked=${t.lektionen.has(u)}
+                              @change=${f=>this._arbeitMenge("lektionen",u,F(f))}
                             />
-                            ${c}
+                            ${u}
                           </label>
                         `)}
                     </div>
-                  `:u}
+                  `:c}
               <div class="leiste">
                 <label class="feld" style="flex: 1; max-width: 220px">
                   ${e("schnell_seit")}
                   <input
                     type="date"
                     .value=${t.seit}
-                    @change=${c=>this._setzeArbeit("seit",$(c))}
+                    @change=${u=>this._setzeArbeit("seit",$(u))}
                   />
                 </label>
                 <button ?disabled=${!t.seit} @click=${this._arbeitSeit}>
@@ -3331,7 +3390,7 @@ gehen; to go`}
                     type="number"
                     min="1"
                     .value=${t.seiteVon}
-                    @input=${c=>this._setzeArbeit("seiteVon",$(c))}
+                    @input=${u=>this._setzeArbeit("seiteVon",$(u))}
                   />
                 </label>
                 <label class="feld" style="flex: 1; max-width: 220px">
@@ -3340,7 +3399,7 @@ gehen; to go`}
                     type="number"
                     min="1"
                     .value=${t.seiteBis}
-                    @input=${c=>this._setzeArbeit("seiteBis",$(c))}
+                    @input=${u=>this._setzeArbeit("seiteBis",$(u))}
                   />
                 </label>
                 <button
@@ -3365,28 +3424,28 @@ gehen; to go`}
                   <span class="seite">${e("spalte_seite")}</span>
                   <span class="lektion">${e("spalte_lektion")}</span>
                 </div>
-                ${this._aufgaben.map(c=>{let f=c.lektion!==null&&t.lektionen.has(c.lektion);return r`
+                ${this._aufgaben.map(u=>{let f=u.lektion!==null&&t.lektionen.has(u.lektion);return r`
                     <label>
                       <input
                         type="checkbox"
-                        .checked=${f||t.ids.has(c.id)}
+                        .checked=${f||t.ids.has(u.id)}
                         ?disabled=${f}
-                        @change=${g=>this._arbeitMenge("ids",c.id,F(g))}
+                        @change=${g=>this._arbeitMenge("ids",u.id,F(g))}
                       />
                       <span style="flex: 1">
-                        ${ot(c,n,a)}
+                        ${ot(u,n,a)}
                       </span>
-                      <span class="klein seite">${c.seite??""}</span>
-                      <span class="klein lektion">${c.lektion??""}</span>
+                      <span class="klein seite">${u.seite??""}</span>
+                      <span class="klein lektion">${u.lektion??""}</span>
                     </label>
                   `})}
               </div>
-            `:u}
+            `:c}
       </fieldset>
       <div class="aktionen">
         ${_?r`<span class="klein" role="status" style="margin-right: auto">
               ${e(_)}
-            </span>`:u}
+            </span>`:c}
         <button @click=${this._schliesseDialog}>${e("abbrechen")}</button>
         <button
           class="primaer"
