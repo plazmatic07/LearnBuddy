@@ -142,6 +142,7 @@ export const styles = css`
     flex: 1;
   }
   .filter {
+    margin-top: 20px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 10px 12px;
