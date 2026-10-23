@@ -1453,7 +1453,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                                   `)}
                               </div>
                             `:c}
-                        <div class="leiste">
+                        <div class="leiste" style="align-items: flex-end">
                           <label class="feld" style="flex: 1; max-width: 220px">
                             ${i("schnell_seit")}
                             <input
@@ -1469,7 +1469,7 @@ ${t.zeilen.map(i=>`- ${i}`).join(`
                             ${i("hinzufuegen")}
                           </button>
                         </div>
-                        <div class="leiste">
+                        <div class="leiste" style="align-items: flex-end">
                           <label class="feld" style="flex: 1; max-width: 220px">
                             ${i("schnell_seiten")}
                             <input
@@ -3450,7 +3450,7 @@ gehen; to go`}
                         `)}
                     </div>
                   `:c}
-              <div class="leiste">
+              <div class="leiste" style="align-items: flex-end">
                 <label class="feld" style="flex: 1; max-width: 220px">
                   ${e("schnell_seit")}
                   <input
@@ -3463,7 +3463,7 @@ gehen; to go`}
                   ${e("hinzufuegen")}
                 </button>
               </div>
-              <div class="leiste">
+              <div class="leiste" style="align-items: flex-end">
                 <label class="feld" style="flex: 1; max-width: 220px">
                   ${e("schnell_seiten")}
                   <input

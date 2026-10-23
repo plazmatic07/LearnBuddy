@@ -1207,7 +1207,7 @@ export class LhUebersicht extends LitElement {
                               </div>
                             `
                           : nothing}
-                        <div class="leiste">
+                        <div class="leiste" style="align-items: flex-end">
                           <label class="feld" style="flex: 1; max-width: 220px">
                             ${t("schnell_seit")}
                             <input
@@ -1225,7 +1225,7 @@ export class LhUebersicht extends LitElement {
                             ${t("hinzufuegen")}
                           </button>
                         </div>
-                        <div class="leiste">
+                        <div class="leiste" style="align-items: flex-end">
                           <label class="feld" style="flex: 1; max-width: 220px">
                             ${t("schnell_seiten")}
                             <input
