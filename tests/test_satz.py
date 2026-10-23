@@ -635,3 +635,49 @@ async def test_hilfe_bei_auswahl(
     zeilen = await frage()
     assert zeilen[1] == "(Ihr Name ist Anna.)"
     assert zeilen[2].startswith("A) ")
+
+
+async def test_abfrage_auswahl_wie_bei_der_arbeit(
+    mit_vokabeln: MockConfigEntry,
+    client: Client,  # noqa: F811
+) -> None:
+    from custom_components.learnbuddy.models import AbfrageFilter  # noqa: PLC0415
+
+    manager: LearnBuddyManager = mit_vokabeln.runtime_data
+    store = manager.task_stores[FACH_ID]
+    bereich = await _satzbereich(client)
+    satz = await client.ok(
+        "tasks/create",
+        fach_id=FACH_ID,
+        aufgabe={
+            "bereich": bereich,
+            "form": "luecke",
+            "frage": "I ___ a boy.",
+            "antwort": "am",
+        },
+    )
+    wort_id = next(a.id for a in store.aufgaben.values() if isinstance(a, Vokabel))
+
+    async def zaehle(**auswahl: Any) -> int:
+        antwort = await client.ok(
+            "ask_count", kind_id=KIND_ID, fach_id=FACH_ID, **auswahl
+        )
+        aufgaben: int = antwort["aufgaben"]
+        return aufgaben
+
+    # Without a selection everything counts (two words, one sentence)
+    assert await zaehle() == 3
+    # Sections, lessons and single tasks together, like the tasks of an exam
+    assert await zaehle(bereiche=[bereich]) == 1
+    assert await zaehle(lektionen=["Unit 3"]) == 2
+    assert await zaehle(bereiche=[bereich], lektionen=["Unit 3"]) == 3
+    assert await zaehle(aufgabe_ids=[satz["id"], wort_id]) == 2
+    assert await zaehle(aufgabe_ids=[satz["id"], "gibtsnicht"]) == 1
+    # The error rate narrows the selection down further
+    assert await zaehle(bereiche=[bereich], fehlerquote_ab=50) == 0
+
+    # The filter keeps single tasks
+    filter_ = AbfrageFilter(aufgabe_ids=(wort_id,))
+    assert AbfrageFilter.from_dict(filter_.to_dict()) == filter_
+    assert filter_.aktiv
+    assert AbfrageFilter.from_dict({"lektionen": ["A"]}).aufgabe_ids == ()

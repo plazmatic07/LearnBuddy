@@ -142,6 +142,7 @@ _SEITE = vol.Any(None, vol.All(int, vol.Range(min=1, max=9999)))
 _ABFRAGE_AUSWAHL: dict[str | vol.Marker, Any] = {
     vol.Optional("lektionen", default=list): [str],
     vol.Optional("bereiche", default=list): [str],
+    vol.Optional("aufgabe_ids", default=list): [str],
     vol.Optional("seite_von"): _SEITE,
     vol.Optional("seite_bis"): _SEITE,
     vol.Optional("lektion_seiten", default=list): [

@@ -336,12 +336,14 @@ export interface DashboardFach extends Kennzahlen {
   lektionen: number;
   lektionsliste: { name: string; aufgaben: number }[];
   ohne_lektion: number;
+  bereiche?: Bereich[];
 }
 
 /** What a manual request is limited to (only with a subject). */
 export interface AbfrageAuswahl {
   lektionen?: string[];
   bereiche?: string[];
+  aufgabe_ids?: string[];
   seite_von?: number | null;
   seite_bis?: number | null;
   // Book pages of single lessons

@@ -804,6 +804,9 @@ class AbfrageFilter:
     fehlerquote_ab: int | None = None
     # Section ids, see STANDARD_BEREICH
     bereiche: tuple[str, ...] = ()
+    # Single tasks; lessons, sections and single tasks together are the
+    # selection, like the tasks of an exam (empty: the whole subject)
+    aufgabe_ids: tuple[str, ...] = ()
 
     @property
     def aktiv(self) -> bool:
@@ -812,9 +815,11 @@ class AbfrageFilter:
 
     def passt(self, aufgabe: Aufgabe) -> bool:
         """Return whether a task belongs to the selection."""
-        if self.lektionen and aufgabe.lektion not in self.lektionen:
-            return False
-        if self.bereiche and bereich_id(aufgabe) not in self.bereiche:
+        if (self.lektionen or self.bereiche or self.aufgabe_ids) and not (
+            aufgabe.lektion in self.lektionen
+            or bereich_id(aufgabe) in self.bereiche
+            or aufgabe.id in self.aufgabe_ids
+        ):
             return False
         if not _seite_passt(aufgabe.seite, self.seite_von, self.seite_bis):
             return False
@@ -843,6 +848,7 @@ class AbfrageFilter:
                 for eintrag in data.get("lektion_seiten", ())
             ),
             fehlerquote_ab=data.get("fehlerquote_ab"),
+            aufgabe_ids=tuple(data.get("aufgabe_ids", ())),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -854,6 +860,7 @@ class AbfrageFilter:
             "seite_bis": self.seite_bis,
             "lektion_seiten": [list(eintrag) for eintrag in self.lektion_seiten],
             "fehlerquote_ab": self.fehlerquote_ab,
+            "aufgabe_ids": list(self.aufgabe_ids),
         }
 
 

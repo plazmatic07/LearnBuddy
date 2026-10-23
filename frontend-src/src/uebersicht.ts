@@ -3,10 +3,13 @@ import { property, state } from "lit/decorators.js";
 
 import { Api } from "./api";
 import "./fortschritt";
+import { inSeiten, kurztext } from "./aufgabentext";
 import { fehlertext, sprachname, uebersetzer, type Uebersetzer } from "./i18n";
 import { styles } from "./styles";
 import type {
   AbfrageAuswahl,
+  Aufgabe,
+  Bereich,
   Dashboard,
   DashboardArbeit,
   DashboardFach,
@@ -30,11 +33,19 @@ const ABFRAGE_STANDARD = 5;
 /** What the dialog "Ask now" is about to send. */
 interface Abfrage {
   fachId: string | null;
+  // Like the tasks of an exam: the whole subject or a selection of topics,
+  // lessons and single tasks
+  modus: "alle" | "auswahl";
   lektionen: Set<string>;
-  // Raw input; empty means no limit
-  seiten: Record<string, { von: string; bis: string }>;
+  bereiche: Set<string>;
+  ids: Set<string>;
+  // Raw input of the shortcuts that tick single tasks
+  seit: string;
   seiteVon: string;
   seiteBis: string;
+  // The tasks of the subject for the list of single tasks; loaded on demand
+  aufgaben: Aufgabe[];
+  // Raw input; empty means no limit
   fehlerquote: string;
   // Raw input; empty means the general setting, 0 no limit
   frist: string;
@@ -359,16 +370,37 @@ export class LhUebersicht extends LitElement {
       faecher.find((f) => f.id === fachId) ?? (faecher.length === 1 ? faecher[0] : undefined);
     this._setzeAbfrage({
       fachId: fach?.id ?? null,
-      lektionen: new Set((fach?.lektionsliste ?? []).map((l) => l.name)),
-      seiten: {},
+      modus: "alle",
+      lektionen: new Set(),
+      bereiche: new Set(),
+      ids: new Set(),
+      seit: "",
       seiteVon: "",
       seiteBis: "",
+      aufgaben: [],
       fehlerquote: "",
       frist: "",
       anzahl: ABFRAGE_STANDARD,
       umfang: null,
       fehler: "",
     });
+    if (fach) {
+      void this._ladeAufgaben(fach.id);
+    }
+  }
+
+  /** Load the tasks of the subject for the list of single tasks. */
+  private async _ladeAufgaben(fachId: string): Promise<void> {
+    try {
+      const aufgaben = await this._api.aufgaben(fachId);
+      if (this._abfrage?.fachId === fachId) {
+        this._abfrage = { ...this._abfrage, aufgaben };
+      }
+    } catch (fehler) {
+      if (this._abfrage?.fachId === fachId) {
+        this._abfrage = { ...this._abfrage, fehler: fehlertext(this._t, fehler) };
+      }
+    }
   }
 
   private async _brichFrageAb(): Promise<void> {
@@ -936,6 +968,12 @@ export class LhUebersicht extends LitElement {
     if (gesamt) {
       teile.push(gesamt);
     }
+    if (abfrage.bereiche?.length) {
+      teile.push(t("abfrage_themen", { n: abfrage.bereiche.length }));
+    }
+    if (abfrage.aufgabe_ids?.length) {
+      teile.push(t("abfrage_einzeln", { n: abfrage.aufgabe_ids.length }));
+    }
     if (abfrage.fehlerquote_ab != null) {
       teile.push(t("abfrage_ab_fehlerquote", { n: abfrage.fehlerquote_ab }));
     }
@@ -943,36 +981,25 @@ export class LhUebersicht extends LitElement {
     return t("abfrage_laeuft_text", { ort, n: abfrage.weitere });
   }
 
-  /** Build what the request is limited to; null if no lesson is ticked. */
+  /** Build what the request is limited to. */
   private _auswahl(daten: Dashboard, abfrage: Abfrage): AbfrageAuswahl | null {
     const fach = daten.faecher.find((f) => f.id === abfrage.fachId);
     if (!fach) {
       return {};
     }
-    const lektionen = fach.lektionsliste.map((l) => l.name);
-    const gewaehlt = lektionen.filter((name) => abfrage.lektionen.has(name));
-    if (lektionen.length > 0 && gewaehlt.length === 0) {
-      return null;
+    const quote = Math.round(Number(abfrage.fehlerquote));
+    const fehlerquote_ab =
+      abfrage.fehlerquote.trim() !== "" && Number.isFinite(quote) && quote >= 1
+        ? Math.min(quote, 100)
+        : null;
+    if (abfrage.modus === "alle") {
+      return { fehlerquote_ab };
     }
-    const zahl = (wert: string, max: number): number | null => {
-      const n = Math.round(Number(wert));
-      return wert.trim() !== "" && Number.isFinite(n) && n >= 1 ? Math.min(n, max) : null;
-    };
-    // Pages are set per lesson; a subject without lessons has one range
-    const ohneLektionen = lektionen.length === 0;
     return {
-      // All lessons ticked means the whole subject, also tasks without a lesson
-      lektionen: gewaehlt.length === lektionen.length ? [] : gewaehlt,
-      seite_von: ohneLektionen ? zahl(abfrage.seiteVon, 9999) : null,
-      seite_bis: ohneLektionen ? zahl(abfrage.seiteBis, 9999) : null,
-      lektion_seiten: gewaehlt
-        .map((lektion) => ({
-          lektion,
-          von: zahl(abfrage.seiten[lektion]?.von ?? "", 9999),
-          bis: zahl(abfrage.seiten[lektion]?.bis ?? "", 9999),
-        }))
-        .filter((eintrag) => eintrag.von !== null || eintrag.bis !== null),
-      fehlerquote_ab: zahl(abfrage.fehlerquote, 100),
+      lektionen: [...abfrage.lektionen],
+      bereiche: [...abfrage.bereiche],
+      aufgabe_ids: [...abfrage.ids],
+      fehlerquote_ab,
     };
   }
 
@@ -1013,28 +1040,48 @@ export class LhUebersicht extends LitElement {
     };
     const fach = daten.faecher.find((f) => f.id === abfrage.fachId) ?? null;
     const lektionen = fach?.lektionsliste ?? [];
+    const themen: Bereich[] = fach?.bereiche ?? [];
+    const [a = "", b = ""] = fach?.sprachen ?? [];
     const umfang = abfrage.umfang;
     const setze = (teil: Partial<Abfrage>): void => {
       this._setzeAbfrage({ ...abfrage, ...teil });
     };
+    const themaName = (thema: Bereich): string =>
+      thema.name ?? t(`bereich_standard_${thema.art}`);
     const waehleFach = (id: string): void => {
       const neu = daten.faecher.find((f) => f.id === id);
       setze({
         fachId: neu ? neu.id : null,
-        lektionen: new Set((neu?.lektionsliste ?? []).map((l) => l.name)),
-        seiten: {},
+        modus: "alle",
+        lektionen: new Set(),
+        bereiche: new Set(),
+        ids: new Set(),
+        seit: "",
         seiteVon: "",
         seiteBis: "",
+        aufgaben: [],
       });
-    };
-    const schalte = (name: string, an: boolean): void => {
-      const auswahl = new Set(abfrage.lektionen);
-      if (an) {
-        auswahl.add(name);
-      } else {
-        auswahl.delete(name);
+      if (neu) {
+        void this._ladeAufgaben(neu.id);
       }
-      setze({ lektionen: auswahl });
+    };
+    const schalte = (feld: "lektionen" | "bereiche" | "ids", name: string, an: boolean): void => {
+      const menge = new Set(abfrage[feld]);
+      if (an) {
+        menge.add(name);
+      } else {
+        menge.delete(name);
+      }
+      setze({ [feld]: menge });
+    };
+    const fuegeHinzu = (treffer: (aufgabe: Aufgabe) => boolean): void => {
+      const ids = new Set(abfrage.ids);
+      for (const aufgabe of abfrage.aufgaben) {
+        if (treffer(aufgabe)) {
+          ids.add(aufgabe.id);
+        }
+      }
+      setze({ ids });
     };
     const senden = (): void => {
       const anzahl = Math.min(MAX_ABFRAGE, Math.max(1, Math.round(abfrage.anzahl) || 1));
@@ -1048,41 +1095,7 @@ export class LhUebersicht extends LitElement {
         );
       }
     };
-    const seite = (lektion: string, rand: "von" | "bis"): TemplateResult => html`
-      <input
-        type="number"
-        min="1"
-        max="9999"
-        aria-label=${t(rand === "von" ? "abfrage_seite_von" : "abfrage_seite_bis")}
-        ?disabled=${!abfrage.lektionen.has(lektion)}
-        .value=${abfrage.seiten[lektion]?.[rand] ?? ""}
-        @input=${(e: Event) => {
-          const bisher = abfrage.seiten[lektion] ?? { von: "", bis: "" };
-          setze({
-            seiten: {
-              ...abfrage.seiten,
-              [lektion]: { ...bisher, [rand]: (e.target as HTMLInputElement).value },
-            },
-          });
-        }}
-      />
-    `;
-    const eingabe = (
-      feld: "seiteVon" | "seiteBis" | "fehlerquote",
-      name: "abfrage_seite_von" | "abfrage_seite_bis" | "abfrage_fehlerquote",
-      max: number,
-    ): TemplateResult => html`
-      <label class="feld">
-        ${t(name)}
-        <input
-          type="number"
-          min="1"
-          max=${max}
-          .value=${abfrage[feld]}
-          @input=${(e: Event) => setze({ [feld]: (e.target as HTMLInputElement).value })}
-        />
-      </label>
-    `;
+    const gezielt = fach !== null && abfrage.modus === "auswahl";
     return html`
       <div
         class="overlay"
@@ -1092,7 +1105,7 @@ export class LhUebersicht extends LitElement {
           }
         }}
       >
-        <div class="dialog" role="dialog" aria-modal="true" style="width: min(440px, 100%)">
+        <div class="dialog" role="dialog" aria-modal="true" style="width: min(640px, 100%)">
           <h2>${t("abfrage_titel")}</h2>
           <label class="feld">
             ${t("abfrage_fach")}
@@ -1118,45 +1131,182 @@ export class LhUebersicht extends LitElement {
               )}
             </select>
           </label>
-          ${lektionen.length > 0
-            ? html`
-                <fieldset class="lektionswahl">
-                  <legend>${t("abfrage_lektionen")}</legend>
-                  ${lektionen.map(
-                    (l) => html`
-                      <div class="lektionszeile">
-                        <label>
-                          <input
-                            type="checkbox"
-                            .checked=${abfrage.lektionen.has(l.name)}
-                            @change=${(e: Event) =>
-                              schalte(l.name, (e.target as HTMLInputElement).checked)}
-                          />
-                          ${l.name}
-                          <span class="klein">${t("arbeit_umfang", { n: l.aufgaben })}</span>
-                        </label>
-                        <span class="seiten">
-                          ${t("abfrage_seite_kurz")} ${seite(l.name, "von")} – ${seite(l.name, "bis")}
-                        </span>
-                      </div>
-                    `,
-                  )}
-                  ${fach && fach.ohne_lektion > 0
-                    ? html`<div class="klein">
-                        ${t("abfrage_ohne_lektion", { n: fach.ohne_lektion })}
-                      </div>`
-                    : nothing}
-                </fieldset>
-              `
-            : nothing}
           ${fach
             ? html`
-                <div class="raster">
-                  ${lektionen.length === 0
-                    ? html`${eingabe("seiteVon", "abfrage_seite_von", 9999)}
-                      ${eingabe("seiteBis", "abfrage_seite_bis", 9999)}`
+                <fieldset>
+                  <legend>${t("abfrage_aufgaben")}</legend>
+                  <div class="chips" style="margin-bottom: 10px">
+                    ${(["alle", "auswahl"] as const).map(
+                      (modus) => html`
+                        <label class="feld zeile">
+                          <input
+                            type="radio"
+                            name="abfrage-modus"
+                            .checked=${abfrage.modus === modus}
+                            @change=${() => setze({ modus })}
+                          />
+                          ${t(modus === "alle" ? "auswahl_alle" : "auswahl_gezielt")}
+                        </label>
+                      `,
+                    )}
+                  </div>
+                  ${gezielt
+                    ? html`
+                        ${themen.length > 1
+                          ? html`
+                              <div class="klein">${t("schnell_bereiche")}</div>
+                              <div class="chips" style="margin: 6px 0 12px">
+                                ${themen.map(
+                                  (thema) => html`
+                                    <label class="feld zeile">
+                                      <input
+                                        type="checkbox"
+                                        .checked=${abfrage.bereiche.has(thema.id)}
+                                        @change=${(e: Event) =>
+                                          schalte(
+                                            "bereiche",
+                                            thema.id,
+                                            (e.target as HTMLInputElement).checked,
+                                          )}
+                                      />
+                                      ${themaName(thema)}
+                                      <span class="klein">(${thema.aufgaben})</span>
+                                    </label>
+                                  `,
+                                )}
+                              </div>
+                            `
+                          : nothing}
+                        ${lektionen.length
+                          ? html`
+                              <div class="klein">${t("schnell_lektionen")}</div>
+                              <div class="chips" style="margin: 6px 0 12px">
+                                ${lektionen.map(
+                                  (l) => html`
+                                    <label class="feld zeile">
+                                      <input
+                                        type="checkbox"
+                                        .checked=${abfrage.lektionen.has(l.name)}
+                                        @change=${(e: Event) =>
+                                          schalte(
+                                            "lektionen",
+                                            l.name,
+                                            (e.target as HTMLInputElement).checked,
+                                          )}
+                                      />
+                                      ${l.name}
+                                      <span class="klein">(${l.aufgaben})</span>
+                                    </label>
+                                  `,
+                                )}
+                              </div>
+                            `
+                          : nothing}
+                        <div class="leiste">
+                          <label class="feld" style="flex: 1; max-width: 220px">
+                            ${t("schnell_seit")}
+                            <input
+                              type="date"
+                              .value=${abfrage.seit}
+                              @change=${(e: Event) =>
+                                setze({ seit: (e.target as HTMLInputElement).value })}
+                            />
+                          </label>
+                          <button
+                            ?disabled=${!abfrage.seit}
+                            @click=${() =>
+                              fuegeHinzu((x) => x.erstellt.slice(0, 10) >= abfrage.seit)}
+                          >
+                            ${t("hinzufuegen")}
+                          </button>
+                        </div>
+                        <div class="leiste">
+                          <label class="feld" style="flex: 1; max-width: 220px">
+                            ${t("schnell_seiten")}
+                            <input
+                              type="number"
+                              min="1"
+                              .value=${abfrage.seiteVon}
+                              @input=${(e: Event) =>
+                                setze({ seiteVon: (e.target as HTMLInputElement).value })}
+                            />
+                          </label>
+                          <label class="feld" style="flex: 1; max-width: 220px">
+                            ${t("schnell_seiten_bis")}
+                            <input
+                              type="number"
+                              min="1"
+                              .value=${abfrage.seiteBis}
+                              @input=${(e: Event) =>
+                                setze({ seiteBis: (e.target as HTMLInputElement).value })}
+                            />
+                          </label>
+                          <button
+                            ?disabled=${!abfrage.seiteVon && !abfrage.seiteBis}
+                            @click=${() =>
+                              fuegeHinzu(
+                                (x) =>
+                                  x.seite !== null &&
+                                  inSeiten(x.seite, abfrage.seiteVon, abfrage.seiteBis),
+                              )}
+                          >
+                            ${t("hinzufuegen")}
+                          </button>
+                          <span class="abstand"></span>
+                          <button
+                            ?disabled=${abfrage.ids.size === 0}
+                            @click=${() => setze({ ids: new Set() })}
+                          >
+                            ${t("auswahl_leeren")}
+                          </button>
+                        </div>
+                        <div class="klein">${t("einzelne_aufgaben")} (${abfrage.ids.size})</div>
+                        <div class="liste" style="margin-top: 6px; max-height: 260px; overflow: auto">
+                          <div class="eintrag kopf">
+                            <span class="haken"></span>
+                            <span style="flex: 1">${t("spalte_aufgabe")}</span>
+                            <span class="seite">${t("spalte_seite")}</span>
+                            <span class="lektion">${t("spalte_lektion")}</span>
+                          </div>
+                          ${abfrage.aufgaben.map((aufgabe) => {
+                            const durchGruppe =
+                              (aufgabe.lektion !== null && abfrage.lektionen.has(aufgabe.lektion)) ||
+                              abfrage.bereiche.has(aufgabe.bereich ?? "standard");
+                            return html`
+                              <label>
+                                <input
+                                  type="checkbox"
+                                  .checked=${durchGruppe || abfrage.ids.has(aufgabe.id)}
+                                  ?disabled=${durchGruppe}
+                                  @change=${(e: Event) =>
+                                    schalte(
+                                      "ids",
+                                      aufgabe.id,
+                                      (e.target as HTMLInputElement).checked,
+                                    )}
+                                />
+                                <span style="flex: 1">${kurztext(aufgabe, a, b)}</span>
+                                <span class="klein seite">${aufgabe.seite ?? ""}</span>
+                                <span class="klein lektion">${aufgabe.lektion ?? ""}</span>
+                              </label>
+                            `;
+                          })}
+                        </div>
+                      `
                     : nothing}
-                  ${eingabe("fehlerquote", "abfrage_fehlerquote", 100)}
+                </fieldset>
+                <div class="raster">
+                  <label class="feld">
+                    ${t("abfrage_fehlerquote")}
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      .value=${abfrage.fehlerquote}
+                      @input=${(e: Event) =>
+                        setze({ fehlerquote: (e.target as HTMLInputElement).value })}
+                    />
+                  </label>
                 </div>
                 <div class="klein">${t("abfrage_filter_hinweis")}</div>
               `

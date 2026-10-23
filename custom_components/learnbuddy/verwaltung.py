@@ -457,6 +457,7 @@ class Verwaltung:
                         for name in store.lektionen
                     ],
                     "ohne_lektion": sum(1 for a in aufgaben if not a.lektion),
+                    "bereiche": self._bereiche_liste(fach, store),
                     **kennzahlen,
                 }
             )
@@ -889,9 +890,15 @@ class Verwaltung:
         }
         if any(b not in bekannte_bereiche for b in bereiche):
             raise _nicht_gefunden("bereich")
+        store = manager.task_stores[fach_id]
+        # Tasks that were deleted meanwhile just drop out, as with exams
+        aufgabe_ids = tuple(
+            i for i in auswahl.get("aufgabe_ids") or () if i in store.aufgaben
+        )
         return AbfrageFilter(
             lektionen=lektionen,
             bereiche=bereiche,
+            aufgabe_ids=aufgabe_ids,
             seite_von=von,
             seite_bis=bis,
             lektion_seiten=lektion_seiten,

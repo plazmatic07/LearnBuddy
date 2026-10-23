@@ -5,6 +5,7 @@ import { Api } from "./api";
 import "./uebersicht";
 import { fehlertext, sprachname, uebersetzer, type Uebersetzer } from "./i18n";
 import { styles } from "./styles";
+import { inSeiten, kurztext } from "./aufgabentext";
 import { STANDARD_BEREICH } from "./types";
 import type {
   Arbeit,
@@ -230,30 +231,6 @@ const LEERER_FILTER: Filter = {
   seiteVon: "",
   seiteBis: "",
 };
-
-/** Whether a page lies in a range; an empty bound is open. */
-function inSeiten(seite: number | null, von: string, bis: string): boolean {
-  const untere = von.trim() === "" ? null : Number(von);
-  const obere = bis.trim() === "" ? null : Number(bis);
-  if (untere === null && obere === null) {
-    return true;
-  }
-  if (seite === null) {
-    return false;
-  }
-  return (untere === null || seite >= untere) && (obere === null || seite <= obere);
-}
-
-/** Short text that identifies a task in lists. */
-function kurztext(aufgabe: Aufgabe, a: string, b: string): string {
-  if (aufgabe.typ === "mathe") {
-    return `${aufgabe.aufgabe} = ${aufgabe.loesung}`;
-  }
-  if (aufgabe.typ === "sach") {
-    return `${aufgabe.frage} – ${aufgabe.antwort}`;
-  }
-  return `${aufgabe.frage[a] ?? ""} – ${aufgabe.frage[b] ?? ""}`;
-}
 
 function wert(ereignis: Event): string {
   return (ereignis.target as HTMLInputElement | HTMLSelectElement).value;
