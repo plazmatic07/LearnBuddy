@@ -14,9 +14,11 @@ from .test_bildversand import _setup
 from .test_mathe_ablauf import MATHE_ID
 
 
-async def _whatsapp(hass: HomeAssistant, kennung: str | None) -> None:
+async def _whatsapp(
+    hass: HomeAssistant, kennung: str | None, plattform: str = "whatsapp"
+) -> None:
     eintrag = er.async_get(hass).async_get_or_create(
-        "notify", "whatsapp", "ziel1", suggested_object_id="whatsapp_schule"
+        "notify", plattform, "ziel1", suggested_object_id="whatsapp_schule"
     )
     entry = await _setup(
         hass,
@@ -56,3 +58,17 @@ async def test_whatsapp_ohne_absender_nutzt_die_entitaet(hass: HomeAssistant) ->
     await hass.async_block_till_done()
     assert not nachrichten
     assert len(texte) == 1
+
+
+async def test_wa_bridge_schreibt_an_die_absendernummer(hass: HomeAssistant) -> None:
+    """The renamed integration (wa_bridge 3.0) is recognised as well."""
+    nachrichten = async_mock_service(hass, "wa_bridge", "send_message")
+    texte = async_mock_service(hass, "notify", "send_message")
+    await _whatsapp(hass, "+49 171 9390814", "wa_bridge")
+
+    await hass.services.async_call(
+        DOMAIN, "ask_now", {"kind_id": KIND_ID}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert not texte
+    assert nachrichten[0].data["number"] == "491719390814"

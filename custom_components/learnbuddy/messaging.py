@@ -29,7 +29,8 @@ if TYPE_CHECKING:
 NOTIFY_DOMAIN = "notify"
 SERVICE_SEND_MESSAGE = "send_message"
 TELEGRAM_DOMAIN = "telegram_bot"
-WHATSAPP_DOMAIN = "whatsapp"
+# The integration was called "whatsapp" up to 2.x and "wa_bridge" since 3.0
+WHATSAPP_DOMAINS = ("wa_bridge", "whatsapp")
 TELEGRAM_SEND_PHOTO = "send_photo"
 # Telegram cuts captions of photos at this length
 TELEGRAM_MAX_UNTERSCHRIFT = 1024
@@ -75,17 +76,22 @@ class Messenger:
         if not kind.notify_entity or not kind.absender_kennung:
             return None
         eintrag = er.async_get(self._hass).async_get(kind.notify_entity)
-        if eintrag is None or eintrag.platform != WHATSAPP_DOMAIN:
+        if eintrag is None or eintrag.platform not in WHATSAPP_DOMAINS:
             return None
         roh = "".join(kind.absender_kennung.split())
         if not all(z.isdigit() or z in "+-()/." for z in roh):
             return None
         nummer = "".join(z for z in roh if z.isdigit()).removeprefix("00")
-        if not nummer or not self._hass.services.has_service(
-            WHATSAPP_DOMAIN, SERVICE_SEND_MESSAGE
-        ):
+        if not nummer:
             return None
-        return nummer
+        return nummer if self._whatsapp_domain() else None
+
+    def _whatsapp_domain(self) -> str | None:
+        """Return the domain of the installed WhatsApp integration."""
+        for domain in WHATSAPP_DOMAINS:
+            if self._hass.services.has_service(domain, SERVICE_SEND_MESSAGE):
+                return domain
+        return None
 
     def kann_bilder(self, kind: Kind) -> bool:
         """Return whether images can be sent to a child."""
@@ -154,9 +160,10 @@ class Messenger:
             await self._async_bild(kind, nachricht, bild)
             return
         nummer = self._whatsapp_nummer(kind)
-        if nummer:
+        domain = self._whatsapp_domain()
+        if nummer and domain:
             await self._hass.services.async_call(
-                WHATSAPP_DOMAIN,
+                domain,
                 SERVICE_SEND_MESSAGE,
                 {"number": nummer, "message": nachricht},
                 blocking=True,
