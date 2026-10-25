@@ -81,6 +81,11 @@ async def test_antwort_ohne_automation(
             {"from": "491701234567@s.whatsapp.net", "body": "x", "isGroup": True},
         ),
         ("whatsapp_message_received", {"from": "4999@s.whatsapp.net", "body": "x"}),
+        # A picture without caption is no reaction
+        (
+            "whatsapp_message_received",
+            {"from": "491701234567@s.whatsapp.net", "body": "", "hasMedia": True},
+        ),
         # No custom event is configured
         ("mein_messenger", {"sender": "491701234567", "text": "x"}),
     ],
@@ -181,6 +186,26 @@ async def test_automation_und_eingang_zaehlen_einmal(
 
     assert ergebnis == {"ergebnis": "doppelt"}
     # One feedback, and the thumb was not taken as a wish for another task
+    assert len(notify_calls) == gesendet + 1
+    assert not _gefragt(manager)
+
+
+async def test_whatsapp_reaktion_zaehlt_wie_daumen(
+    hass: HomeAssistant,
+    mit_vokabeln: MockConfigEntry,
+    notify_calls: list[ServiceCall],
+) -> None:
+    """The bridge reports an emoji reaction as a message without text."""
+    manager: LearnBuddyManager = mit_vokabeln.runtime_data
+    await _frage(hass, manager)
+    gesendet = len(notify_calls)
+
+    hass.bus.async_fire(
+        "whatsapp_message_received",
+        {"from": "491701234567@s.whatsapp.net", "body": "", "hasMedia": False},
+    )
+    await hass.async_block_till_done()
+
     assert len(notify_calls) == gesendet + 1
     assert not _gefragt(manager)
 

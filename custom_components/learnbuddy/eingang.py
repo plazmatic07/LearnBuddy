@@ -34,6 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 
 QUELLE_EINGANG = "eingang"
 QUELLE_AKTION = "aktion"
+# Any emoji reaction counts like the thumbs up the children are asked for
+DAUMEN_REAKTION = "\U0001F44D"
 
 
 def whatsapp_absender(wert: Any) -> str:
@@ -98,11 +100,11 @@ class Eingang:
     def _von_whatsapp(self, event: Event) -> None:
         if event.data.get("isGroup") or event.data.get("fromMe"):
             return
-        self._annehmen(
-            whatsapp_absender(event.data.get("from")),
-            event.data.get("body"),
-            "whatsapp",
-        )
+        text = event.data.get("body")
+        if text == "" and not event.data.get("hasMedia"):
+            # The bridge reports an emoji reaction as a message without text
+            text = DAUMEN_REAKTION
+        self._annehmen(whatsapp_absender(event.data.get("from")), text, "whatsapp")
 
     @callback
     def _von_event(self, event: Event) -> None:
