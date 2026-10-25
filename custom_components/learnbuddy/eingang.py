@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 QUELLE_EINGANG = "eingang"
 QUELLE_AKTION = "aktion"
 # Any emoji reaction counts like the thumbs up the children are asked for
-DAUMEN_REAKTION = "\U0001F44D"
+DAUMEN_REAKTION = "\U0001f44d"
 
 
 def whatsapp_absender(wert: Any) -> str:
