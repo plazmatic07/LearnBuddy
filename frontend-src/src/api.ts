@@ -8,6 +8,7 @@ import type {
   SeitenEingabe,
   SimulationsErgebnis,
   SimulationsWeg,
+  BeschriftungsFeld,
   FotoVorschau,
   GenerierErgebnis,
   NachrechnenErgebnis,
@@ -268,6 +269,49 @@ export class Api {
       zeilen,
       lektion,
       bereich,
+    });
+  }
+
+  beschriftungenFinden(fachId: string, bild: string): Promise<{ felder: BeschriftungsFeld[] }> {
+    return this.call("tasks/label_detect", { fach_id: fachId, bild });
+  }
+
+  beschriftungVorschau(
+    fachId: string,
+    bild: string,
+    felder: BeschriftungsFeld[],
+    vorherige: string | null,
+  ): Promise<{ vorschau: string }> {
+    return this.call("tasks/label_preview", {
+      fach_id: fachId,
+      bild,
+      felder,
+      vorherige,
+    });
+  }
+
+  beschriftungLesen(
+    fachId: string,
+    bild: string,
+  ): Promise<{ bild: string; lektion: string | null; felder: BeschriftungsFeld[] }> {
+    return this.call("tasks/label_get", { fach_id: fachId, bild });
+  }
+
+  beschriftungSpeichern(
+    fachId: string,
+    bild: string,
+    felder: BeschriftungsFeld[],
+    lektion: string | null,
+    bereich: string | null,
+    vorschau: string | null,
+  ): Promise<{ neu: number; geaendert: number; entfernt: number }> {
+    return this.call("tasks/label_save", {
+      fach_id: fachId,
+      bild,
+      felder,
+      lektion,
+      bereich,
+      vorschau,
     });
   }
 

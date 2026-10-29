@@ -138,10 +138,26 @@ export interface MatheAufgabe extends AufgabeBasis {
   bild: string | null;
 }
 
-export type SachForm = "kurz" | "auswahl" | "luecke" | "uebersetzung";
+export type SachForm = "kurz" | "auswahl" | "luecke" | "uebersetzung" | "beschriftung";
+
+/** The box of one label of an image, as fractions of the image. */
+export interface BeschriftungsFeld {
+  nr: number;
+  x: number;
+  y: number;
+  b: number;
+  h: number;
+  text: string;
+  alternativen: string[];
+}
+
 
 export interface SachAufgabe extends AufgabeBasis {
   typ: "sach";
+  // Labelling tasks: numbered image, original image and box of the number
+  bild?: string | null;
+  original_bild?: string | null;
+  feld?: { nr: number; x: number; y: number; b: number; h: number } | null;
   frage: string;
   antwort: string;
   form: SachForm;

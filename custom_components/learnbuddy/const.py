@@ -175,7 +175,7 @@ ATTR_BESCHREIBUNG: Final = "beschreibung"
 ATTR_BIS: Final = "bis"
 
 STORAGE_VERSION: Final = 1
-STORAGE_MINOR_VERSION: Final = 15
+STORAGE_MINOR_VERSION: Final = 16
 
 # Most extra questions a child can ask for at once
 MAX_ZUSATZAUFGABEN: Final = 20

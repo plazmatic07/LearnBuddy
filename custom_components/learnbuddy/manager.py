@@ -176,6 +176,13 @@ def normalisiere_absender(wert: str) -> str:
     return kompakt
 
 
+def aufgaben_bild(aufgabe: Aufgabe) -> str | None:
+    """Return the image a task is about, None if it has none."""
+    if isinstance(aufgabe, MatheAufgabe | SachAufgabe):
+        return aufgabe.bild
+    return None
+
+
 class LearnBuddyManager:
     """Hold the runtime data of the integration and drive the question cycle."""
 
@@ -479,8 +486,16 @@ class LearnBuddyManager:
             for aufgabe in store.aufgaben.values():
                 if isinstance(aufgabe, MatheAufgabe) and aufgabe.bild:
                     bilder.add(aufgabe.bild)
-                elif isinstance(aufgabe, SachAufgabe) and aufgabe.quelle_bild:
-                    bilder.add(aufgabe.quelle_bild)
+                elif isinstance(aufgabe, SachAufgabe):
+                    bilder.update(
+                        b
+                        for b in (
+                            aufgabe.quelle_bild,
+                            aufgabe.bild,
+                            aufgabe.original_bild,
+                        )
+                        if b
+                    )
         return bilder
 
     def zustand(self, kind_id: str) -> KindZustand:
@@ -1043,7 +1058,7 @@ class LearnBuddyManager:
         return [
             a
             for a in aufgaben
-            if (bilder or not (isinstance(a, MatheAufgabe) and a.bild))
+            if (bilder or not aufgaben_bild(a))
             and not (
                 isinstance(a, SachAufgabe)
                 and a.form is SachForm.KURZ
@@ -1169,6 +1184,7 @@ class LearnBuddyManager:
             art = {
                 SachForm.LUECKE: "luecke",
                 SachForm.UEBERSETZUNG: "uebersetzung",
+                SachForm.BESCHRIFTUNG: "beschriftung",
             }.get(aufgabe.form, "sach")
             nachricht = text(
                 self.sprache,
@@ -1176,6 +1192,7 @@ class LearnBuddyManager:
                 name=kind.name,
                 fach=fach.name,
                 frage=aufgabe.frage,
+                nr=str(int((aufgabe.feld or {}).get("nr", 0))),
                 zielsprache=sprachname(self.sprache, fach.sprachen[-1])
                 if fach.sprachen
                 else "",
@@ -1242,7 +1259,7 @@ class LearnBuddyManager:
             kind, fach, aufgabe, richtung_key, kurz=kurz, optionen=optionen
         )
 
-        bild = aufgabe.bild if isinstance(aufgabe, MatheAufgabe) else None
+        bild = aufgaben_bild(aufgabe)
         if manuell:
             await self.messenger.async_send_or_raise(kind, nachricht, bild=bild)
         elif not await self.messenger.async_send(kind, nachricht, bild=bild):
@@ -1414,6 +1431,13 @@ class LearnBuddyManager:
             if aufgabe.form is SachForm.AUSWAHL:
                 gezeigt = optionen or [aufgabe.antwort, *aufgabe.falsche_optionen]
                 return bewerte_auswahl(antwort, gezeigt, loesung), "lokal", None
+            if aufgabe.form is SachForm.BESCHRIFTUNG:
+                # A label is judged like a vocabulary answer
+                return (
+                    bewerte_vokabel(antwort, loesung, aufgabe.alternativen, ""),
+                    "lokal",
+                    None,
+                )
             if aufgabe.form in (SachForm.LUECKE, SachForm.UEBERSETZUNG):
                 # Judged like a vocabulary answer, in the language to be learned
                 nach = fach.sprachen[-1] if fach.sprachen else ""
@@ -1853,7 +1877,7 @@ class LearnBuddyManager:
                             optionen=frage.optionen,
                         ),
                     ),
-                    bild=aufgabe.bild if isinstance(aufgabe, MatheAufgabe) else None,
+                    bild=aufgaben_bild(aufgabe),
                     wiederholen=True,
                 )
             self._benachrichtige(kind_id)
@@ -1948,10 +1972,7 @@ class LearnBuddyManager:
             aufgaben = self._zustellbar(fach.kind_id, aufgaben)
         gewaehlt = waehle(aufgaben, fach.richtungen, anzahl, self._rng)
         # Tasks about the same image stand together, like parts a), b), c)
-        bilder = [
-            aufgabe.bild if isinstance(aufgabe, MatheAufgabe) else None
-            for aufgabe, _ in gewaehlt
-        ]
+        bilder = [aufgaben_bild(aufgabe) for aufgabe, _ in gewaehlt]
         reihenfolge = sorted(
             range(len(gewaehlt)),
             key=lambda i: bilder.index(bilder[i]) if bilder[i] else i,
@@ -1995,6 +2016,16 @@ class LearnBuddyManager:
                 frage += text(self.sprache, "frage_hilfe", hilfe=aufgabe.hilfe)
             return BlattAufgabe(
                 frage, Art.AUSWAHL, optionen=tuple(eintrag.optionen or ())
+            )
+        if aufgabe.form is SachForm.BESCHRIFTUNG:
+            return BlattAufgabe(
+                text(
+                    self.sprache,
+                    "blatt_beschriftung",
+                    nr=str(int((aufgabe.feld or {}).get("nr", 0))),
+                ),
+                Art.LINIE,
+                bild=self.bilder.pfad(aufgabe.bild) if aufgabe.bild else None,
             )
         if aufgabe.form is SachForm.UEBERSETZUNG:
             fach = self.faecher[aufgabe.fach_id]
@@ -2205,7 +2236,7 @@ class LearnBuddyManager:
                     anzahl=str(len(simulation.aufgaben)),
                     frage=frage,
                 ),
-                bild=aufgabe.bild if isinstance(aufgabe, MatheAufgabe) else None,
+                bild=aufgaben_bild(aufgabe),
                 wiederholen=True,
             )
             sim_frist = self._frist(

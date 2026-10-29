@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
+from .beschriftung import MAX_FELDER, gitter, pruefe_feld, zeichne
 from .const import (
     CONF_ABFRAGEN_PRO_TAG,
     CONF_ANTWORTFRIST,
@@ -189,6 +190,9 @@ def aufgabe_schluessel(fach: Fach, aufgabe: Aufgabe) -> tuple[str, str]:
     if isinstance(aufgabe, MatheAufgabe):
         return AufgabenTyp.MATHE.value, "".join(aufgabe.aufgabe.casefold().split())
     if isinstance(aufgabe, SachAufgabe):
+        if aufgabe.form is SachForm.BESCHRIFTUNG:
+            # "Nr. 3" is the same question on every image
+            return AufgabenTyp.SACH.value, f"{aufgabe.original_bild}:{aufgabe.frage}"
         return AufgabenTyp.SACH.value, "".join(aufgabe.frage.casefold().split())
     ausgang, ziel = fach.sprachen
     return (
@@ -1526,7 +1530,10 @@ class Verwaltung:
         aufgaben = []
         ohne_bild = 0
         for aufgabe in store.aufgaben.values():
-            if isinstance(aufgabe, MatheAufgabe) and aufgabe.bild:
+            if (isinstance(aufgabe, MatheAufgabe) and aufgabe.bild) or (
+                isinstance(aufgabe, SachAufgabe)
+                and aufgabe.form is SachForm.BESCHRIFTUNG
+            ):
                 # The image file is not part of the export
                 ohne_bild += 1
                 continue
@@ -2062,6 +2069,212 @@ class Verwaltung:
         finally:
             # Pages no question refers to are not kept
             self._bilder_aufraeumen(sofort=seiten)
+
+    # ------------------------------------------------------------------
+    # Labelling tasks
+    # ------------------------------------------------------------------
+
+    def _beschriftung_fach(self, fach_id: str) -> tuple[Fach, TaskStore]:
+        fach, store = self._fach(fach_id)
+        if fach.typ is not AufgabenTyp.SACH:
+            raise _ungueltig("beschriftung_nur_sachfach")
+        return fach, store
+
+    async def _beschriftung_original(self, bild: Any) -> bytes:
+        """Return the data of a stored image."""
+        pfad = self._manager.bilder.pfad(bild) if isinstance(bild, str) else None
+        if pfad is None:
+            raise _ungueltig("bild_unbekannt")
+        return await self._manager.hass.async_add_executor_job(pfad.read_bytes)
+
+    @staticmethod
+    def _beschriftung_felder(roh: Any, *, mit_text: bool) -> list[dict[str, Any]]:
+        """Validate the fields the panel sends: box, number, text, alternatives."""
+        if not isinstance(roh, list) or not 1 <= len(roh) <= MAX_FELDER:
+            raise _ungueltig("beschriftung_felder_ungueltig")
+        felder: list[dict[str, Any]] = []
+        for eintrag in roh:
+            feld = pruefe_feld(eintrag)
+            if feld is None:
+                raise _ungueltig("beschriftung_felder_ungueltig")
+            alternativen = eintrag.get("alternativen") or []
+            if not isinstance(alternativen, list) or len(alternativen) > MAX_SCHRITTE:
+                raise _ungueltig("alternativen_ungueltig")
+            text = _text(
+                eintrag.get("text"), "sach_antwort_ungueltig", pflicht=mit_text
+            )
+            if text is not None and len(text) > MAX_LOESUNG:
+                raise _ungueltig("sach_antwort_ungueltig")
+            werte = [_text(w, "alternativen_ungueltig") for w in alternativen]
+            felder.append(
+                {
+                    **feld,
+                    "text": text or "",
+                    "alternativen": [
+                        w for w in werte if w and len(w) <= MAX_LOESUNG and w != text
+                    ],
+                }
+            )
+        if len({f["nr"] for f in felder}) != len(felder):
+            raise _ungueltig("beschriftung_felder_ungueltig")
+        return sorted(felder, key=lambda f: f["nr"])
+
+    async def beschriftung_erkennen(self, fach_id: str, bild: str) -> dict[str, Any]:
+        """Let the AI find the labels of an image; nothing is stored."""
+        manager = self._manager
+        fach, _ = self._beschriftung_fach(fach_id)
+        ki_entity = self._ki(fach, bilder=True)
+        if manager.bilder.pfad(bild) is None:
+            raise _ungueltig("bild_unbekannt")
+        # Lazy import: the AI module is only needed here
+        from .ai import baue_beschriftungen_prompt  # noqa: PLC0415
+
+        # The AI reads the positions off a grid drawn over a copy of the image
+        daten = await self._beschriftung_original(bild)
+        mit_gitter = await manager.hass.async_add_executor_job(gitter, daten)
+        kopie = await manager.bilder.async_speichere_fertig(mit_gitter)
+        try:
+            gefunden = await manager.ki.async_finde_beschriftungen(
+                ki_entity, baue_beschriftungen_prompt(), kopie
+            )
+        finally:
+            await manager.bilder.async_loesche([kopie])
+        if gefunden is None:
+            raise VerwaltungError("home_assistant_error", manager.ki.fehler_schluessel)
+        return {
+            "felder": [
+                {
+                    "nr": nr,
+                    "text": g.text,
+                    "alternativen": [],
+                    "x": g.x,
+                    "y": g.y,
+                    "b": g.b,
+                    "h": g.h,
+                }
+                for nr, g in enumerate(gefunden, 1)
+            ]
+        }
+
+    async def beschriftung_vorschau(
+        self,
+        fach_id: str,
+        bild: str,
+        felder: Any,
+        vorherige: str | None = None,
+    ) -> dict[str, Any]:
+        """Render the numbered image for the preview and store it temporarily."""
+        self._beschriftung_fach(fach_id)
+        geprueft = self._beschriftung_felder(felder, mit_text=False)
+        daten = await self._beschriftung_original(bild)
+        png = await self._manager.hass.async_add_executor_job(zeichne, daten, geprueft)
+        vorschau = await self._manager.bilder.async_speichere_fertig(png)
+        if vorherige:
+            self._bilder_aufraeumen(sofort=[vorherige])
+        return {"vorschau": vorschau}
+
+    def beschriftung_lesen(self, fach_id: str, original: str) -> dict[str, Any]:
+        """Return the fields of the labelling tasks made from an image."""
+        _, store = self._beschriftung_fach(fach_id)
+        aufgaben = [
+            a
+            for a in store.aufgaben.values()
+            if isinstance(a, SachAufgabe)
+            and a.form is SachForm.BESCHRIFTUNG
+            and a.original_bild == original
+            and a.feld
+        ]
+        if not aufgaben:
+            raise _nicht_gefunden("aufgabe")
+        aufgaben.sort(key=lambda a: (a.feld or {}).get("nr", 0))
+        return {
+            "bild": original,
+            "lektion": aufgaben[0].lektion,
+            "felder": [
+                {
+                    **(a.feld or {}),
+                    "text": a.antwort,
+                    "alternativen": list(a.alternativen),
+                    "aufgabe_id": a.id,
+                }
+                for a in aufgaben
+            ],
+        }
+
+    async def beschriftung_speichern(
+        self,
+        fach_id: str,
+        bild: str,
+        felder: Any,
+        *,
+        lektion: str | None,
+        bereich: str | None,
+        vorschau: str | None = None,
+    ) -> dict[str, Any]:
+        """Create (or update) one task per number of an image.
+
+        Tasks of the same original image are matched by their number, so that
+        their statistics survive a correction; numbers that are gone are removed.
+        """
+        manager = self._manager
+        fach, store = self._beschriftung_fach(fach_id)
+        geprueft = self._beschriftung_felder(felder, mit_text=True)
+        ziel_bereich = self._bereich_pruefen(store, bereich)
+        ziel_lektion = None
+        if lektion:
+            ziel_lektion = store.lektion_finden(lektion)
+            if ziel_lektion is None:
+                raise _ungueltig("lektion_unbekannt")
+        daten = await self._beschriftung_original(bild)
+        png = await manager.hass.async_add_executor_job(zeichne, daten, geprueft)
+        # The subject may have been removed while the image was drawn
+        fach, store = self._beschriftung_fach(fach_id)
+        nummeriert = await manager.bilder.async_speichere_fertig(png)
+
+        vorhanden = {
+            (a.feld or {}).get("nr"): a
+            for a in store.aufgaben.values()
+            if isinstance(a, SachAufgabe)
+            and a.form is SachForm.BESCHRIFTUNG
+            and a.original_bild == bild
+        }
+        frei = [vorschau] if vorschau else []
+        neu = geaendert = 0
+        for feld in geprueft:
+            geometrie = {k: feld[k] for k in ("nr", "x", "y", "b", "h")}
+            aufgabe = vorhanden.pop(feld["nr"], None)
+            if aufgabe is None:
+                store.add(
+                    SachAufgabe(
+                        fach_id=fach_id,
+                        frage=f"Nr. {feld['nr']}",
+                        antwort=feld["text"],
+                        form=SachForm.BESCHRIFTUNG,
+                        alternativen=feld["alternativen"],
+                        bild=nummeriert,
+                        original_bild=bild,
+                        feld=geometrie,
+                        lektion=ziel_lektion,
+                        bereich=ziel_bereich,
+                    )
+                )
+                neu += 1
+                continue
+            if aufgabe.bild:
+                frei.append(aufgabe.bild)
+            aufgabe.antwort = feld["text"]
+            aufgabe.alternativen = feld["alternativen"]
+            aufgabe.bild = nummeriert
+            aufgabe.feld = geometrie
+            aufgabe.geaendert = dt_util.utcnow()
+            geaendert += 1
+        for uebrig in vorhanden.values():
+            if uebrig.bild:
+                frei.append(uebrig.bild)
+            store.remove(uebrig.id)
+        self._gespeichert(fach, store)
+        self._bilder_aufraeumen(sofort=frei)
+        return {"neu": neu, "geaendert": geaendert, "entfernt": len(vorhanden)}
 
     async def satzaufgaben_erzeugen(
         self,

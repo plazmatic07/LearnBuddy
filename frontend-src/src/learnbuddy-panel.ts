@@ -8,6 +8,7 @@ import { styles } from "./styles";
 import { inSeiten, kurztext } from "./aufgabentext";
 import { STANDARD_BEREICH } from "./types";
 import type {
+  BeschriftungsFeld,
   Arbeit,
   ArbeitEingabe,
   Aufgabe,
@@ -46,6 +47,7 @@ type Dialog =
   | "seiten"
   | "saetze"
   | "foto"
+  | "beschriftung"
   | "simulation"
   | null;
 
@@ -123,6 +125,42 @@ interface FotoEntwurf {
   lektion: string;
   zeilen: FotoEntwurfZeile[] | null;
 }
+
+interface LabelFeldEntwurf {
+  nr: number;
+  x: number;
+  y: number;
+  b: number;
+  h: number;
+  text: string;
+  alt: string;
+}
+
+interface LabelEntwurf {
+  schritt: "wahl" | "editor" | "vorschau";
+  datei: File | null;
+  // Id and address of the original image with its labels
+  bild: string | null;
+  adresse: string;
+  felder: LabelFeldEntwurf[];
+  gewaehlt: number | null;
+  lektion: string;
+  bestehend: boolean;
+  // The numbered image of the preview
+  vorschau: string | null;
+  vorschauAdresse: string;
+}
+
+interface LabelZug {
+  modus: "neu" | "bewegen" | "groesse";
+  index: number;
+  rahmen: DOMRect;
+  startX: number;
+  startY: number;
+  ursprung: LabelFeldEntwurf;
+}
+
+const LABEL_MIN = 0.012;
 
 interface SimulationsEntwurf {
   arbeit: Arbeit;
@@ -302,6 +340,8 @@ export class LearnBuddyPanel extends LitElement {
   @state() private _saetze: SaetzeEntwurf | null = null;
 
   @state() private _foto: FotoEntwurf | null = null;
+  @state() private _label: LabelEntwurf | null = null;
+  private _labelZug: LabelZug | null = null;
 
   @state() private _sim: SimulationsEntwurf | null = null;
 
@@ -463,7 +503,7 @@ export class LearnBuddyPanel extends LitElement {
         aufgabe.typ === "mathe"
           ? aufgabe.bild
           : aufgabe.typ === "sach"
-            ? aufgabe.quelle_bild
+            ? (aufgabe.bild ?? aufgabe.quelle_bild)
             : null;
       if (bild && !(bild in this._bildAdressen)) {
         ids.add(bild);
@@ -849,7 +889,9 @@ export class LearnBuddyPanel extends LitElement {
               kernpunkte: entwurf.form === "kurz" ? zeilen(entwurf.kernpunkte) : [],
               falsche_optionen: entwurf.form === "auswahl" ? zeilen(entwurf.falsche) : [],
               alternativen:
-                entwurf.form === "luecke" || entwurf.form === "uebersetzung"
+                entwurf.form === "luecke" ||
+                entwurf.form === "uebersetzung" ||
+                entwurf.form === "beschriftung"
                   ? teile(entwurf.altB)
                   : [],
               hilfe:
@@ -1236,6 +1278,11 @@ export class LearnBuddyPanel extends LitElement {
       URL.revokeObjectURL(adresse);
     }
     this._foto = null;
+    if (this._label?.adresse.startsWith("blob:")) {
+      URL.revokeObjectURL(this._label.adresse);
+    }
+    this._label = null;
+    this._labelZug = null;
     this._sim = null;
     this._dialogFehler = "";
   }
@@ -1447,6 +1494,327 @@ export class LearnBuddyPanel extends LitElement {
           n: ergebnis.importiert,
           doppelt: ergebnis.uebersprungen,
           fehler: ergebnis.fehler.length,
+        }),
+      );
+      await this._neuLaden();
+    } catch (fehler) {
+      this._dialogFehler = fehlertext(this._t, fehler);
+    } finally {
+      this._beschaeftigt = false;
+    }
+  }
+
+  // ------------------------------------------------ labelling images
+
+  private _originalBild(aufgabeId: string | null): string | null {
+    const aufgabe = this._aufgaben.find((x) => x.id === aufgabeId);
+    return aufgabe?.typ === "sach" ? (aufgabe.original_bild ?? null) : null;
+  }
+
+  /** Open the editor: a new image, or the labels of an image already used. */
+  private async _oeffneLabel(original: string | null): Promise<void> {
+    const fach = this._fach;
+    if (!fach) {
+      return;
+    }
+    this._entwurf = null;
+    this._dialogFehler = "";
+    const leer: LabelEntwurf = {
+      schritt: "wahl",
+      datei: null,
+      bild: null,
+      adresse: "",
+      felder: [],
+      gewaehlt: null,
+      lektion: this._filter.lektion === OHNE_LEKTION ? "" : this._filter.lektion,
+      bestehend: false,
+      vorschau: null,
+      vorschauAdresse: "",
+    };
+    this._label = leer;
+    this._dialog = "beschriftung";
+    if (!original) {
+      return;
+    }
+    this._beschaeftigt = true;
+    try {
+      const gelesen = await this._api.beschriftungLesen(fach.id, original);
+      const adresse = await this._api.bildAdresse(original);
+      this._label = {
+        ...leer,
+        schritt: "editor",
+        bild: original,
+        adresse,
+        bestehend: true,
+        lektion: gelesen.lektion ?? "",
+        felder: gelesen.felder.map((feld) => ({
+          nr: feld.nr,
+          x: feld.x,
+          y: feld.y,
+          b: feld.b,
+          h: feld.h,
+          text: feld.text,
+          alt: feld.alternativen.join(" | "),
+        })),
+      };
+    } catch (fehler) {
+      this._dialogFehler = fehlertext(this._t, fehler);
+    } finally {
+      this._beschaeftigt = false;
+    }
+  }
+
+  private _labelDatei(ereignis: Event): void {
+    const entwurf = this._label;
+    if (!entwurf) {
+      return;
+    }
+    const datei = (ereignis.target as HTMLInputElement).files?.[0] ?? null;
+    if (entwurf.adresse.startsWith("blob:")) {
+      URL.revokeObjectURL(entwurf.adresse);
+    }
+    this._label = {
+      ...entwurf,
+      datei,
+      adresse: datei ? URL.createObjectURL(datei) : "",
+    };
+  }
+
+  /** Upload the image and, if wanted, let the AI find the labels. */
+  private async _labelStart(mitKi: boolean): Promise<void> {
+    const entwurf = this._label;
+    const fach = this._fach;
+    if (!entwurf?.datei || !fach) {
+      return;
+    }
+    this._beschaeftigt = true;
+    this._dialogFehler = "";
+    try {
+      const bild = await this._api.bildHochladen(entwurf.datei);
+      let felder: LabelFeldEntwurf[] = [];
+      if (mitKi) {
+        try {
+          const gefunden = await this._api.beschriftungenFinden(fach.id, bild);
+          felder = gefunden.felder.map((feld) => ({
+            nr: feld.nr,
+            x: feld.x,
+            y: feld.y,
+            b: feld.b,
+            h: feld.h,
+            text: feld.text,
+            alt: "",
+          }));
+          if (!felder.length) {
+            this._dialogFehler = this._t("beschriftung_nichts_gefunden");
+          }
+        } catch (fehler) {
+          // Without the AI the labels are marked by hand
+          this._dialogFehler = fehlertext(this._t, fehler);
+        }
+      }
+      this._label = { ...entwurf, schritt: "editor", bild, felder, gewaehlt: null };
+    } catch (fehler) {
+      this._dialogFehler = fehlertext(this._t, fehler);
+    } finally {
+      this._beschaeftigt = false;
+    }
+  }
+
+  private _setzeLabel(neu: Partial<LabelEntwurf>): void {
+    if (this._label) {
+      this._label = { ...this._label, ...neu };
+    }
+  }
+
+  private _setzeLabelFeld(index: number, neu: Partial<LabelFeldEntwurf>): void {
+    const entwurf = this._label;
+    if (!entwurf) {
+      return;
+    }
+    this._label = {
+      ...entwurf,
+      felder: entwurf.felder.map((feld, i) => (i === index ? { ...feld, ...neu } : feld)),
+    };
+  }
+
+  private _loescheLabelFeld(index: number): void {
+    const entwurf = this._label;
+    if (!entwurf) {
+      return;
+    }
+    let felder = entwurf.felder.filter((_, i) => i !== index);
+    if (!entwurf.bestehend) {
+      // Numbers of a new image stay without gaps; an existing image keeps
+      // them so that the statistics of the tasks stay with their number
+      felder = felder.map((feld, i) => ({ ...feld, nr: i + 1 }));
+    }
+    this._label = { ...entwurf, felder, gewaehlt: null };
+  }
+
+  private _labelZeigerRunter(ereignis: PointerEvent): void {
+    const entwurf = this._label;
+    const ziel = ereignis.currentTarget as HTMLElement;
+    if (!entwurf || entwurf.schritt !== "editor") {
+      return;
+    }
+    const rahmen = ziel.getBoundingClientRect();
+    const roh = ereignis.target as HTMLElement;
+    const start = {
+      rahmen,
+      startX: (ereignis.clientX - rahmen.left) / rahmen.width,
+      startY: (ereignis.clientY - rahmen.top) / rahmen.height,
+    };
+    const griff = roh.dataset.griff;
+    const box = roh.dataset.box;
+    if (griff !== undefined || box !== undefined) {
+      const index = Number(griff ?? box);
+      const ursprung = entwurf.felder[index];
+      if (!ursprung) {
+        return;
+      }
+      this._labelZug = {
+        ...start,
+        modus: griff !== undefined ? "groesse" : "bewegen",
+        index,
+        ursprung,
+      };
+      this._setzeLabel({ gewaehlt: index });
+    } else {
+      const nr = Math.max(0, ...entwurf.felder.map((feld) => feld.nr)) + 1;
+      const neu: LabelFeldEntwurf = {
+        nr,
+        x: Math.min(Math.max(start.startX, 0), 1),
+        y: Math.min(Math.max(start.startY, 0), 1),
+        b: 0,
+        h: 0,
+        text: "",
+        alt: "",
+      };
+      this._labelZug = {
+        ...start,
+        modus: "neu",
+        index: entwurf.felder.length,
+        ursprung: neu,
+      };
+      this._label = { ...entwurf, felder: [...entwurf.felder, neu], gewaehlt: entwurf.felder.length };
+    }
+    ziel.setPointerCapture(ereignis.pointerId);
+    ereignis.preventDefault();
+  }
+
+  private _labelZeigerBewegt(ereignis: PointerEvent): void {
+    const zug = this._labelZug;
+    if (!zug) {
+      return;
+    }
+    const x = (ereignis.clientX - zug.rahmen.left) / zug.rahmen.width;
+    const y = (ereignis.clientY - zug.rahmen.top) / zug.rahmen.height;
+    const von = zug.ursprung;
+    const begrenze = (wert: number, max: number): number => Math.min(Math.max(wert, 0), max);
+    if (zug.modus === "bewegen") {
+      this._setzeLabelFeld(zug.index, {
+        x: begrenze(von.x + x - zug.startX, 1 - von.b),
+        y: begrenze(von.y + y - zug.startY, 1 - von.h),
+      });
+    } else if (zug.modus === "groesse") {
+      this._setzeLabelFeld(zug.index, {
+        b: begrenze(von.b + x - zug.startX, 1 - von.x),
+        h: begrenze(von.h + y - zug.startY, 1 - von.y),
+      });
+    } else {
+      const links = begrenze(Math.min(zug.startX, x), 1);
+      const oben = begrenze(Math.min(zug.startY, y), 1);
+      this._setzeLabelFeld(zug.index, {
+        x: links,
+        y: oben,
+        b: begrenze(Math.max(zug.startX, x), 1) - links,
+        h: begrenze(Math.max(zug.startY, y), 1) - oben,
+      });
+    }
+  }
+
+  private _labelZeigerHoch(): void {
+    const zug = this._labelZug;
+    const entwurf = this._label;
+    this._labelZug = null;
+    if (!zug || !entwurf) {
+      return;
+    }
+    const feld = entwurf.felder[zug.index];
+    if (zug.modus === "neu" && feld && (feld.b < LABEL_MIN || feld.h < LABEL_MIN)) {
+      // A click without dragging draws no label
+      this._label = {
+        ...entwurf,
+        felder: entwurf.felder.filter((_, i) => i !== zug.index),
+        gewaehlt: null,
+      };
+    }
+  }
+
+  private _labelFelderFuerServer(entwurf: LabelEntwurf): BeschriftungsFeld[] {
+    return entwurf.felder.map((feld) => ({
+      nr: feld.nr,
+      x: feld.x,
+      y: feld.y,
+      b: feld.b,
+      h: feld.h,
+      text: feld.text.trim(),
+      alternativen: teile(feld.alt),
+    }));
+  }
+
+  private async _labelVorschau(): Promise<void> {
+    const entwurf = this._label;
+    const fach = this._fach;
+    if (!entwurf?.bild || !fach) {
+      return;
+    }
+    this._beschaeftigt = true;
+    this._dialogFehler = "";
+    try {
+      const antwort = await this._api.beschriftungVorschau(
+        fach.id,
+        entwurf.bild,
+        this._labelFelderFuerServer(entwurf),
+        entwurf.vorschau,
+      );
+      const vorschauAdresse = await this._api.bildAdresse(antwort.vorschau);
+      this._label = {
+        ...entwurf,
+        schritt: "vorschau",
+        vorschau: antwort.vorschau,
+        vorschauAdresse,
+      };
+    } catch (fehler) {
+      this._dialogFehler = fehlertext(this._t, fehler);
+    } finally {
+      this._beschaeftigt = false;
+    }
+  }
+
+  private async _labelSpeichern(): Promise<void> {
+    const entwurf = this._label;
+    const fach = this._fach;
+    if (!entwurf?.bild || !fach) {
+      return;
+    }
+    this._beschaeftigt = true;
+    this._dialogFehler = "";
+    try {
+      const ergebnis = await this._api.beschriftungSpeichern(
+        fach.id,
+        entwurf.bild,
+        this._labelFelderFuerServer(entwurf),
+        entwurf.lektion || null,
+        entwurf.bestehend ? null : this._neuBereich(),
+        entwurf.vorschau,
+      );
+      this._schliesseDialog();
+      this._zeigeErfolg(
+        this._t("beschriftung_fertig", {
+          neu: ergebnis.neu,
+          geaendert: ergebnis.geaendert,
+          entfernt: ergebnis.entfernt,
         }),
       );
       await this._neuLaden();
@@ -2434,12 +2802,15 @@ export class LearnBuddyPanel extends LitElement {
           ? nothing
           : sachFach
           ? html`<button
-              ?disabled=${!kiBilder}
-              title=${kiGrund}
-              @click=${this._oeffneSeiten}
-            >
-              ${t("seiten")}
-            </button>`
+                ?disabled=${!kiBilder}
+                title=${kiGrund}
+                @click=${this._oeffneSeiten}
+              >
+                ${t("seiten")}
+              </button>
+              <button @click=${() => void this._oeffneLabel(null)}>
+                ${t("beschriftung_neu")}
+              </button>`
           : html`
               <button
                 ?disabled=${!kiBilder}
@@ -2866,9 +3237,11 @@ export class LearnBuddyPanel extends LitElement {
 
   private _sachZellen(aufgabe: SachAufgabe): TemplateResult {
     const t = this._t;
-    const adresse = aufgabe.quelle_bild
-      ? this._bildAdressen[aufgabe.quelle_bild]
-      : undefined;
+    const adresse = aufgabe.bild
+      ? this._bildAdressen[aufgabe.bild]
+      : aufgabe.quelle_bild
+        ? this._bildAdressen[aufgabe.quelle_bild]
+        : undefined;
     // Sentences of a language subject: sentence and solution
     const satz = this._fach?.typ === "vokabel";
     return html`
@@ -3095,9 +3468,20 @@ export class LearnBuddyPanel extends LitElement {
           : sach
             ? html`
                 <td data-label=${t(satzEntwurf ? "spalte_satz" : "spalte_frage")}>
-                  ${mehrzeilig("a", t(satzEntwurf ? "spalte_satz" : "spalte_frage"))}
+                  ${entwurf.form === "beschriftung"
+                    ? html`<div>${entwurf.a}</div>
+                        ${this._originalBild(entwurf.id)
+                          ? html`<button
+                              style="margin-top: 4px"
+                              @click=${() => void this._oeffneLabel(this._originalBild(entwurf.id))}
+                            >
+                              ${t("beschriftung_bearbeiten")}
+                            </button>`
+                          : nothing}`
+                    : mehrzeilig("a", t(satzEntwurf ? "spalte_satz" : "spalte_frage"))}
                   <select
                     style="margin-top: 4px"
+                    ?hidden=${entwurf.form === "beschriftung"}
                     aria-label=${t("form")}
                     .value=${entwurf.form}
                     @change=${(e: Event) => {
@@ -3146,7 +3530,9 @@ export class LearnBuddyPanel extends LitElement {
                   <div style="margin-top: 4px">
                     ${entwurf.form === "auswahl"
                       ? mehrzeilig("falsche", t("falsche_optionen"))
-                      : entwurf.form === "luecke" || entwurf.form === "uebersetzung"
+                      : entwurf.form === "luecke" ||
+                          entwurf.form === "uebersetzung" ||
+                          entwurf.form === "beschriftung"
                         ? eingabe("altB", alt, alt)
                         : mehrzeilig("kernpunkte", t("kernpunkte"))}
                   </div>
@@ -3351,6 +3737,9 @@ export class LearnBuddyPanel extends LitElement {
       case "foto":
         inhalt = this._fotoDialog();
         break;
+      case "beschriftung":
+        inhalt = this._labelDialog();
+        break;
       case "simulation":
         inhalt = this._simulationDialog();
         break;
@@ -3385,7 +3774,10 @@ export class LearnBuddyPanel extends LitElement {
         }}
       >
         <div
-          class="dialog ${this._dialog === "foto" && this._foto?.zeilen ? "breit" : ""}"
+          class="dialog ${(this._dialog === "foto" && this._foto?.zeilen) ||
+          this._dialog === "beschriftung"
+            ? "breit"
+            : ""}"
           role="dialog"
           aria-modal="true"
         >
@@ -3491,6 +3883,174 @@ export class LearnBuddyPanel extends LitElement {
           @click=${this._simuliere}
         >
           ${t(entwurf.weg === "messenger" ? "sim_start_messenger" : "sim_start_ausdruck")}
+        </button>
+      </div>
+    `;
+  }
+
+  private _labelDialog(): TemplateResult {
+    const t = this._t;
+    const entwurf = this._label;
+    const fach = this._fach;
+    if (!entwurf || !fach) {
+      return html``;
+    }
+    if (entwurf.schritt === "wahl") {
+      const ki = fach.ki_status ?? (fach.ki ? (fach.ki_bilder ? "ok" : "ohne_bilder") : "keine");
+      return html`
+        <h2>${t("beschriftung_titel")}</h2>
+        <p class="klein">${t("beschriftung_hilfe")}</p>
+        <label class="feld">
+          ${t("beschriftung_bild")} *
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            aria-label=${t("beschriftung_bild")}
+            @change=${this._labelDatei}
+          />
+        </label>
+        ${entwurf.adresse
+          ? html`<img
+              class="grossbild"
+              style="max-height: 240px; margin-top: 12px"
+              src=${entwurf.adresse}
+              alt=${t("beschriftung_bild")}
+            />`
+          : nothing}
+        ${ki === "ok" ? nothing : html`<p class="klein" role="note">${t(`ki_${ki}`)}</p>`}
+        ${this._beschaeftigt
+          ? html`<p class="klein" role="status">${t("seiten_laeuft")}</p>`
+          : nothing}
+        <div class="aktionen">
+          <button @click=${this._schliesseDialog}>${t("abbrechen")}</button>
+          <button
+            ?disabled=${this._beschaeftigt || !entwurf.datei}
+            @click=${() => void this._labelStart(false)}
+          >
+            ${t("beschriftung_von_hand")}
+          </button>
+          <button
+            class="primaer"
+            ?disabled=${this._beschaeftigt || !entwurf.datei || ki !== "ok"}
+            @click=${() => void this._labelStart(true)}
+          >
+            ${t("beschriftung_suchen")}
+          </button>
+        </div>
+      `;
+    }
+    if (entwurf.schritt === "vorschau") {
+      return html`
+        <h2>${t("beschriftung_vorschau")}</h2>
+        <p class="klein">${t("beschriftung_vorschau_hilfe")}</p>
+        <img
+          class="grossbild"
+          src=${entwurf.vorschauAdresse}
+          alt=${t("beschriftung_vorschau")}
+        />
+        <ol class="klein" style="columns: 2; margin: 12px 0">
+          ${entwurf.felder.map(
+            (feld) =>
+              html`<li value=${feld.nr}>
+                ${feld.text}${feld.alt ? html` <span class="klein">(${feld.alt})</span>` : nothing}
+              </li>`,
+          )}
+        </ol>
+        <div class="aktionen">
+          <button
+            ?disabled=${this._beschaeftigt}
+            @click=${() => this._setzeLabel({ schritt: "editor" })}
+          >
+            ${t("zurueck")}
+          </button>
+          <button
+            class="primaer"
+            ?disabled=${this._beschaeftigt}
+            @click=${() => void this._labelSpeichern()}
+          >
+            ${t(entwurf.bestehend ? "beschriftung_aktualisieren" : "beschriftung_speichern", {
+              n: entwurf.felder.length,
+            })}
+          </button>
+        </div>
+      `;
+    }
+    const fehlt = entwurf.felder.some((feld) => !feld.text.trim());
+    return html`
+      <h2>${t("beschriftung_titel")}</h2>
+      <p class="klein">${t("beschriftung_editor_hilfe")}</p>
+      <div
+        class="label-flaeche"
+        @pointerdown=${this._labelZeigerRunter}
+        @pointermove=${this._labelZeigerBewegt}
+        @pointerup=${this._labelZeigerHoch}
+        @pointercancel=${this._labelZeigerHoch}
+      >
+        <img src=${entwurf.adresse} alt=${t("beschriftung_bild")} draggable="false" />
+        ${entwurf.felder.map(
+          (feld, index) => html`
+            <div
+              class="label-box ${entwurf.gewaehlt === index ? "gewaehlt" : ""}"
+              data-box=${index}
+              style="left:${feld.x * 100}%;top:${feld.y * 100}%;width:${feld.b *
+              100}%;height:${feld.h * 100}%"
+            >
+              <span class="label-nr" data-box=${index}>${feld.nr}</span>
+              <span class="label-griff" data-griff=${index}></span>
+            </div>
+          `,
+        )}
+      </div>
+      <div class="label-liste">
+        ${entwurf.felder.map(
+          (feld, index) => html`
+            <div class="label-zeile ${entwurf.gewaehlt === index ? "gewaehlt" : ""}">
+              <strong>${feld.nr}</strong>
+              <input
+                type="text"
+                aria-label=${t("beschriftung_text", { nr: feld.nr })}
+                placeholder=${t("beschriftung_text", { nr: feld.nr })}
+                .value=${feld.text}
+                @focus=${() => this._setzeLabel({ gewaehlt: index })}
+                @input=${(e: Event) => this._setzeLabelFeld(index, { text: wert(e) })}
+              />
+              <input
+                type="text"
+                aria-label=${t("beschriftung_alternativen", { nr: feld.nr })}
+                placeholder=${t("beschriftung_alternativen", { nr: feld.nr })}
+                .value=${feld.alt}
+                @input=${(e: Event) => this._setzeLabelFeld(index, { alt: wert(e) })}
+              />
+              <button
+                aria-label=${t("loeschen")}
+                title=${t("loeschen")}
+                @click=${() => this._loescheLabelFeld(index)}
+              >
+                ✕
+              </button>
+            </div>
+          `,
+        )}
+      </div>
+      <label class="feld" style="margin-top: 12px">
+        ${t("spalte_lektion")}
+        ${this._lektionAuswahl(
+          entwurf.lektion,
+          (neu) => this._setzeLabel({ lektion: neu }),
+          t("spalte_lektion"),
+        )}
+      </label>
+      ${fehlt && entwurf.felder.length
+        ? html`<p class="klein" role="note">${t("beschriftung_text_fehlt")}</p>`
+        : nothing}
+      <div class="aktionen">
+        <button @click=${this._schliesseDialog}>${t("abbrechen")}</button>
+        <button
+          class="primaer"
+          ?disabled=${this._beschaeftigt || !entwurf.felder.length || fehlt}
+          @click=${() => void this._labelVorschau()}
+        >
+          ${t("beschriftung_pruefen")}
         </button>
       </div>
     `;

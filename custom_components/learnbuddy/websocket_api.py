@@ -583,6 +583,116 @@ def ws_tasks_photo_accept(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
 
 @websocket_command(
     {
+        vol.Required("type"): "learnbuddy/tasks/label_detect",
+        vol.Required("fach_id"): str,
+        vol.Required("bild"): str,
+    }
+)
+@require_admin
+@async_response
+async def ws_tasks_label_detect(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Let the AI find the labels of an image."""
+    verwaltung = _verwaltung(hass)
+    if verwaltung is None:
+        connection.send_error(msg["id"], "not_loaded", "nicht_geladen")
+        return
+    try:
+        ergebnis = await verwaltung.beschriftung_erkennen(msg["fach_id"], msg["bild"])
+    except VerwaltungError as err:
+        connection.send_error(msg["id"], err.code, err.schluessel)
+        return
+    connection.send_result(msg["id"], ergebnis)
+
+
+@websocket_command(
+    {
+        vol.Required("type"): "learnbuddy/tasks/label_preview",
+        vol.Required("fach_id"): str,
+        vol.Required("bild"): str,
+        vol.Required("felder"): [dict],
+        vol.Optional("vorherige"): vol.Any(str, None),
+    }
+)
+@require_admin
+@async_response
+async def ws_tasks_label_preview(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Render the image with numbers instead of labels."""
+    verwaltung = _verwaltung(hass)
+    if verwaltung is None:
+        connection.send_error(msg["id"], "not_loaded", "nicht_geladen")
+        return
+    try:
+        ergebnis = await verwaltung.beschriftung_vorschau(
+            msg["fach_id"], msg["bild"], msg["felder"], msg.get("vorherige")
+        )
+    except VerwaltungError as err:
+        connection.send_error(msg["id"], err.code, err.schluessel)
+        return
+    connection.send_result(msg["id"], ergebnis)
+
+
+@websocket_command(
+    {
+        vol.Required("type"): "learnbuddy/tasks/label_get",
+        vol.Required("fach_id"): str,
+        vol.Required("bild"): str,
+    }
+)
+@require_admin
+@_befehl
+def ws_tasks_label_get(verwaltung: Verwaltung, msg: dict[str, Any]) -> Any:
+    """Return the fields of the labelling tasks of an image."""
+    return verwaltung.beschriftung_lesen(msg["fach_id"], msg["bild"])
+
+
+@websocket_command(
+    {
+        vol.Required("type"): "learnbuddy/tasks/label_save",
+        vol.Required("fach_id"): str,
+        vol.Required("bild"): str,
+        vol.Required("felder"): [dict],
+        vol.Optional("lektion"): vol.Any(str, None),
+        vol.Optional("bereich"): vol.Any(str, None),
+        vol.Optional("vorschau"): vol.Any(str, None),
+    }
+)
+@require_admin
+@async_response
+async def ws_tasks_label_save(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Create or update the labelling tasks of an image."""
+    verwaltung = _verwaltung(hass)
+    if verwaltung is None:
+        connection.send_error(msg["id"], "not_loaded", "nicht_geladen")
+        return
+    try:
+        ergebnis = await verwaltung.beschriftung_speichern(
+            msg["fach_id"],
+            msg["bild"],
+            msg["felder"],
+            lektion=msg.get("lektion"),
+            bereich=msg.get("bereich"),
+            vorschau=msg.get("vorschau"),
+        )
+    except VerwaltungError as err:
+        connection.send_error(msg["id"], err.code, err.schluessel)
+        return
+    connection.send_result(msg["id"], ergebnis)
+
+
+@websocket_command(
+    {
         vol.Required("type"): "learnbuddy/tasks/verify",
         vol.Required("fach_id"): str,
         vol.Required("aufgabe_ids"): [str],
@@ -942,6 +1052,10 @@ def async_setup_websocket_api(hass: HomeAssistant) -> None:
         ws_tasks_verify,
         ws_tasks_photo_extract,
         ws_tasks_photo_accept,
+        ws_tasks_label_detect,
+        ws_tasks_label_preview,
+        ws_tasks_label_get,
+        ws_tasks_label_save,
         ws_tasks_generate_from_pages,
         ws_tasks_generate_steps,
         ws_tasks_accept_suggestion,

@@ -394,6 +394,85 @@ export const styles = css`
   .dialog.breit {
     width: min(1100px, 100%);
   }
+  .label-flaeche {
+    position: relative;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
+    touch-action: none;
+    user-select: none;
+    cursor: crosshair;
+  }
+  .label-flaeche img {
+    display: block;
+    max-width: 100%;
+    max-height: 60vh;
+    border-radius: 8px;
+    background: #fff;
+    pointer-events: none;
+  }
+  .label-box {
+    position: absolute;
+    box-sizing: border-box;
+    border: 2px solid var(--primary-color);
+    background: color-mix(in srgb, var(--primary-color) 18%, transparent);
+    cursor: move;
+  }
+  .label-box.gewaehlt {
+    border-color: var(--error-color, #db4437);
+    background: color-mix(in srgb, var(--error-color, #db4437) 18%, transparent);
+  }
+  .label-nr {
+    position: absolute;
+    left: -2px;
+    top: -22px;
+    min-width: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    background: var(--primary-color);
+    color: var(--text-primary-color, #fff);
+    font-size: 12px;
+    line-height: 20px;
+    text-align: center;
+  }
+  .label-box.gewaehlt .label-nr {
+    background: var(--error-color, #db4437);
+  }
+  .label-griff {
+    position: absolute;
+    right: -7px;
+    bottom: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: nwse-resize;
+  }
+  .label-liste {
+    display: grid;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .label-zeile {
+    display: grid;
+    grid-template-columns: 2em 1fr 1fr auto;
+    gap: 8px;
+    align-items: center;
+    padding: 2px 4px;
+    border-radius: 8px;
+  }
+  .label-zeile.gewaehlt {
+    background: color-mix(in srgb, var(--error-color, #db4437) 10%, transparent);
+  }
+  @media (max-width: 600px) {
+    .label-zeile {
+      grid-template-columns: 2em 1fr auto;
+    }
+    .label-zeile input:nth-of-type(2) {
+      grid-column: 2 / 4;
+    }
+  }
   .vorschaubild {
     display: block;
     width: 56px;

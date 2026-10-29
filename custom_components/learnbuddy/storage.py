@@ -143,6 +143,13 @@ def migrate_tasks(
         data.setdefault("standard_name", None)
         for aufgabe in data["aufgaben"]:
             aufgabe.setdefault("bereich", None)
+    if old_major == 1 and old_minor < 16:
+        # 1.15 -> 1.16: knowledge questions can label a part of an image
+        for aufgabe in data["aufgaben"]:
+            if aufgabe.get("typ") == "sach":
+                aufgabe.setdefault("bild", None)
+                aufgabe.setdefault("original_bild", None)
+                aufgabe.setdefault("feld", None)
     return data
 
 

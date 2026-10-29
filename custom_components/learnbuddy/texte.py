@@ -36,6 +36,11 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
         "frage_luecke_kurz": "Setze ein: {frage}",
         "frage_uebersetzung": "Hallo {name}! 🌍 {fach}: Übersetze ins {zielsprache}e: {frage}",
         "frage_uebersetzung_kurz": "Übersetze ins {zielsprache}e: {frage}",
+        "frage_beschriftung": (
+            "Hallo {name}! 🔬 {fach}: Was steht im Bild bei Nummer {nr}?"
+        ),
+        "frage_beschriftung_kurz": "Was steht im Bild bei Nummer {nr}?",
+        "blatt_beschriftung": "Was steht im Bild bei Nummer {nr}?",
         "fast_richtig_sach": (
             "Fast richtig, {name}! 👍 Achte auf die Schreibweise: „{loesung}“."
         ),
@@ -147,6 +152,9 @@ TEXTE: Final[dict[str, dict[str, str]]] = {
         "frage_luecke_kurz": "Fill in the gap: {frage}",
         "frage_uebersetzung": "Hi {name}! 🌍 {fach}: Translate into {zielsprache}: {frage}",
         "frage_uebersetzung_kurz": "Translate into {zielsprache}: {frage}",
+        "frage_beschriftung": "Hi {name}! 🔬 {fach}: What is label number {nr} in the picture?",
+        "frage_beschriftung_kurz": "What is label number {nr} in the picture?",
+        "blatt_beschriftung": "What is label number {nr} in the picture?",
         "fast_richtig_sach": "Almost, {name}! 👍 Mind the spelling: “{loesung}”.",
         "frage_optionen": "\n{optionen}\nAnswer with the letter.",
         "frage_hilfe": "\n({hilfe})",

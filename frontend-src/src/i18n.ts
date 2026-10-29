@@ -129,6 +129,33 @@ const de = {
   err_weg_ungueltig: "Unbekannter Weg für die Simulation.",
   foto_import: "Aus Foto importieren",
   foto_titel: "Aufgaben aus Fotos auslesen",
+  beschriftung_neu: "Beschriftungsbild",
+  beschriftung_titel: "Beschriftungen abfragen",
+  beschriftung_hilfe:
+    "Lade ein Bild mit Beschriftungen hoch (z. B. ein Mikroskop). LearnBuddy ersetzt die Beschriftungen durch Nummern und fragt das Kind je Nummer, was dort steht.",
+  beschriftung_bild: "Bild mit Beschriftungen",
+  beschriftung_suchen: "Beschriftungen von der KI suchen lassen",
+  beschriftung_von_hand: "Von Hand markieren",
+  beschriftung_nichts_gefunden:
+    "Die KI hat keine Beschriftungen gefunden. Du kannst sie von Hand markieren.",
+  beschriftung_editor_hilfe:
+    "Ziehe einen Rahmen um jede Beschriftung, damit sie verdeckt wird. Rahmen lassen sich verschieben, am Punkt unten rechts vergrößern und unten in der Liste löschen. Trage rechts den richtigen Text ein.",
+  beschriftung_text: "Text zu Nummer {nr}",
+  beschriftung_alternativen: "Weitere richtige Schreibweisen (mit | trennen) zu Nummer {nr}",
+  beschriftung_text_fehlt: "Zu jeder Nummer fehlt noch der richtige Text.",
+  beschriftung_pruefen: "Vorschau ansehen",
+  beschriftung_vorschau: "So sieht das Kind das Bild",
+  beschriftung_vorschau_hilfe:
+    "Die Beschriftungen sind durch Nummern ersetzt. Passt alles, dann speichere die Aufgaben, sonst gehe zurück und korrigiere die Rahmen.",
+  beschriftung_speichern: "{n} Aufgaben anlegen",
+  beschriftung_aktualisieren: "Änderungen speichern",
+  beschriftung_bearbeiten: "Beschriftungen bearbeiten",
+  beschriftung_fertig: "Beschriftungen gespeichert: {neu} neu, {geaendert} geändert, {entfernt} entfernt.",
+  zurueck: "Zurück",
+  form_beschriftung: "Beschriftung",
+  err_beschriftung_nur_sachfach: "Beschriftungsbilder gibt es nur für Sachfächer.",
+  err_beschriftung_felder_ungueltig:
+    "Die Rahmen sind ungültig. Jede Nummer braucht einen Rahmen mit sichtbarer Größe.",
   foto_hilfe:
     "Fotografiere die Vokabelseiten möglichst gerade und gut lesbar. Die KI liest Wort, Übersetzung, Seitenzahl und den Verweis auf die Unit-Seite aus. Beispielsätze und Lautschrift lässt sie weg. Danach prüfst du die Vorschau. Die Fotos gehen an den KI-Dienst und werden anschließend gelöscht.",
   foto_hilfe_mathe:
@@ -739,6 +766,32 @@ const en: Record<Schluessel, string> = {
   err_weg_ungueltig: "Unknown way of simulating.",
   foto_import: "Import from photo",
   foto_titel: "Read tasks from photos",
+  beschriftung_neu: "Labelled image",
+  beschriftung_titel: "Ask for labels",
+  beschriftung_hilfe:
+    "Upload an image with labels (for example a microscope). LearnBuddy replaces the labels with numbers and asks the child what each number stands for.",
+  beschriftung_bild: "Image with labels",
+  beschriftung_suchen: "Let the AI find the labels",
+  beschriftung_von_hand: "Mark by hand",
+  beschriftung_nichts_gefunden: "The AI found no labels. You can mark them by hand.",
+  beschriftung_editor_hilfe:
+    "Draw a box around every label to cover it. Boxes can be moved, enlarged at the dot in the lower right corner and deleted in the list below. Enter the correct text next to its number.",
+  beschriftung_text: "Text for number {nr}",
+  beschriftung_alternativen: "Other correct spellings (separate with |) for number {nr}",
+  beschriftung_text_fehlt: "Some numbers still need their correct text.",
+  beschriftung_pruefen: "Show preview",
+  beschriftung_vorschau: "What the child sees",
+  beschriftung_vorschau_hilfe:
+    "The labels are replaced by numbers. If everything fits, save the tasks, otherwise go back and correct the boxes.",
+  beschriftung_speichern: "Create {n} tasks",
+  beschriftung_aktualisieren: "Save changes",
+  beschriftung_bearbeiten: "Edit labels",
+  beschriftung_fertig: "Labels saved: {neu} new, {geaendert} changed, {entfernt} removed.",
+  zurueck: "Back",
+  form_beschriftung: "Label",
+  err_beschriftung_nur_sachfach: "Labelled images only exist for knowledge subjects.",
+  err_beschriftung_felder_ungueltig:
+    "The boxes are invalid. Every number needs a box of visible size.",
   foto_hilfe:
     "Take the photos of the vocabulary pages straight and legible. The AI reads word, translation, page number and the reference to the unit page. It leaves out example sentences and phonetic transcriptions. Then you check the preview. The photos are sent to the AI service and deleted afterwards.",
   foto_hilfe_mathe:

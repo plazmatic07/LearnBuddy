@@ -53,7 +53,7 @@ async def test_config_store_roundtrip(
 
     gespeichert = hass_storage["learnbuddy.config"]
     assert gespeichert["version"] == 1
-    assert gespeichert["minor_version"] == 15
+    assert gespeichert["minor_version"] == 16
     assert gespeichert["data"]["kinder"]["k1"]["aktiv"] is False
 
     neu = ConfigStore(hass)
@@ -102,7 +102,7 @@ async def test_config_store_migration_from_1_0(
     await store.async_load()
     assert store.kinder["k1"].aktiv is False
     assert store.arbeit_aufgaben == {}
-    assert hass_storage["learnbuddy.config"]["minor_version"] == 15
+    assert hass_storage["learnbuddy.config"]["minor_version"] == 16
     assert hass_storage["learnbuddy.config"]["data"]["aufgaben_dateien"] == []
 
 
@@ -196,7 +196,7 @@ async def test_task_store_migration_from_1_0(
     await store.async_load()
     assert len(store.aufgaben) == 1
     gespeichert = hass_storage["learnbuddy.k1_f1"]
-    assert gespeichert["minor_version"] == 15
+    assert gespeichert["minor_version"] == 16
     assert gespeichert["data"]["aufgaben"][0]["typ"] == "vokabel"
 
 
@@ -223,7 +223,7 @@ async def test_task_store_migration_from_1_1(
     await store.async_load()
     aufgabe = next(iter(store.aufgaben.values()))
     assert aufgabe.statistik["de>en"].box == box
-    assert hass_storage["learnbuddy.k1_f1"]["minor_version"] == 15
+    assert hass_storage["learnbuddy.k1_f1"]["minor_version"] == 16
 
 
 async def test_remove_task_file(
@@ -257,7 +257,7 @@ async def test_task_store_migration_from_1_2(
     await store.async_load()
     assert store.lektionen == ["Unit 1", "Unit 3"]
     gespeichert = hass_storage["learnbuddy.k1_f1"]
-    assert gespeichert["minor_version"] == 15
+    assert gespeichert["minor_version"] == 16
     assert gespeichert["data"]["lektionen"] == ["Unit 1", "Unit 3"]
 
 
@@ -313,7 +313,7 @@ async def test_task_store_migration_from_1_4(
     await store.async_load()
     assert next(iter(store.aufgaben.values())).seite is None
     gespeichert = hass_storage["learnbuddy.k1_f1"]
-    assert gespeichert["minor_version"] == 15
+    assert gespeichert["minor_version"] == 16
     assert gespeichert["data"]["aufgaben"][0]["seite"] is None
 
 
@@ -358,3 +358,17 @@ def test_migration_from_1_9() -> None:
     )
     assert config["kinder"]["k1"]["offene_frage"]["optionen"] is None
     assert config["kinder"]["k2"]["simulation"] is None
+
+
+def test_migration_beschriftungsfelder() -> None:
+    """Knowledge questions get the fields for labelling tasks (1.15 -> 1.16)."""
+    alt = {
+        "aufgaben": [
+            {"id": "s", "typ": "sach", "frage": "f", "antwort": "a"},
+            {"id": "m", "typ": "mathe"},
+        ]
+    }
+    neu = migrate_tasks(1, 15, alt)
+    sach, mathe = neu["aufgaben"]
+    assert (sach["bild"], sach["original_bild"], sach["feld"]) == (None, None, None)
+    assert "original_bild" not in mathe

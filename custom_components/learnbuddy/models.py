@@ -96,6 +96,8 @@ class SachForm(StrEnum):
     LUECKE = "luecke"
     # Sentence of the native language to be translated, judged like vocabulary
     UEBERSETZUNG = "uebersetzung"
+    # A numbered part of an image, judged locally like vocabulary
+    BESCHRIFTUNG = "beschriftung"
 
 
 class Quelle(StrEnum):
@@ -426,6 +428,12 @@ class SachAufgabe:
     stelle: str | None = None
     # Id of the image of the page the question was made from, never sent
     quelle_bild: str | None = None
+    # Labelling task: the numbered image that is sent, the original image with
+    # the labels and the box of this number ({nr, x, y, b, h} as fractions of
+    # the image)
+    bild: str | None = None
+    original_bild: str | None = None
+    feld: dict[str, float] | None = None
     hinweis: str | None = None
     seite: int | None = None
     statistik: dict[str, Statistik] = field(default_factory=dict)
@@ -473,6 +481,9 @@ class SachAufgabe:
             hilfe_senden=data.get("hilfe_senden", bool(data.get("hilfe"))),
             stelle=data.get("stelle"),
             quelle_bild=data.get("quelle_bild"),
+            bild=data.get("bild"),
+            original_bild=data.get("original_bild"),
+            feld=dict(data["feld"]) if data.get("feld") else None,
             hinweis=data.get("hinweis"),
             seite=data.get("seite"),
             statistik={
@@ -496,6 +507,9 @@ class SachAufgabe:
             "frage": self.frage,
             "antwort": self.antwort,
             "form": self.form.value,
+            "bild": self.bild,
+            "original_bild": self.original_bild,
+            "feld": dict(self.feld) if self.feld else None,
             "kernpunkte": list(self.kernpunkte),
             "falsche_optionen": list(self.falsche_optionen),
             "alternativen": list(self.alternativen),
